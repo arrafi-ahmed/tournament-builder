@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import RemoveEntity from "@/components/RemoveEntity.vue";
@@ -8,16 +8,40 @@ import NoItems from "@/components/NoItems.vue";
 import { getTeamLogoUrl } from "@/others/util";
 
 const router = useRouter();
+const route = useRoute();
 const store = useStore();
 
-const teams = computed(() => store.state.team.teams);
+const participants = computed(() => store.state.tournament.participants);
 
-const deleteTeam = (teamId) => {
-  store.dispatch("team/removeTeam", { teamId });
+const targetTournamentId = computed(() => route.params.tournamentId);
+const prefetchedTournament = computed(() =>
+  store.getters["tournament/getTournamentById"](targetTournamentId.value)
+);
+const shouldFetchData = computed(() => !prefetchedTournament.value?.id);
+const tournament = computed(() =>
+  shouldFetchData.value
+    ? store.state.tournament.tournament
+    : prefetchedTournament.value
+);
+
+const deleteParticipant = (id, teamId, tournamentId) => {
+  store.dispatch("tournament/removeParticipant", {
+    id,
+    teamId,
+    tournamentId,
+  }); //TODO
 };
 const fetchData = () => {
-  store.dispatch("team/setTeams");
+  if (shouldFetchData.value) {
+    store.dispatch("tournament/setTournamentWEmailOptionalById", {
+      tournamentId: targetTournamentId.value,
+    });
+  }
+  store.dispatch("tournament/setParticipants", {
+    tournamentId: route.params.tournamentId,
+  });
 };
+
 onMounted(() => {
   fetchData();
 });
@@ -29,8 +53,8 @@ onMounted(() => {
       <v-col>
         <page-title
           justify="space-between"
-          sub-title="Team"
-          title="List"
+          :sub-title="tournament.name"
+          title="Participants"
           show-back
         >
           <v-row align="center">
@@ -42,11 +66,12 @@ onMounted(() => {
               <v-list density="compact">
                 <v-list-item
                   :to="{
-                    name: 'team-add',
+                    name: 'tournament-invite',
+                    params: { tournamentId: tournament.id },
                   }"
                   density="compact"
                   prepend-icon="mdi-plus"
-                  title="Add Team"
+                  title="Invite Team"
                 ></v-list-item>
               </v-list>
             </v-menu>
@@ -58,13 +83,13 @@ onMounted(() => {
     <v-row justify="center">
       <v-col col="12" md="6">
         <v-list
-          v-if="teams.length > 0"
+          v-if="participants.length > 0"
           density="compact"
           lines="two"
           rounded
           elevation="1"
         >
-          <template v-for="(item, index) in teams">
+          <template v-for="(item, index) in participants">
             <v-list-item v-if="item" :key="index" :title="item?.name" link>
               <!--                    @click="-->
               <!--                      router.push({-->
@@ -125,7 +150,9 @@ onMounted(() => {
                       label="Delete"
                       prepend-icon="mdi-delete"
                       variant="list"
-                      @remove-entity="deleteTeam(item.id)"
+                      @remove-entity="
+                        deleteParticipant(item.ttId, item.tmId, item.tuId)
+                      "
                     ></remove-entity>
                   </v-list>
                 </v-menu>
@@ -137,7 +164,7 @@ onMounted(() => {
                 </div>
               </template>
             </v-list-item>
-            <v-divider v-if="index !== teams.length - 1"></v-divider>
+            <v-divider v-if="index !== participants.length - 1"></v-divider>
           </template>
         </v-list>
         <no-items v-else :cols="12"></no-items>

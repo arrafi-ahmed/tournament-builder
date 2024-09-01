@@ -3,15 +3,26 @@ import PageTitle from "@/components/PageTitle.vue";
 import { computed, reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import { isValidEmail, isValidImage } from "@/others/util";
+import {
+  isValidEmail,
+  isValidImage,
+  removeNullProperties,
+} from "@/others/util";
 import { useDisplay } from "vuetify";
 import DatePicker from "@/components/DatePicker.vue";
+import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 
 const { mobile } = useDisplay();
 const router = useRouter();
 const store = useStore();
 
 const isSudo = computed(() => store.getters["user/isSudo"]);
+
+const formatShortcodeInit = {
+  groupCount: null,
+  groupMemberCount: null,
+  knockoutMemberCount: null,
+};
 
 const tournamentInit = {
   name: null,
@@ -20,11 +31,7 @@ const tournamentInit = {
   startDate: null,
   endDate: null,
   rules: null,
-  formatShortcode: {
-    groupCount: null,
-    groupMemberCount: null,
-    knockoutMemberCount: null,
-  },
+  formatShortcode: [{ ...formatShortcodeInit }, { ...formatShortcodeInit }], //max 2 items, first item -> group, second item -> knockout
   organizerEmail: null,
   organizerId: null,
 };
@@ -54,15 +61,26 @@ const handleAddTournament = async () => {
   await form.value.validate();
   if (!isFormValid.value) return;
 
-  await store.dispatch("tournament/save", tournament).then((result) => {
-    // tournament = {...tournament, ...tournamentInit}
-    Object.assign(tournament, {
-      ...tournamentInit,
+  // if formatShortcode arr item is group/knockout only, remove item's extra null property, then remove second {} empty obj
+  const formatShortcode = tournament.formatShortcode
+    .map((obj) => removeNullProperties(obj))
+    .filter((obj) => obj && Object.keys(obj).length > 0);
+
+  tournament.formatShortcode
+
+  console.log(12, { ...tournament, formatShortcode })
+
+  await store
+    .dispatch("tournament/save", { ...tournament, formatShortcode })
+    .then((result) => {
+      // tournament = {...tournament, ...tournamentInit}
+      Object.assign(tournament, {
+        ...tournamentInit,
+      });
+      router.push({
+        name: "tournament-list",
+      });
     });
-    router.push({
-      name: "tournament-list",
-    });
-  });
 };
 </script>
 
@@ -70,7 +88,12 @@ const handleAddTournament = async () => {
   <v-container>
     <v-row>
       <v-col>
-        <page-title justify="space-between" title="Add Tournament" show-back>
+        <page-title
+          justify="space-between"
+          sub-title="Tournament"
+          title="Add"
+          show-back
+        >
         </page-title>
       </v-col>
     </v-row>
@@ -161,95 +184,11 @@ const handleAddTournament = async () => {
             prepend-inner-icon="mdi-email"
           ></v-text-field>
 
-          <v-card title="Tournament Format" class="mt-2 mt-md-6">
-            <template #text>
-              <v-tabs
-                v-model="formatTab"
-                :items="formatTabs"
-                align-tabs="start"
-                color="primary"
-                height="60"
-                slider-color="#f78166"
-              >
-                <template v-slot:tab="{ item }">
-                  <v-tab
-                    :text="item.text"
-                    :value="item.value"
-                    class="text-none"
-                  ></v-tab>
-                </template>
-
-                <template v-slot:item="{ item }">
-                  <template v-if="item.value == 'group'">
-                    <v-tabs-window-item :value="item.value" class="pa-4">
-                      <v-text-field
-                        v-model="tournament.formatShortcode.groupCount"
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many groups do you want to create?"
-                        type="number"
-                      ></v-text-field>
-                      <v-text-field
-                        v-model="tournament.formatShortcode.groupMemberCount"
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many teams are there in each group?"
-                        type="number"
-                      ></v-text-field>
-                    </v-tabs-window-item>
-                  </template>
-                  <template v-else-if="item.value == 'group_knockout'">
-                    <v-tabs-window-item :value="item.value" class="pa-4">
-                      <v-text-field
-                        v-model="tournament.formatShortcode.groupCount"
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many groups do you want to create?"
-                        type="number"
-                      ></v-text-field>
-                      <v-text-field
-                        v-model="tournament.formatShortcode.groupMemberCount"
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many teams are there in each group?"
-                        type="number"
-                      ></v-text-field>
-                      <v-text-field
-                        v-model="tournament.formatShortcode.knockoutMemberCount"
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many teams proceed to the knockout phase?"
-                        type="number"
-                      ></v-text-field>
-                    </v-tabs-window-item>
-                  </template>
-                  <template v-else-if="item.value == 'knockout'">
-                    <v-tabs-window-item :value="item.value" class="pa-4">
-                      <v-text-field
-                        v-model="tournament.formatShortcode.knockoutMemberCount"
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many teams proceed to the knockout phase?"
-                        type="number"
-                      ></v-text-field>
-                    </v-tabs-window-item>
-                  </template>
-                </template>
-              </v-tabs>
-            </template>
-          </v-card>
+          <tournament-base-format
+            v-model:format-tab="formatTab"
+            v-model:format-shortcode="tournament.formatShortcode"
+            :tabs="formatTabs"
+          ></tournament-base-format>
 
           <div class="d-flex align-center mt-3 mt-md-4">
             <v-spacer></v-spacer>
@@ -266,5 +205,4 @@ const handleAddTournament = async () => {
   </v-container>
 </template>
 
-<style scoped>
-</style>
+<style scoped></style>

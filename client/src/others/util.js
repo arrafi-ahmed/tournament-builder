@@ -57,6 +57,13 @@ export const getTeamLogoUrl = (imageName) => {
     : getApiPublicImgUrl(imageName, "team-logo");
 };
 
+export const removeNullProperties = (obj) => {
+  for (const key in obj) {
+    if (obj[key] === null) delete obj[key];
+  }
+  return obj;
+};
+
 export const getToLink = (item) => {
   if (item.to.params) {
     const paramKey = Object.keys(item.to.params)[0];
@@ -68,6 +75,15 @@ export const getToLink = (item) => {
   }
   return item.to;
 };
+
+export const getRequestBg = (item) =>
+  item.requestStatus === 0
+    ? "bg-red-lighten-3"
+    : item.requestStatus === 1
+    ? "bg-green-lighten-3"
+    : item.requestStatus === 2
+    ? "bg-yellow-lighten-3"
+    : null;
 
 export const getQueryParam = (param) => {
   const queryParams = new URLSearchParams(window.location.search);

@@ -16,12 +16,12 @@ const { label, color, customClass, rules, variant, density } = defineProps({
   variant: { type: String },
   density: { type: String },
 });
-const selectedDate = ref();
 const menu = ref(false);
 
 const handleDateChange = (newDate) => {
   emit("update:modelValue", new Date(newDate));
 };
+const selectedDate = ref();
 watch(
   () => model.value,
   (newVal) => {

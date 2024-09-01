@@ -96,7 +96,25 @@ const routes = [
         },
       },
       {
-        path: "tournament/edit/:tournamentId?",
+        path: "tournament/:tournamentId?/invite",
+        name: "tournament-invite",
+        component: () => import("@/views/TournamentInvite.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Invite Team",
+        },
+      },
+      {
+        path: "tournament/:tournamentId/dashboard",
+        name: "tournament-dashboard",
+        component: () => import("@/views/TournamentDashboard.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Tournament Dashboard",
+        },
+      },
+      {
+        path: "tournament/:tournamentId?/edit",
         name: "tournament-edit",
         component: () => import("@/views/TournamentEdit.vue"),
         meta: {
@@ -114,7 +132,16 @@ const routes = [
         },
       },
       {
-        path: "team/edit/:teamId?",
+        path: "tournament/join",
+        name: "tournament-join",
+        component: () => import("@/views/TournamentJoin.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Tournament Join",
+        },
+      },
+      {
+        path: "team/:teamId?/edit",
         name: "team-edit",
         component: () => import("@/views/TeamEdit.vue"),
         meta: {
@@ -123,9 +150,18 @@ const routes = [
         },
       },
       {
-        path: "team/squad/:teamId?",
+        path: "team/:teamId?/squad",
         name: "team-squad",
         component: () => import("@/views/TeamSquad.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Team Squad",
+        },
+      },
+      {
+        path: "team/requests",
+        name: "team-requests",
+        component: () => import("@/views/TeamRequests.vue"),
         meta: {
           requiresAuth: true,
           title: "Team Squad",
@@ -141,6 +177,56 @@ const routes = [
         },
       },
     ],
+  },
+  {
+    path: "/tournament/:tournamentId/dashboard/",
+    name: "tournament-dashboard",
+    component: import("@/layouts/tournament-dashboard/Dashboard.vue"),
+    children: [
+      {
+        path: "participants",
+        name: "tournament-participants",
+        component: () => import("@/views/TournamentParticipants.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Tournament Participants",
+        },
+      },
+      {
+        path: "format",
+        name: "tournament-format",
+        component: () => import("@/views/TournamentFormat.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Tournament Format",
+        },
+      },
+      {
+        path: "schedule",
+        name: "tournament-schedule",
+        component: () => import("@/views/TournamentSchedule.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Tournament Schedule",
+        },
+      },
+      {
+        path: "result",
+        name: "tournament-result",
+        component: () => import("@/views/TournamentResult.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Tournament Result",
+        },
+      },
+    ],
+    beforeEnter(to, from, next) {
+      if (to.matched.length > 1) return next(); //parent and child route matched
+      next({
+        name: "tournament-participants",
+        params: { tournamentId: to.params.tournamentId },
+      });
+    },
   },
   {
     path: "",

@@ -4,7 +4,9 @@ const ApiResponse = require("../model/ApiResponse");
 const { auth, isAdmin, isAdminEventAuthor } = require("../middleware/auth");
 const { uploadTournamentLogo } = require("../middleware/upload");
 const compressImages = require("../middleware/compress");
-const { ifSudo, ifOrganizer } = require("../others/util");
+const { ifSudo, ifOrganizer, ifManager } = require("../others/util");
+const teamService = require("../service/team");
+const CustomError = require("../model/CustomError");
 
 router.post("/save", auth, (req, res, next) => {
   tournamentService
@@ -18,39 +20,76 @@ router.post("/save", auth, (req, res, next) => {
     .catch((err) => next(err));
 });
 
-router.post("/saveMember", (req, res, next) => {
-  tournamentService
-    .saveMember({
-      payload: req.body,
-    })
-    .then((result) => {
-      res.status(200).json(new ApiResponse("Member saved!", result));
-    })
-    .catch((err) => next(err));
-});
-
 router.get("/getAllTournaments", auth, (req, res, next) => {
-    const organizerId = ifSudo(req.currentUser.role)
-    ? req.query.organizerId
-    : ifOrganizer(req.currentUser.role)
-    ? req.currentUser.id
-    : null;
-
-  tournamentService
-    .getAllTournaments({ organizerId })
-    .then((results) => res.status(200).json(new ApiResponse(null, results)))
-    .catch((err) => next(err));
-});
-
-router.get("/getAllTournamentsByOrganizerId", auth, (req, res, next) => {
   const organizerId = ifSudo(req.currentUser.role)
     ? req.query.organizerId
     : ifOrganizer(req.currentUser.role)
     ? req.currentUser.id
     : null;
+
   tournamentService
-    .getAllTournamentsByOrganizerId({ organizerId })
+    .getTournamentsByOrganizerId({ organizerId })
     .then((results) => res.status(200).json(new ApiResponse(null, results)))
+    .catch((err) => next(err));
+});
+
+router.get("/getTournamentsByOrganizerId", auth, (req, res, next) => {
+  const organizerId = ifSudo(req.currentUser.role)
+    ? req.query.organizerId
+    : ifOrganizer(req.currentUser.role)
+    ? req.currentUser.id
+    : null;
+
+  tournamentService
+    .getTournamentsByOrganizerId({ organizerId })
+    .then((results) => res.status(200).json(new ApiResponse(null, results)))
+    .catch((err) => next(err));
+});
+//for team managers
+router.get("/getJoinRequests", auth, (req, res, next) => {
+  const teamId = ifSudo(req.currentUser.role)
+    ? req.query.teamId
+    : ifManager(req.currentUser.role)
+    ? req.currentUser.teamId
+    : null;
+
+  tournamentService
+    .getJoinRequests({ teamId })
+    .then((results) => res.status(200).json(new ApiResponse(null, results)))
+    .catch((err) => next(err));
+});
+
+router.get("/saveTeamRequest", auth, (req, res, next) => {
+  const teamId = ifSudo(req.currentUser.role)
+    ? req.query.teamId
+    : ifManager(req.currentUser.role)
+    ? req.currentUser.teamId
+    : null;
+
+  tournamentService
+    .saveTeamRequest({ teamId, tournamentId: req.query.tournamentId })
+    .then((results) =>
+      res.status(200).json(new ApiResponse("Request sent!", results))
+    )
+    .catch((err) => next(err));
+});
+
+router.get("/removeTeamRequest", auth, (req, res, next) => {
+  const teamId = ifSudo(req.currentUser.role)
+    ? req.query.teamId
+    : ifManager(req.currentUser.role)
+    ? req.currentUser.teamId
+    : null;
+
+  tournamentService
+    .removeTeamRequest({
+      teamId,
+      requestId: req.query.requestId,
+      tournamentId: req.query.tournamentId,
+    })
+    .then((results) =>
+      res.status(200).json(new ApiResponse("Request cancelled!", results))
+    )
     .catch((err) => next(err));
 });
 
@@ -61,9 +100,67 @@ router.get("/getTournamentWEmailOptionalById", (req, res, next) => {
     .catch((err) => next(err));
 });
 
+router.get("/getParticipants", auth, (req, res, next) => {
+  const organizerId = ifSudo(req.currentUser.role)
+    ? req.query.organizerId
+    : ifOrganizer(req.currentUser.role)
+    ? req.currentUser.id
+    : null;
+
+  tournamentService
+    .getParticipants({
+      tournamentId: req.query.tournamentId,
+      organizerId,
+    })
+    .then((results) => res.status(200).json(new ApiResponse(null, results)))
+    .catch((err) => next(err));
+});
+
+router.get("/addParticipant", (req, res, next) => {
+  tournamentService
+    .addParticipant({
+      teamId: req.query.teamId,
+      tournamentId: req.query.tournamentId,
+      tournamentName: req.query.tournamentName,
+      managerEmail: req.query.managerEmail,
+    })
+    .then((results) =>
+      res.status(200).json(new ApiResponse("Participant added!", results))
+    )
+    .catch((err) => {
+      if (err instanceof CustomError)
+        res.status(err.statusCode).json(new ApiResponse(err.message, null));
+      else next(err);
+    });
+});
+
+router.get("/removeParticipant", (req, res, next) => {
+  tournamentService
+    .removeParticipant({
+      id: req.query.id,
+      teamId: req.query.teamId,
+      tournamentId: req.query.tournamentId,
+    })
+    .then((results) =>
+      res.status(200).json(new ApiResponse("Participant removed!", results[0]))
+    )
+    .catch((err) => {
+      if (err instanceof CustomError)
+        res.status(err.statusCode).json(new ApiResponse(err.message, null));
+      else next(err);
+    });
+});
+
 router.get("/getTournament", (req, res, next) => {
   tournamentService
     .getTournament({ tournamentId: req.query.tournamentId })
+    .then((results) => res.status(200).json(new ApiResponse(null, results)))
+    .catch((err) => next(err));
+});
+
+router.get("/searchTournament", (req, res, next) => {
+  tournamentService
+    .searchTournament({ searchKeyword: req.query.searchKeyword })
     .then((results) => res.status(200).json(new ApiResponse(null, results)))
     .catch((err) => next(err));
 });

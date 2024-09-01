@@ -5,20 +5,60 @@ import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import RemoveEntity from "@/components/RemoveEntity.vue";
 import NoItems from "@/components/NoItems.vue";
-import { formatDate, toLocalISOString } from "@/others/util";
+import {formatDate, getRequestBg, toLocalISOString} from "../others/util";
 // import { getTournamentLogoUrl } from "@/others/util";
 
 const router = useRouter();
 const store = useStore();
 
 const tournaments = computed(() => store.state.tournament.tournaments);
+const joinRequests = computed(() => store.state.tournament.joinRequests);
 
 const deleteTournament = (tournamentId) => {
   store.dispatch("tournament/removeTournament", { tournamentId });
 };
-const fetchData = () => {
-  store.dispatch("tournament/setTournaments");
+const searchKeyword = ref(null);
+
+const showJoinRequests = () => {
+  store.dispatch("tournament/setJoinRequestsByTeamId").then((result) => {
+    store.commit("tournament/setTournaments", joinRequests.value);
+    shouldShowJoinRequests.value = true;
+  });
 };
+
+const handleSearchTournament = () => {
+  shouldShowJoinRequests.value = false;
+  store.dispatch("tournament/searchTournament", {
+    searchKeyword: searchKeyword.value,
+  });
+};
+
+const handleJoinTournament = (tournamentId) => {
+  store
+    .dispatch("tournament/joinTournament", {
+      tournamentId,
+    })
+    .then(() => {
+      // shouldShowJoinRequests.value = true;
+    });
+};
+
+const handleCancelJoinTournament = (requestId, tournamentId) => {
+  store.dispatch("tournament/cancelJoinTournament", {
+    requestId,
+    tournamentId,
+  });
+};
+
+const fetchData = () => {
+  store.dispatch("tournament/setJoinRequestsByTeamId");
+};
+
+const shouldShowJoinRequests = ref(false);
+const generateTitle = computed(() =>
+  shouldShowJoinRequests.value ? "Sent Requests" : "Search"
+);
+
 onMounted(() => {
   fetchData();
 });
@@ -30,8 +70,8 @@ onMounted(() => {
       <v-col>
         <page-title
           justify="space-between"
-          sub-title="Tournament"
-          title="List"
+          sub-title="Tournament Join"
+          :title="generateTitle"
           show-back
         >
           <v-row align="center">
@@ -42,12 +82,10 @@ onMounted(() => {
               </template>
               <v-list density="compact">
                 <v-list-item
-                  :to="{
-                    name: 'tournament-add',
-                  }"
+                  @click="showJoinRequests"
                   density="compact"
-                  prepend-icon="mdi-plus"
-                  title="Add Tournament"
+                  prepend-icon="mdi-eye"
+                  title="Show Join Requests"
                 ></v-list-item>
               </v-list>
             </v-menu>
@@ -58,12 +96,23 @@ onMounted(() => {
 
     <v-row justify="center">
       <v-col col="12" md="6">
+        <v-text-field
+          v-model="searchKeyword"
+          append-inner-icon="mdi-magnify"
+          hide-details
+          label="Search by name"
+          variant="solo"
+          @keydown.enter="handleSearchTournament"
+          @click:append-inner="handleSearchTournament"
+        ></v-text-field>
+
         <v-list
           v-if="tournaments.length > 0"
-          density="compact"
+          density="default"
           lines="three"
           rounded
           elevation="1"
+          class="mt-2 mt-md-4"
         >
           <template v-for="(item, index) in tournaments">
             <v-list-item
@@ -71,12 +120,7 @@ onMounted(() => {
               :key="index"
               :title="item?.name"
               link
-              @click="
-                router.push({
-                  name: 'tournament-dashboard',
-                  params: { tournamentId: item.id },
-                })
-              "
+              :class="getRequestBg(item)"
             >
               <template v-slot:append>
                 <v-menu>
@@ -91,24 +135,22 @@ onMounted(() => {
                   </template>
                   <v-list density="compact">
                     <v-list-item
-                      prepend-icon="mdi-pencil"
-                      title="Edit"
-                      @click="
-                        router.push({
-                          name: 'tournament-edit',
-                          params: { tournamentId: item.id },
-                        })
-                      "
+                      v-if="!item.sentRequest"
+                      prepend-icon="mdi-plus"
+                      title="Join"
+                      class="text-primary"
+                      @click="handleJoinTournament(item.tournamentId)"
                     ></v-list-item>
 
-                    <v-divider></v-divider>
-
                     <remove-entity
+                      v-else
                       custom-class="text-error"
-                      label="Delete"
-                      prepend-icon="mdi-delete"
+                      label="Cancel"
+                      prepend-icon="mdi-close"
                       variant="list"
-                      @remove-entity="deleteTournament(item.id)"
+                      @remove-entity="
+                        handleCancelJoinTournament(item.id, item.tournamentId)
+                      "
                     ></remove-entity>
                   </v-list>
                 </v-menu>
@@ -129,7 +171,7 @@ onMounted(() => {
             <v-divider v-if="index !== tournaments.length - 1"></v-divider>
           </template>
         </v-list>
-        <no-items v-else :cols="12"></no-items>
+        <no-items v-else :cols="12" class="mt-2 mt-md-4"></no-items>
       </v-col>
     </v-row>
   </v-container>

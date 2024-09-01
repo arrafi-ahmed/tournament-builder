@@ -5,6 +5,7 @@ import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { getTeamLogoUrl, isValidImage } from "@/others/util";
 import { useDisplay } from "vuetify";
+import NoItems from "@/components/NoItems.vue";
 
 const { mobile } = useDisplay();
 const route = useRoute();
@@ -22,7 +23,9 @@ const targetTeamId = computed(() =>
 const prefetchedTeam = computed(() =>
   store.getters["team/getTeamById"](targetTeamId.value)
 );
-const team = computed(() => shouldFetchData.value ? store.state.team.team : prefetchedTeam.value);
+const team = computed(() =>
+  shouldFetchData.value ? store.state.team.team : prefetchedTeam.value
+);
 
 const teamInit = {
   id: null,
@@ -92,10 +95,14 @@ const handleEditTeam = async () => {
 const shouldFetchData = computed(
   () =>
     !prefetchedTeam.value?.id ||
-    (targetTeamId.value == prefetchedTeam.value?.id && !prefetchedTeam.value?.email)
+    (targetTeamId.value == prefetchedTeam.value?.id &&
+      !prefetchedTeam.value?.email)
 );
 
 const fetchData = async () => {
+  console.log(1, currentUser.value);
+  console.log(2, targetTeamId.value);
+  console.log(3, shouldFetchData.value);
   if (shouldFetchData.value) {
     await store.dispatch("team/setTeamWEmail", { teamId: targetTeamId.value });
   }
@@ -114,7 +121,7 @@ onMounted(async () => {
     <v-row>
       <v-col>
         <page-title
-          :sub-title="team.name"
+          :sub-title="team?.name"
           justify="space-between"
           title="Edit Team"
           show-back
@@ -123,7 +130,7 @@ onMounted(async () => {
       </v-col>
     </v-row>
 
-    <v-row>
+    <v-row v-if="team?.id">
       <v-col>
         <!--        {{newTeam}}-->
         <v-form
@@ -228,6 +235,7 @@ onMounted(async () => {
         </v-form>
       </v-col>
     </v-row>
+    <no-items v-else></no-items>
   </v-container>
 </template>
 

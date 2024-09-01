@@ -1,26 +1,63 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import RemoveEntity from "@/components/RemoveEntity.vue";
 import NoItems from "@/components/NoItems.vue";
-import { getTeamLogoUrl } from "@/others/util";
+import {
+  formatDate,
+  getRequestBg,
+  getTeamLogoUrl,
+  toLocalISOString,
+} from "@/others/util";
 
 const router = useRouter();
 const store = useStore();
 
-const teams = computed(() => store.state.team.teams);
+const tournaments = computed(() => store.state.tournament.tournaments);
+const teams = computed(() => store.state.team.teamRequests);
 
 const deleteTeam = (teamId) => {
   store.dispatch("team/removeTeam", { teamId });
 };
-const fetchData = () => {
-  store.dispatch("team/setTeams");
+const fetchData = async () => {
+  store.dispatch("team/setTeamRequestsByOrganizerId");
+  store.dispatch("tournament/setTournamentsByOrganizerId");
 };
-onMounted(() => {
+onMounted(async () => {
   fetchData();
 });
+const selectedTournament = ref(null);
+
+const approveTeamRequest = (teamRequest) => {
+  teamRequest = {
+    id: teamRequest.id,
+    requestStatus: 1,
+    tournamentId: teamRequest.tournamentId,
+    teamId: teamRequest.teamId,
+    updatedAt: teamRequest.updatedAt,
+  };
+  store.dispatch("team/updateTeamRequest", teamRequest);
+};
+const rejectTeamRequest = (teamRequest) => {
+  teamRequest = {
+    id: teamRequest.id,
+    requestStatus: 0,
+    tournamentId: teamRequest.tournamentId,
+    teamId: teamRequest.teamId,
+    updatedAt: teamRequest.updatedAt,
+  };
+  store.dispatch("team/updateTeamRequest", teamRequest);
+};
+watch(
+  () => selectedTournament.value,
+  (newVal) => {
+    store.dispatch("team/setTeamRequestsByTournamentId", {
+      tournamentId: newVal,
+    });
+  }
+);
 </script>
 
 <template>
@@ -29,12 +66,12 @@ onMounted(() => {
       <v-col>
         <page-title
           justify="space-between"
-          sub-title="Team"
-          title="List"
+          sub-title="Tournament Join"
+          title="Team Requests"
           show-back
         >
           <v-row align="center">
-            <v-menu>
+            <v-menu :close-on-content-click="false">
               <template v-slot:activator="{ props }">
                 <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">
                 </v-btn>
@@ -57,15 +94,31 @@ onMounted(() => {
 
     <v-row justify="center">
       <v-col col="12" md="6">
+        <v-select
+          v-model="selectedTournament"
+          :items="tournaments"
+          item-title="name"
+          item-value="id"
+          label="Filter by tournament"
+          variant="solo"
+          prepend-inner-icon="mdi-filter"
+        ></v-select>
+
         <v-list
           v-if="teams.length > 0"
           density="compact"
-          lines="two"
+          lines="three"
           rounded
           elevation="1"
         >
           <template v-for="(item, index) in teams">
-            <v-list-item v-if="item" :key="index" :title="item?.name" link>
+            <v-list-item
+              v-if="item"
+              :key="index"
+              :title="item?.tmName"
+              :class="getRequestBg(item)"
+              link
+            >
               <!--                    @click="-->
               <!--                      router.push({-->
               <!--                        name: 'team-single',-->
@@ -94,38 +147,21 @@ onMounted(() => {
                   </template>
                   <v-list density="compact">
                     <v-list-item
+                      class="text-primary"
                       density="compact"
-                      prepend-icon="mdi-eye"
-                      title="Squad"
-                      @click="
-                        router.push({
-                          name: 'team-squad',
-                          params: {
-                            teamId: item.id,
-                          },
-                        })
-                      "
-                    ></v-list-item>
-
-                    <v-list-item
-                      prepend-icon="mdi-pencil"
-                      title="Edit"
-                      @click="
-                        router.push({
-                          name: 'team-edit',
-                          params: { teamId: item.id },
-                        })
-                      "
+                      prepend-icon="mdi-check"
+                      title="Approve"
+                      @click="approveTeamRequest(item)"
                     ></v-list-item>
 
                     <v-divider></v-divider>
 
                     <remove-entity
                       custom-class="text-error"
-                      label="Delete"
+                      label="Reject"
                       prepend-icon="mdi-delete"
                       variant="list"
-                      @remove-entity="deleteTeam(item.id)"
+                      @remove-entity="rejectTeamRequest(item)"
                     ></remove-entity>
                   </v-list>
                 </v-menu>
@@ -133,8 +169,9 @@ onMounted(() => {
 
               <template v-slot:subtitle>
                 <div class="text-truncate">
-                  {{ item?.description }}
+                  {{ item?.tuName }}
                 </div>
+                <div>Requested at: {{ formatDate(item.updatedAt) }}</div>
               </template>
             </v-list-item>
             <v-divider v-if="index !== teams.length - 1"></v-divider>

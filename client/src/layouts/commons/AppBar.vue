@@ -25,7 +25,7 @@ const getGreetings = computed(() => {
 </script>
 
 <template>
-  <v-app-bar :order="1" class="px-2 px-md-5" color="grey-lighten-3" dense flat>
+  <v-app-bar :order="1" class="px-2 px-md-5" color="grey-lighten-3" dense flat density="comfortable">
 <!--      img-src="logo.png"-->
     <logo
       :width="150"

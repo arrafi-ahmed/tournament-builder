@@ -12,9 +12,6 @@ const store = useStore();
 
 const members = computed(() => store.state.team.members);
 
-const fetchData = () => {
-  store.dispatch("team/setTeamWSquad", { teamId: route.params.teamId });
-};
 const dialog = ref(false);
 const form = ref(null);
 const isFormValid = ref(false);
@@ -70,6 +67,10 @@ const removeMember = async (id) => {
     id,
     teamId: route.params.teamId,
   });
+};
+
+const fetchData = () => {
+  store.dispatch("team/setTeamWSquad", { teamId: route.params.teamId });
 };
 onMounted(() => {
   fetchData();

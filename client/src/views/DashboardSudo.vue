@@ -78,9 +78,7 @@ onMounted(() => {
           <v-card-text class="text-center"><h2>Teams</h2></v-card-text>
         </v-card>
       </v-col>
-    </v-row>
 
-    <v-row justify="center">
       <v-col>
         <v-card
           :height="200"

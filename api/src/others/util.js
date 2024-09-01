@@ -17,24 +17,36 @@ const ifManager = (role) => role === "team_manager";
 
 const generatePassResetContent = (token, CLIENT_BASE_URL) => {
   return `
-    Greetings!
+    Greetings!<br><br>
     
-    Click the button to reset password, will be valid for 1 hour.
-    <a href="${CLIENT_BASE_URL}/reset-password/?token=${token}"><button style="background-color: #e40046; color: white; border: none; padding: 10px;">Reset Password</button></a>
+    Click the button to reset password, will be valid for 1 hour.<br>
+    <a href="${CLIENT_BASE_URL}/reset-password/?token=${token}"><button style="background-color: #e40046; color: white; border: none; padding: 10px;">Reset Password</button></a><br><br>
     
-    Best wishes,
+    Best wishes,<br>
     ${appInfo.name}`;
 };
 
 const generateManagerCredentialContent = ({ teamName, credential }) => {
   return `
-    Greetings!
+    Greetings!<br><br>
     
-    Your email has added as team manager for ${teamName}.
-    Email: ${credential.email}
-    Password: ${credential.password}
+    You are added as team manager for the team '${teamName}'.<br>
+    Your Username: ${credential.username} Password:${credential.password}<br><br>
     
-    Best wishes,
+    Best wishes,<br>
+    ${appInfo.name}`;
+};
+
+const generateTournamentInvitationContent = ({
+  tournamentName,
+  credential,
+}) => {
+  return `
+    Greetings!<br><br>
+    
+    Your team added to the tournament '${tournamentName}'.<br><br>
+    
+    Best wishes,<br>
     ${appInfo.name}`;
 };
 
@@ -109,6 +121,7 @@ module.exports = {
   appInfo,
   getCurrencySymbol,
   generatePassResetContent,
+  generateTournamentInvitationContent,
   generateManagerCredentialContent,
   moveImage,
   getPrefix,

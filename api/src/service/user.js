@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const CustomError = require("../model/CustomError");
 const { sql } = require("../db");
+const { ifManager, ifOrganizer } = require("../others/util");
 
 exports.generatePassword = (length = 8) => {
   const charset =
@@ -43,7 +44,7 @@ exports.save = async ({ payload: user }) => {
   return upsertedUser;
 };
 
-const generateAuthData = (result) => {
+const generateAuthData = async (result) => {
   let token = "";
   let currentUser = {};
   if (result) {
@@ -52,6 +53,23 @@ const generateAuthData = (result) => {
       email: result.email,
       role: result.role.toLowerCase(),
     };
+
+    ifManager(currentUser.role);
+    {
+      const teams = await sql`
+                select *
+                from teams
+                where manager_id = ${result.id}`;
+
+      if (teams.length > 0) {
+        currentUser.teamId = teams[0].id;
+        currentUser.teamName = teams[0].name;
+      }
+    }
+
+    ifOrganizer(currentUser.role);
+    {
+    }
     token = jwt.sign({ currentUser }, process.env.TOKEN_SECRET);
   }
   return { token, currentUser };
@@ -77,8 +95,8 @@ exports.getUsers = () => {
 
 exports.getUserByEmail = async ({ email }) => {
   const [user] = await sql`select *
-                       from users
-                       where email = ${email}`;
+                             from users
+                             where email = ${email}`;
   return user;
 };
 

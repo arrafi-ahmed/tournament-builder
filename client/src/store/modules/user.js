@@ -166,7 +166,7 @@ export const getters = {
       : state.currentUser.role === "organizer"
       ? { name: "dashboard-organizer" }
       : state.currentUser.role === "team_manager"
-      ? { name: "dashboard-team_manager" }
+      ? { name: "dashboard-manager" }
       : { name: "signout" };
   },
 };

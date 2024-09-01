@@ -6,6 +6,7 @@ export const state = {
   teams: [],
   team: {},
   members: [],
+  teamRequests: [],
 };
 
 export const mutations = {
@@ -18,6 +19,9 @@ export const mutations = {
   setMembers(state, payload) {
     state.members = payload;
   },
+  setTeamRequests(state, payload) {
+    state.teamRequests = payload;
+  },
   addTeam(state, payload) {
     state.teams.unshift(payload);
   },
@@ -27,6 +31,22 @@ export const mutations = {
       state.teams[foundIndex] = payload;
     } else {
       state.teams.unshift(payload);
+    }
+  },
+  removeTeam(state, payload) {
+    const foundIndex = state.teams.findIndex(
+      (item) => item.id == payload.teamId
+    );
+    if (foundIndex !== -1) {
+      state.teams.splice(foundIndex, 1);
+    }
+  },
+  updateTeamRequest(state, payload) {
+    const foundIndex = state.teamRequests.findIndex(
+      (item) => item.id == payload.id
+    );
+    if (foundIndex !== -1) {
+      Object.assign(state.teamRequests[foundIndex], { ...payload });
     }
   },
   addMember(state, payload) {
@@ -40,19 +60,14 @@ export const mutations = {
       state.members.unshift(payload);
     }
   },
-  removeTeam(state, payload) {
-    const foundIndex = state.teams.findIndex(
-      (item) => item.id == payload.teamId
-    );
-    if (foundIndex !== -1) {
-      state.teams.splice(foundIndex, 1);
-    }
-  },
   removeMember(state, payload) {
     const foundIndex = state.members.findIndex((item) => item.id == payload.id);
     if (foundIndex !== -1) {
       state.members.splice(foundIndex, 1);
     }
+  },
+  resetTeams(state) {
+    state.teams = [];
   },
 };
 
@@ -79,7 +94,6 @@ export const actions = {
         })
         .then((response) => {
           commit("setTeam", response.data?.payload);
-          console.log(5, response.data?.payload);
           resolve(response);
         })
         .catch((err) => {
@@ -103,7 +117,7 @@ export const actions = {
   setTeamWSquad({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios
-        .get("/api/team/getTeamWSquad", { params: { teamId: request.teamId } })
+        .get("/api/team/getTeamWSquad", { params: { teamId: request?.teamId } })
         .then((response) => {
           commit("setMembers", response.data?.payload);
           resolve(response);
@@ -160,10 +174,75 @@ export const actions = {
     return new Promise((resolve, reject) => {
       $axios
         .get("/api/team/removeMember", {
-          params: { id: request.id, teamId: request.teamId },
+          params: { id: request.id, teamId: request?.teamId },
         })
         .then((response) => {
           commit("removeMember", request);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  setTeamRequestsByOrganizerId({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .get("/api/team/getTeamRequestsByOrganizerId", {
+          params: { organizerId: request?.organizerId },
+        })
+        .then((response) => {
+          // commit("setTournaments", response.data?.payload);
+          commit("setTeamRequests", response.data?.payload);
+          resolve(response.data?.payload);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  setTeamRequestsByTournamentId({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .get("/api/team/getTeamRequestsByTournamentId", {
+          params: {
+            organizerId: request?.organizerId,
+            tournamentId: request?.tournamentId,
+          },
+        })
+        .then((response) => {
+          // commit("setTournaments", response.data?.payload);
+          commit("setTeamRequests", response.data?.payload);
+          resolve(response.data?.payload);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  updateTeamRequest({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/team/updateTeamRequest", request)
+        .then((response) => {
+          // commit("setTournaments", response.data?.payload);
+          commit("updateTeamRequest", response.data?.payload);
+          console.log(9, response.data.payload);
+          resolve(response.data?.payload);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  searchTeam({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .get("/api/team/searchTeam", {
+          params: { searchKeyword: request?.searchKeyword },
+        })
+        .then((response) => {
+          commit("setTeams", response.data?.payload);
           resolve(response);
         })
         .catch((err) => {

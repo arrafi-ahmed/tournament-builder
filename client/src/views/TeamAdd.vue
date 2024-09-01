@@ -60,7 +60,12 @@ const handleAddTeam = async () => {
   <v-container>
     <v-row>
       <v-col>
-        <page-title justify="space-between" title="Add Team" show-back>
+        <page-title
+          justify="space-between"
+          sub-title="Team"
+          title="Add"
+          show-back
+        >
         </page-title>
       </v-col>
     </v-row>

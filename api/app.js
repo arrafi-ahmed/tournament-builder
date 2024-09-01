@@ -28,6 +28,7 @@ app.use(express.json());
 app.use("/api/user", require("./src/controller/user"));
 app.use("/api/team", require("./src/controller/team"));
 app.use("/api/tournament", require("./src/controller/tournament"));
+app.use("/api/tournament-format", require("./src/controller/tournament-format"));
 
 app.get("/api/info", (req, res) => {
   res.status(200).json(appInfo);

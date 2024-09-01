@@ -1,11 +1,12 @@
 <script setup>
 import PageTitle from "@/components/PageTitle.vue";
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
-import { isValidEmail } from "@/others/util";
+import { isValidEmail, removeNullProperties } from "@/others/util";
 import DatePicker from "@/components/DatePicker.vue";
+import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 
 const { mobile } = useDisplay();
 const route = useRoute();
@@ -25,6 +26,12 @@ const tournament = computed(() =>
 
 const isSudo = computed(() => store.getters["user/isSudo"]);
 
+// const formatShortcodeInit = {
+//   groupCount: null,
+//   groupMemberCount: null,
+//   knockoutMemberCount: null,
+// };
+
 const tournamentInit = {
   name: null,
   type: null,
@@ -32,11 +39,7 @@ const tournamentInit = {
   startDate: null,
   endDate: null,
   rules: null,
-  formatShortcode: {
-    groupCount: null,
-    groupMemberCount: null,
-    knockoutMemberCount: null,
-  },
+  formatShortcode: [],
   organizerEmail: null,
   organizerId: null,
 };
@@ -65,6 +68,7 @@ const handleEditTournament = async () => {
   await form.value.validate();
   if (!isFormValid.value) return;
 
+  console.log(newTournament.formatShortcode);
   await store.dispatch("tournament/save", newTournament).then((result) => {
     // newTournament = {...newTournament, ...tournamentInit}
     Object.assign(newTournament, {
@@ -78,32 +82,56 @@ const handleEditTournament = async () => {
 const shouldFetchData = computed(
   () =>
     !prefetchedTournament.value?.id ||
-    targetTournamentId.value == prefetchedTournament.value?.id  && !prefetchedTournament.value?.email
+    (targetTournamentId.value == prefetchedTournament.value?.id &&
+      !prefetchedTournament.value?.email)
 );
 
-const fetchData = async () => {
+const fetchData = () => {
   if (shouldFetchData.value) {
-    await store.dispatch("tournament/setTournamentWEmailOptionalById", {
+    return store.dispatch("tournament/setTournamentWEmailOptionalById", {
       tournamentId: targetTournamentId.value,
     });
   }
 };
-const formatTab = ref(null);
-const formatTabs = ref([
-  { text: "Group only", value: "group" },
-  { text: "Group + Knockout", value: "group_knockout" },
-  {
-    text: "Knockout only",
-    value: "knockout",
-  },
-]);
+//order of checking is important cause group/group_knockout condition check result is same
 onMounted(async () => {
+  // console.log(41, newTournament?.formatShortcode);
   await fetchData();
   Object.assign(newTournament, {
     ...tournament.value,
     organizerEmail: tournament.value?.email,
+    // formatShortcode: newTournament.formatShortcode.map((obj, index) => ({
+    //   ...obj,
+    //   ...(tournament.value?.formatShortcode?.[index] || {}),
+    // })),
   });
 });
+// watch(
+//   () => newTournament.formatShortcode,
+//   (newVal) => {
+//     activeTab.value =
+//       newVal[0]?.groupCount &&
+//       newVal[0]?.groupMemberCount &&
+//       newVal[1]?.knockoutMemberCount
+//         ? "group_knockout"
+//         : newVal[0]?.groupCount &&
+//           newVal[0]?.groupMemberCount &&
+//           !newVal[0]?.knockoutMemberCount
+//         ? "group"
+//         : !newVal[0]?.groupCount &&
+//           !newVal[0]?.groupMemberCount &&
+//           newVal[0]?.knockoutMemberCount
+//         ? "knockout"
+//         : null;
+//   },
+//   { deep: true }
+// );
+// watch(
+//   () => activeTab.value,
+//   (newVal) => {
+//     formatTab.value = newVal;
+//   }
+// );
 </script>
 
 <template>
@@ -113,7 +141,8 @@ onMounted(async () => {
         <page-title
           :sub-title="tournament.name"
           justify="space-between"
-          title="Edit Tournament"
+          sub-title="Tournament"
+          title="Edit"
           show-back
         >
         </page-title>
@@ -210,99 +239,9 @@ onMounted(async () => {
             prepend-inner-icon="mdi-email"
           ></v-text-field>
 
-          <v-card title="Tournament Format" class="mt-2 mt-md-6">
-            <template #text>
-              <v-tabs
-                v-model="formatTab"
-                :items="formatTabs"
-                align-tabs="start"
-                color="primary"
-                height="60"
-                slider-color="#f78166"
-              >
-                <template v-slot:tab="{ item }">
-                  <v-tab
-                    :text="item.text"
-                    :value="item.value"
-                    class="text-none"
-                  ></v-tab>
-                </template>
-
-                <template v-slot:item="{ item }">
-                  <template v-if="item.value == 'group'">
-                    <v-tabs-window-item :value="item.value" class="pa-4">
-                      <v-text-field
-                        v-model="newTournament.formatShortcode.groupCount"
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many groups do you want to create?"
-                        type="number"
-                      ></v-text-field>
-                      <v-text-field
-                        v-model="newTournament.formatShortcode.groupMemberCount"
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many teams are there in each group?"
-                        type="number"
-                      ></v-text-field>
-                    </v-tabs-window-item>
-                  </template>
-                  <template v-else-if="item.value == 'group_knockout'">
-                    <v-tabs-window-item :value="item.value" class="pa-4">
-                      <v-text-field
-                        v-model="newTournament.formatShortcode.groupCount"
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many groups do you want to create?"
-                        type="number"
-                      ></v-text-field>
-                      <v-text-field
-                        v-model="newTournament.formatShortcode.groupMemberCount"
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many teams are there in each group?"
-                        type="number"
-                      ></v-text-field>
-                      <v-text-field
-                        v-model="
-                          newTournament.formatShortcode.knockoutMemberCount
-                        "
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many teams proceed to the knockout phase?"
-                        type="number"
-                      ></v-text-field>
-                    </v-tabs-window-item>
-                  </template>
-                  <template v-else-if="item.value == 'knockout'">
-                    <v-tabs-window-item :value="item.value" class="pa-4">
-                      <v-text-field
-                        v-model="
-                          newTournament.formatShortcode.knockoutMemberCount
-                        "
-                        :rules="[(v) => !!v || 'required!']"
-                        class="mt-2 mt-md-4"
-                        clearable
-                        hide-details="auto"
-                        label="How many teams proceed to the knockout phase?"
-                        type="number"
-                      ></v-text-field>
-                    </v-tabs-window-item>
-                  </template>
-                </template>
-              </v-tabs>
-            </template>
-          </v-card>
+          <tournament-base-format
+            v-model="newTournament.formatShortcode"
+          ></tournament-base-format>
 
           <div class="d-flex align-center mt-3 mt-md-4">
             <v-spacer></v-spacer>

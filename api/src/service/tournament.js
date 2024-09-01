@@ -6,6 +6,7 @@ const {
   appInfo,
   ifSudo,
   ifOrganizer,
+  generateTournamentInvitationContent,
 } = require("../others/util");
 const userService = require("../service/user");
 const mailService = require("../service/sendMail");
@@ -35,7 +36,6 @@ exports.save = async ({ payload, currentUser }) => {
   delete payload.tId;
   delete payload.uId;
 
-  console.log(93, payload)
   const [insertedTournament] = await sql`
         insert into tournaments ${sql(payload)}
         on conflict (id)
@@ -76,14 +76,122 @@ exports.getAllTournamentsWEmail = async () => {
                order by t.id desc`;
 };
 
+exports.searchTournament = async ({ searchKeyword }) => {
+  const tournaments = await sql`
+        SELECT *, id as tournament_id
+        FROM tournaments
+        WHERE name ilike concat('%', ${searchKeyword}::text, '%')`;
+  return tournaments;
+};
+
+exports.getJoinRequests = async ({ teamId }) => {
+  const teamRequests = await sql`
+        select *, tr.id as id
+        from team_requests tr
+                 join tournaments t on tr.tournament_id = t.id
+        where tr.team_id = ${teamId}`;
+
+  return teamRequests;
+};
+
+exports.saveTeamRequest = async ({ teamId, tournamentId }) => {
+  if (!teamId) {
+    throw new CustomError("No team Id provided!");
+  }
+
+  const teamRequest = { requestStatus: 2, teamId, tournamentId };
+  const [insertedRequest] = await sql`
+        insert into team_requests ${sql(teamRequest)} returning *`;
+  return insertedRequest;
+};
+
+exports.removeTeamRequest = async ({ teamId, requestId, tournamentId }) => {
+  if (!teamId || !requestId || !tournamentId) {
+    throw new CustomError("Bad request!");
+  }
+
+  const [deletedRequest] = await sql`
+        delete
+        from team_requests
+        where id = ${requestId}
+          and team_id = ${teamId}
+          and tournament_id = ${tournamentId}
+        returning *`;
+
+  if (!deletedRequest) {
+    throw new CustomError("Request cancel failed!");
+  }
+  return deletedRequest;
+};
+
 exports.getTournamentWEmailOptionalById = async ({ tournamentId }) => {
-  const [tournament] = await sql`SELECT t.*, t.id as t_id, u.id as u_id, u.email
-                                   FROM tournaments t
-                                            left join users u
-                                                      on t.organizer_id = u.id and u.role = 'organizer'
-                                   WHERE t.id = ${tournamentId}`;
+  const [tournament] = await sql`
+        SELECT t.*, t.id as t_id, u.id as u_id, u.email
+        FROM tournaments t
+                 left join users u
+                           on t.organizer_id = u.id and u.role = 'organizer'
+        WHERE t.id = ${tournamentId}`;
 
   return tournament;
+};
+
+exports.getParticipants = async ({ tournamentId, organizerId }) => {
+  const teams = await sql`
+        SELECT tu.*,
+               tt.*,
+               tm.*,
+               tu.name as tu_name,
+               tu.id   as tu_id,
+               tt.id   as tt_id,
+               tm.id   as tm_id
+        FROM tournaments tu
+                 left join teams_tournaments tt
+                           on tt.tournament_id = tu.id
+                 left join teams tm on tt.team_id = tm.id
+        WHERE tu.id = ${tournamentId}
+            ${
+              organizerId
+                ? sql` and tu.organizer_id =
+                            ${organizerId}`
+                : sql``
+            }`;
+
+  return teams;
+};
+
+exports.addParticipant = async ({ teamId, tournamentId, tournamentName, managerEmail }) => {
+  const newTeamTournament = { teamId, tournamentId };
+  const insertedTeamTournament = await sql`
+        insert into teams_tournaments
+            ${sql(newTeamTournament)}
+        on conflict (team_id, tournament_id)
+        do nothing
+        returning *`;
+
+  if (insertedTeamTournament.length === 0)
+    throw new CustomError("Team already added to Tournament!", 409);
+
+  //send email
+  const html = generateTournamentInvitationContent({
+    tournamentName,
+  });
+  const subject = `Team added to tournament on ${appInfo.name}`;
+  // send email to team manager with credential
+  mailService.sendMail(managerEmail, subject, html);
+
+  return insertedTeamTournament[0];
+};
+
+exports.removeParticipant = async ({ id, teamId, tournamentId }) => {
+  const [removedTicket] = await sql`
+        delete
+        from teams_tournaments
+        where id = ${id}
+          and team_id = ${teamId}
+          and tournament_id = ${tournamentId}
+        returning *`;
+
+  return removedTicket;
 };
 
 exports.getTournament = async ({ tournamentId }) => {
@@ -103,15 +211,12 @@ exports.getEventByEventIdnClubId = async ({ clubId, eventId }) => {
         order by id desc`;
 };
 
-exports.getAllTournaments = ({ organizerId }) => {
+exports.getTournamentsByOrganizerId = ({ organizerId }) => {
   return sql`
         SELECT *
-        FROM tournaments ${
-          organizerId
-            ? sql`WHERE organizer_id =
-                        ${organizerId}`
-            : sql``
-        }
+        FROM tournaments
+        WHERE organizer_id =
+              ${organizerId}
         ORDER BY id DESC`;
 };
 

@@ -17,7 +17,6 @@ exports.save = async ({ payload, files }) => {
   if (!payload.id) {
     // email exists and belongs to other manager
     if (foundTeamManager) {
-      console.log(31, foundTeamManager);
       throw new CustomError("Email not available!");
     }
     // email exists and belongs to other user role
@@ -32,7 +31,6 @@ exports.save = async ({ payload, files }) => {
     }
   }
   let sendEmail = false;
-  console.log(3, foundUser);
   if (!foundUser) {
     foundUser = await userService.save({
       payload: {
@@ -41,11 +39,9 @@ exports.save = async ({ payload, files }) => {
       },
     });
     sendEmail = true;
-    console.log(4, sendEmail);
   }
 
   if (sendEmail) {
-    console.log(5, sendEmail);
     const html = generateManagerCredentialContent({
       teamName: payload.name,
       credential: { email: foundUser.email, password: foundUser.password },
@@ -114,31 +110,33 @@ exports.removeMember = async ({ id, teamId }) => {
 };
 
 exports.getTeamByManagerEmail = async ({ email }) => {
-  const [team] = await sql`SELECT t.*, u.*, t.id as t_id, u.id as u_id
-                             FROM teams t
-                                      join users u
-                                           on t.manager_id = u.id
-                             WHERE u.email = ${email}
-                               and u.role = 'team_manager'`;
+  const [team] = await sql`
+        SELECT t.*, u.*, t.id as t_id, u.id as u_id
+        FROM teams t
+                 join users u
+                      on t.manager_id = u.id
+        WHERE u.email = ${email}
+          and u.role = 'team_manager'`;
   return team;
 };
 
 exports.getAllTeamsWEmail = async () => {
-  return sql`SELECT t.*, t.id as t_id, u.id as u_id, u.email
-               FROM teams t
-                        left join users u
-                             on t.manager_id = u.id
-                                 and u.role = 'team_manager'
-               order by t.id desc`;
+  return sql`
+        SELECT t.*, t.id as t_id, u.id as u_id, u.email
+        FROM teams t
+                 left join users u
+                           on t.manager_id = u.id
+                               and u.role = 'team_manager'
+        order by t.id desc`;
 };
 
 exports.getTeamWEmailOptionalById = async ({ teamId }) => {
-  const [team] = await sql`SELECT t.*, t.id as t_id, u.id as u_id, u.email
-                             FROM teams t
-                                      left join users u
-                                           on t.manager_id = u.id  and u.role = 'team_manager'
-                             WHERE t.id = ${teamId}`;
-  console.log(team)
+  const [team] = await sql`
+        SELECT t.*, t.id as t_id, u.id as u_id, u.email
+        FROM teams t
+                 left join users u
+                           on t.manager_id = u.id and u.role = 'team_manager'
+        WHERE t.id = ${teamId}`;
   return team;
 };
 
@@ -156,6 +154,52 @@ exports.getEventByEventIdnClubId = async ({ clubId, eventId }) => {
         where id = ${eventId}
           and club_id = ${clubId}
         order by id desc`;
+};
+
+exports.getTeamRequestsByOrganizerId = async ({ organizerId }) => {
+  const teamRequests = await sql`
+        select tr.*,
+               tm.*,
+               tu.*,
+               tr.id         as id,
+               tu.id         as tu_id,
+               tm.id         as tm_id,
+               tm.name       as tm_name,
+               tu.name       as tu_name,
+               tr.updated_at as updated_at
+        from team_requests tr
+                 join tournaments tu on tr.tournament_id = tu.id
+                 join teams tm on tr.team_id = tm.id
+        where tu.organizer_id = ${organizerId}
+          and tr.request_status = 2
+        order by tr.updated_at desc`;
+
+  return teamRequests;
+};
+
+exports.getTeamRequestsByTournamentId = async ({
+  tournamentId,
+  organizerId,
+}) => {
+  const teamRequests = await sql`
+        select tr.*,
+               tm.*,
+               tu.*,
+               tr.id         as id,
+               tu.id         as tu_id,
+               tm.id         as tm_id,
+               tm.name       as tm_name,
+               tu.name       as tu_name,
+               tr.updated_at as updated_at
+        from team_requests tr
+                 join tournaments tu on tr.tournament_id = tu.id
+                 join teams tm on tr.team_id = tm.id
+        where tu.organizer_id = ${organizerId}
+          and tr.request_status = 2
+          and tu.id = ${tournamentId}
+        order by tr.updated_at desc`;
+
+  return teamRequests;
 };
 
 exports.getAllTeams = ({ organizerId }) => {
@@ -194,4 +238,31 @@ exports.saveMember = async ({ payload: member }) => {
         do update set ${sql(member)}
         returning *`;
   return upsertedMember;
+};
+
+exports.saveTeamsTournaments = async ({ payload }) => {
+  const [insertedTeamsTournaments] = await sql`
+        insert into teams_tournaments ${sql(payload)}
+            returning *`;
+  return insertedTeamsTournaments;
+};
+
+exports.updateTeamRequest = async ({ payload }) => {
+  const [updatedRequest] = await sql`
+        update team_requests
+        set ${sql(payload)}
+        where id = ${payload.id}
+          and tournament_id = ${payload.tournamentId}
+          and team_id = ${payload.teamId}
+        returning *`;
+  return updatedRequest;
+};
+
+exports.searchTeam = async ({ searchKeyword }) => {
+  return sql`
+        SELECT t.*, u.*, t.id as t_id, u.id as u_id, t.name as t_name, u.name as u_name
+        FROM teams t
+                 left join users u on t.manager_id = u.id
+        where t.name ilike concat('%', ${searchKeyword}::text, '%')
+           or u.email = ${searchKeyword}`;
 };
