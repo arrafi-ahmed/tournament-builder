@@ -62,14 +62,11 @@ CREATE TABLE teams_tournaments
 
 CREATE TABLE tournament_phases
 (
-    id               SERIAL PRIMARY KEY,
-    name             VARCHAR(255),
-    groups_count     INT,
-    teams_per_group  INT,
-    qualifying_teams INT,
-    phase_order      INT,
-    updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    tournament_id    INT REFERENCES tournaments (id) ON DELETE CASCADE
+    id            SERIAL PRIMARY KEY,
+    name          VARCHAR(255),
+    phase_order   INT,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
 );
 
 CREATE TABLE tournament_groups
@@ -77,6 +74,8 @@ CREATE TABLE tournament_groups
     id                  SERIAL PRIMARY KEY,
     name                VARCHAR(255),
     group_order         INT,
+    groups_count        INT,
+    teams_per_group     INT,
     double_round_robin  BOOLEAN,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tournament_phase_id INT REFERENCES tournament_phases (id) ON DELETE CASCADE
@@ -100,6 +99,7 @@ CREATE TABLE tournament_brackets
     id                  SERIAL PRIMARY KEY,
     name                VARCHAR(255),
     bracket_order       INT,
+    teams_count         INT,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tournament_phase_id INT REFERENCES tournament_phases (id) ON DELETE CASCADE
 );
@@ -112,8 +112,8 @@ CREATE TABLE matches
     match_order           INT,                                                                             --added
     future_team_reference jsonb,
     -- added;
-    -- {home:{type:'group', id:1, position:2}, away:{type:group, id:2, position:4}}
-    -- {home:{type:'match', id:1, position:0}, away:{type:match, id:2, position:1}}
+    -- {home:{type:'group', id:1, position:2}, away:{type:'group', id:2, position:4}}
+    -- {home:{type:'match', id:1, position:0}, away:{type:'match', id:2, position:1}}
     -- for match position 1 = winner, position 2 = loser
     tournament_group_id   INT,
     round_type            INT,                                                                             --changed; 0 final, 1 semi final..

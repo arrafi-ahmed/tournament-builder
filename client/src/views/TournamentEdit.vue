@@ -39,7 +39,7 @@ const tournamentInit = {
   startDate: null,
   endDate: null,
   rules: null,
-  formatShortcode: [],
+  // formatShortcode: [],
   organizerEmail: null,
   organizerId: null,
 };
@@ -68,7 +68,7 @@ const handleEditTournament = async () => {
   await form.value.validate();
   if (!isFormValid.value) return;
 
-  console.log(newTournament.formatShortcode);
+  // console.log(newTournament.formatShortcode);
   await store.dispatch("tournament/save", newTournament).then((result) => {
     // newTournament = {...newTournament, ...tournamentInit}
     Object.assign(newTournament, {
@@ -239,9 +239,9 @@ onMounted(async () => {
             prepend-inner-icon="mdi-email"
           ></v-text-field>
 
-          <tournament-base-format
-            v-model="newTournament.formatShortcode"
-          ></tournament-base-format>
+<!--          <tournament-base-format-->
+<!--            v-model="newTournament.formatShortcode"-->
+<!--          ></tournament-base-format>-->
 
           <div class="d-flex align-center mt-3 mt-md-4">
             <v-spacer></v-spacer>
