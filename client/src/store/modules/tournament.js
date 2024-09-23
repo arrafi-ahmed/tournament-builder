@@ -275,6 +275,24 @@ export const actions = {
         });
     });
   },
+  setParticipantsWTournament({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .get("/api/tournament/getParticipantsWTournament", {
+          params: {
+            tournamentId: request.tournamentId,
+            organizerId: request?.organizerId,
+          },
+        })
+        .then((response) => {
+          commit("setParticipants", response.data?.payload);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
   addParticipant({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios

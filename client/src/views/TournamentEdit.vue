@@ -26,12 +26,6 @@ const tournament = computed(() =>
 
 const isSudo = computed(() => store.getters["user/isSudo"]);
 
-// const formatShortcodeInit = {
-//   groupCount: null,
-//   groupMemberCount: null,
-//   knockoutMemberCount: null,
-// };
-
 const tournamentInit = {
   name: null,
   type: null,
@@ -39,7 +33,7 @@ const tournamentInit = {
   startDate: null,
   endDate: null,
   rules: null,
-  // formatShortcode: [],
+  entityLastCount: { phase: 1, group: 1, bracket: 1, match: 1 },
   organizerEmail: null,
   organizerId: null,
 };
@@ -238,10 +232,6 @@ onMounted(async () => {
             label="Organizer Email"
             prepend-inner-icon="mdi-email"
           ></v-text-field>
-
-<!--          <tournament-base-format-->
-<!--            v-model="newTournament.formatShortcode"-->
-<!--          ></tournament-base-format>-->
 
           <div class="d-flex align-center mt-3 mt-md-4">
             <v-spacer></v-spacer>

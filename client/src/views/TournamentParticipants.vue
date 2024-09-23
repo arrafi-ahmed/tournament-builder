@@ -37,7 +37,7 @@ const fetchData = () => {
       tournamentId: targetTournamentId.value,
     });
   }
-  store.dispatch("tournament/setParticipants", {
+  store.dispatch("tournament/setParticipantsWTournament", {
     tournamentId: route.params.tournamentId,
   });
 };

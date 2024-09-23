@@ -18,12 +18,6 @@ const store = useStore();
 
 const isSudo = computed(() => store.getters["user/isSudo"]);
 
-const formatShortcodeInit = {
-  groupCount: null,
-  groupMemberCount: null,
-  knockoutMemberCount: null,
-};
-
 const tournamentInit = {
   name: null,
   type: null,
@@ -31,19 +25,10 @@ const tournamentInit = {
   startDate: null,
   endDate: null,
   rules: null,
-  formatShortcode: [{ ...formatShortcodeInit }, { ...formatShortcodeInit }], //max 2 items, first item -> group, second item -> knockout
+  entityLastCount: { phase: 1, group: 1, bracket: 1, match: 1 },
   organizerEmail: null,
   organizerId: null,
 };
-const formatTab = ref(null);
-const formatTabs = ref([
-  { text: "Group only", value: "group" },
-  { text: "Group + Knockout", value: "group_knockout" },
-  {
-    text: "Knockout only",
-    value: "knockout",
-  },
-]);
 
 const tournament = reactive({ ...tournamentInit });
 const types = [
@@ -61,26 +46,15 @@ const handleAddTournament = async () => {
   await form.value.validate();
   if (!isFormValid.value) return;
 
-  // if formatShortcode arr item is group/knockout only, remove item's extra null property, then remove second {} empty obj
-  const formatShortcode = tournament.formatShortcode
-    .map((obj) => removeNullProperties(obj))
-    .filter((obj) => obj && Object.keys(obj).length > 0);
-
-  tournament.formatShortcode
-
-  console.log(12, { ...tournament, formatShortcode })
-
-  await store
-    .dispatch("tournament/save", { ...tournament, formatShortcode })
-    .then((result) => {
-      // tournament = {...tournament, ...tournamentInit}
-      Object.assign(tournament, {
-        ...tournamentInit,
-      });
-      router.push({
-        name: "tournament-list",
-      });
+  await store.dispatch("tournament/save", tournament).then((result) => {
+    // tournament = {...tournament, ...tournamentInit}
+    Object.assign(tournament, {
+      ...tournamentInit,
     });
+    router.push({
+      name: "tournament-list",
+    });
+  });
 };
 </script>
 
@@ -183,12 +157,6 @@ const handleAddTournament = async () => {
             label="Organizer Email"
             prepend-inner-icon="mdi-email"
           ></v-text-field>
-
-          <tournament-base-format
-            v-model:format-tab="formatTab"
-            v-model:format-shortcode="tournament.formatShortcode"
-            :tabs="formatTabs"
-          ></tournament-base-format>
 
           <div class="d-flex align-center mt-3 mt-md-4">
             <v-spacer></v-spacer>

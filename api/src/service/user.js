@@ -80,6 +80,7 @@ exports.signin = async ({ email, password }) => {
                              from users
                              where email = ${email}
                                and password = ${password}`;
+
   if (result.length > 0) {
     return generateAuthData(result[0]);
   } else {

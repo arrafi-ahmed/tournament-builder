@@ -44,7 +44,7 @@ exports.save = async ({ payload, files }) => {
   if (sendEmail) {
     const html = generateManagerCredentialContent({
       teamName: payload.name,
-      credential: { email: foundUser.email, password: foundUser.password },
+      credential: { username: foundUser.email, password: foundUser.password },
     });
     const subject = `Added as team manager on ${appInfo.name}`;
     // send email to team manager with credential

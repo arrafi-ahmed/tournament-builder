@@ -31,7 +31,7 @@ const signinUser = async () => {
       router.push(calcHome.value);
     });
 };
-let dialog = ref(false);
+const dialog = ref(false);
 const resetEmail = ref(null);
 const resetForm = ref(null);
 const isResetFormValid = ref(true);

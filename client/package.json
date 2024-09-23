@@ -11,21 +11,21 @@
   },
   "dependencies": {
     "@mdi/font": "7.0.96",
-    "axios": "^1.7.2",
-    "core-js": "^3.37.1",
+    "axios": "^1.7.7",
+    "core-js": "^3.38.1",
     "roboto-fontface": "^0.10.0",
     "vue": "^3.4.27",
-    "vue-router": "^4.4.0",
-    "vue-sonner": "^1.1.3",
-    "vuetify": "^3.6.12",
+    "vue-router": "^4.4.3",
+    "vue-sonner": "^1.1.5",
+    "vuetify": "^3.7.1",
     "vuex": "^4.1.0"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^5.0.5",
-    "sass": "^1.77.8",
+    "@vitejs/plugin-vue": "^5.1.3",
+    "sass": "^1.78.0",
     "unplugin-fonts": "^1.1.1",
     "unplugin-vue-components": "^0.26.0",
-    "vite": "^5.3.4",
-    "vite-plugin-vuetify": "^2.0.3"
+    "vite": "^5.4.3",
+    "vite-plugin-vuetify": "^2.0.4"
   }
 }

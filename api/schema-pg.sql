@@ -27,29 +27,19 @@ CREATE TABLE team_members
     team_id  INT REFERENCES teams (id) ON DELETE CASCADE
 );
 
--- [[{groupCount:2, groupMemberCount:4}], [{knockoutMemberCount:2}], [{groupCount:2, groupMemberCount:4}, {knockoutMemberCount:2}],
--- [{knockoutMemberCount:2}, single],  [single]]
--- [all phases are seperated by parent array, each element of phases are seperated by child array]
--- each phase either group/knockout/group+knockout/group+single/knockout+single/single
--- phase 1: [groupCount:2, groupMemberCount:4] -> 2 groups each containing 4 teams
--- phase 2: [knockoutMemberCount:2] -> 2 teams will be qualified to knockout stage
--- phase 3: [{groupCount:2, groupMemberCount:4}, {knockoutMemberCount:2}] -> 2 groups each containing
---          4 teams + knockout stage with 2 teams
--- phase 4: [{knockoutMemberCount:2}, single] -> 2 teams will be qualified to knockout stage and single match
--- phase 5: [single] -> 1 single match
-
+-- entity_last_count = {phase:1, group:1, bracket:1, match:1}
 CREATE TABLE tournaments
 (
-    id               SERIAL PRIMARY KEY,
-    name             VARCHAR(255) NOT NULL,
-    type             int CHECK (type IN (5, 6, 7, 8, 11)),
-    location         VARCHAR(255),
-    start_date       DATE         NOT NULL,
-    end_date         DATE         NOT NULL,
-    rules            TEXT,
-    format_shortcode JSONB,
-    updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    organizer_id     INT REFERENCES users (id) ON DELETE CASCADE
+    id                SERIAL PRIMARY KEY,
+    name              VARCHAR(255) NOT NULL,
+    type              int CHECK (type IN (5, 6, 7, 8, 11)),
+    location          VARCHAR(255),
+    start_date        DATE         NOT NULL,
+    end_date          DATE         NOT NULL,
+    rules             TEXT,
+    entity_last_count JSONB,
+    updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    organizer_id      INT REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE teams_tournaments
@@ -74,24 +64,27 @@ CREATE TABLE tournament_groups
     id                  SERIAL PRIMARY KEY,
     name                VARCHAR(255),
     group_order         INT,
-    groups_count        INT,
     teams_per_group     INT,
     double_round_robin  BOOLEAN,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tournament_phase_id INT REFERENCES tournament_phases (id) ON DELETE CASCADE
 );
+-- #future_team_reference:
+-- {type:group, id:1, position:2}
+-- {type:match, id:1, position:0}
+-- position 1 = winner, position 2 = loser
 
+-- in format use group_teams->future_team_reference as ref temporarily, while making schedule replace
+-- match->future_team_reference
+-- with related group_teams->future_team_reference
 CREATE TABLE groups_teams
 (
     id                    SERIAL PRIMARY KEY,
+    team_ranking          INT,
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    team_ranking          INT,  --added
+    future_team_reference jsonb,
     tournament_group_id   INT REFERENCES tournament_groups (id) ON DELETE CASCADE,
-    team_id               INT REFERENCES teams (id),
-    future_team_reference jsonb -- added;
-    -- {type:group, id:1, position:2}
-    -- {type:match, id:1, position:0}
-    -- position 1 = winner, position 2 = loser
+    team_id               INT REFERENCES teams (id)
 );
 
 CREATE TABLE tournament_brackets
@@ -103,36 +96,36 @@ CREATE TABLE tournament_brackets
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tournament_phase_id INT REFERENCES tournament_phases (id) ON DELETE CASCADE
 );
+-- #host_id:
+-- host can be group/bracket/single match based on match_type,
+-- match_type = group -> host id = group_id
+-- match_type = bracket -> host id = match_id
+-- match_type = single_match -> host id = phase_id
 
+-- #future_team_reference:
+-- {home:{type:'group', id:1, position:2}, away:{type:'group', id:2, position:4}}
+-- {home:{type:'match', id:1, position:0}, away:{type:'match', id:2, position:1}}
+-- for match position 1 = winner, position 2 = loser
+
+-- #round_type
+-- 0=final, 1=semi final
 CREATE TABLE matches
 (
     id                    SERIAL PRIMARY KEY,
     name                  VARCHAR(255),
-    match_type            VARCHAR(50) CHECK (match_type IN ('group', 'bracket', 'single_match')) NOT NULL, --changed
-    match_order           INT,                                                                             --added
+    match_order           INT,
+    match_type            VARCHAR(50) CHECK (match_type IN ('group', 'bracket', 'single_match')) NOT NULL,
     future_team_reference jsonb,
-    -- added;
-    -- {home:{type:'group', id:1, position:2}, away:{type:'group', id:2, position:4}}
-    -- {home:{type:'match', id:1, position:0}, away:{type:'match', id:2, position:1}}
-    -- for match position 1 = winner, position 2 = loser
-    tournament_group_id   INT,
-    round_type            INT,                                                                             --changed; 0 final, 1 semi final..
+    round_type            INT,
     start_time            TIMESTAMP,
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     home_team_id          INT REFERENCES teams (id) ON DELETE CASCADE,
     away_team_id          INT REFERENCES teams (id) ON DELETE CASCADE,
-    tournament_phase_id   INT REFERENCES tournament_phases (id) ON DELETE CASCADE,
-    CONSTRAINT chk_group_phase CHECK (
-        (match_type = 'group' AND tournament_group_id IS NOT NULL AND
-         round_id IS NULL) OR
-        (match_type = 'bracket' AND tournament_group_id IS NULL AND                                        --changed
-         round_id IS NOT NULL) OR
-        (match_type = 'single_match' AND tournament_group_id IS NULL AND
-         round_id IS NULL)
-        )
+    phase_id              INT REFERENCES tournament_phases (id) ON DELETE CASCADE,  -- used in match
+    group_id              INT REFERENCES tournament_groups (id) ON DELETE CASCADE,  -- used in groups
+    bracket_id            INT REFERENCES tournament_brackets (id) ON DELETE CASCADE  -- used in brackets
 );
-
-
+match
 CREATE TABLE match_results
 (
     id              SERIAL PRIMARY KEY,
@@ -167,3 +160,7 @@ CREATE TABLE subscriptions
     updated_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     organizer_id           INT REFERENCES users (id) ON DELETE CASCADE
 );
+
+ALTER TABLE teams_tournaments
+    ADD CONSTRAINT unique_team_tournament
+        UNIQUE (team_id, tournament_id);

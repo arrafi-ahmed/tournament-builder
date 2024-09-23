@@ -2,7 +2,6 @@ const CustomError = require("../model/CustomError");
 const { sql } = require("../db");
 const {
   removeImages,
-  generateManagerCredentialContent,
   appInfo,
   ifSudo,
   ifOrganizer,
@@ -37,9 +36,9 @@ exports.save = async ({ payload, currentUser }) => {
   delete payload.uId;
 
   const [insertedTournament] = await sql`
-        insert into tournaments ${sql(payload)}
-        on conflict (id)
-        do update set ${sql(payload)} returning *`;
+        insert into tournaments ${sql(payload)} on conflict (id)
+        do
+        update set ${sql(payload)} returning *`;
 
   return insertedTournament;
 };
@@ -48,8 +47,7 @@ exports.removeTournament = async ({ tournamentId }) => {
   const [deletedTournament] = await sql`
         delete
         from tournaments
-        where id = ${tournamentId}
-        returning *;`;
+        where id = ${tournamentId} returning *;`;
 
   if (deletedTournament.logo) {
     await removeImages([deletedTournament.logo]);
@@ -62,8 +60,7 @@ exports.removeMember = async ({ id, tournamentId }) => {
         delete
         from tournament_members
         where id = ${id}
-          and tournament_id = ${tournamentId}
-        returning *;`;
+          and tournament_id = ${tournamentId} returning *;`;
   return deletedMember;
 };
 
@@ -80,7 +77,8 @@ exports.searchTournament = async ({ searchKeyword }) => {
   const tournaments = await sql`
         SELECT *, id as tournament_id
         FROM tournaments
-        WHERE name ilike concat('%', ${searchKeyword}::text, '%')`;
+        WHERE name ilike concat('%', ${searchKeyword}::text
+            , '%')`;
   return tournaments;
 };
 
@@ -115,8 +113,7 @@ exports.removeTeamRequest = async ({ teamId, requestId, tournamentId }) => {
         from team_requests
         where id = ${requestId}
           and team_id = ${teamId}
-          and tournament_id = ${tournamentId}
-        returning *`;
+          and tournament_id = ${tournamentId} returning *`;
 
   if (!deletedRequest) {
     throw new CustomError("Request cancel failed!");
@@ -137,6 +134,18 @@ exports.getTournamentWEmailOptionalById = async ({ tournamentId }) => {
 
 exports.getParticipants = async ({ tournamentId, organizerId }) => {
   const teams = await sql`
+        SELECT tt.*,
+               tm.*,
+               tt.id as tt_id,
+               tm.id as tm_id
+        FROM teams_tournaments tt
+                 left join teams tm on tt.team_id = tm.id
+        WHERE tt.tournament_id = ${tournamentId}`;
+  return teams;
+};
+
+exports.getParticipantsWTournament = async ({ tournamentId, organizerId }) => {
+  const teams = await sql`
         SELECT tu.*,
                tt.*,
                tm.*,
@@ -148,23 +157,26 @@ exports.getParticipants = async ({ tournamentId, organizerId }) => {
                  left join teams_tournaments tt
                            on tt.tournament_id = tu.id
                  left join teams tm on tt.team_id = tm.id
-        WHERE tu.id = ${tournamentId}
-            ${
-              organizerId
-                ? sql` and tu.organizer_id =
-                            ${organizerId}`
-                : sql``
-            }`;
+        WHERE tu.id = ${tournamentId} ${
+          organizerId
+            ? sql` and tu.organizer_id =
+                        ${organizerId}`
+            : sql``
+        }`;
 
   return teams;
 };
 
-exports.addParticipant = async ({ teamId, tournamentId, tournamentName, managerEmail }) => {
+exports.addParticipant = async ({
+  teamId,
+  tournamentId,
+  tournamentName,
+  managerEmail,
+}) => {
   const newTeamTournament = { teamId, tournamentId };
   const insertedTeamTournament = await sql`
         insert into teams_tournaments
-            ${sql(newTeamTournament)}
-        on conflict (team_id, tournament_id)
+            ${sql(newTeamTournament)} on conflict (team_id, tournament_id)
         do nothing
         returning *`;
 
@@ -188,8 +200,7 @@ exports.removeParticipant = async ({ id, teamId, tournamentId }) => {
         from teams_tournaments
         where id = ${id}
           and team_id = ${teamId}
-          and tournament_id = ${tournamentId}
-        returning *`;
+          and tournament_id = ${tournamentId} returning *`;
 
   return removedTicket;
 };
@@ -211,12 +222,15 @@ exports.getEventByEventIdnClubId = async ({ clubId, eventId }) => {
         order by id desc`;
 };
 
-exports.getTournamentsByOrganizerId = ({ organizerId }) => {
+exports.getTournamentsByOrganizerId = async ({ organizerId }) => {
   return sql`
         SELECT *
-        FROM tournaments
-        WHERE organizer_id =
-              ${organizerId}
+        FROM tournaments ${
+          organizerId === "all"
+            ? sql``
+            : sql`WHERE organizer_id =
+                        ${organizerId}`
+        }
         ORDER BY id DESC`;
 };
 
@@ -240,9 +254,9 @@ exports.saveMember = async ({ payload: member }) => {
     delete member.id;
   }
   const [upsertedMember] = await sql`
-        insert into tournament_members ${sql(member)}
-        on conflict (id)
-        do update set ${sql(member)}
-        returning *`;
+        insert into tournament_members ${sql(member)} on conflict (id)
+        do
+        update set ${sql(member)}
+            returning *`;
   return upsertedMember;
 };

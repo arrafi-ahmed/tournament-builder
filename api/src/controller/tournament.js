@@ -1,11 +1,8 @@
 const router = require("express").Router();
 const tournamentService = require("../service/tournament");
 const ApiResponse = require("../model/ApiResponse");
-const { auth, isAdmin, isAdminEventAuthor } = require("../middleware/auth");
-const { uploadTournamentLogo } = require("../middleware/upload");
-const compressImages = require("../middleware/compress");
+const { auth } = require("../middleware/auth");
 const { ifSudo, ifOrganizer, ifManager } = require("../others/util");
-const teamService = require("../service/team");
 const CustomError = require("../model/CustomError");
 
 router.post("/save", auth, (req, res, next) => {
@@ -22,7 +19,7 @@ router.post("/save", auth, (req, res, next) => {
 
 router.get("/getAllTournaments", auth, (req, res, next) => {
   const organizerId = ifSudo(req.currentUser.role)
-    ? req.query.organizerId
+    ? (req.query.organizerId || 'all')  // if no param passed, get all tournaments
     : ifOrganizer(req.currentUser.role)
     ? req.currentUser.id
     : null;
@@ -100,7 +97,7 @@ router.get("/getTournamentWEmailOptionalById", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-router.get("/getParticipants", auth, (req, res, next) => {
+router.get("/getParticipantsWTournament", auth, (req, res, next) => {
   const organizerId = ifSudo(req.currentUser.role)
     ? req.query.organizerId
     : ifOrganizer(req.currentUser.role)
@@ -108,7 +105,7 @@ router.get("/getParticipants", auth, (req, res, next) => {
     : null;
 
   tournamentService
-    .getParticipants({
+    .getParticipantsWTournament({
       tournamentId: req.query.tournamentId,
       organizerId,
     })
