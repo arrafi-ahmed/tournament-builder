@@ -78,7 +78,6 @@ export const actions = {
         .get("/api/team/getAllTeamsWEmail")
         .then((response) => {
           commit("setTeams", response.data?.payload);
-          console.log(5, response.data?.payload);
           resolve(response);
         })
         .catch((err) => {
@@ -227,7 +226,6 @@ export const actions = {
         .then((response) => {
           // commit("setTournaments", response.data?.payload);
           commit("updateTeamRequest", response.data?.payload);
-          console.log(9, response.data.payload);
           resolve(response.data?.payload);
         })
         .catch((err) => {

@@ -33,7 +33,6 @@ const handleSearchTeam = () => {
 };
 
 const addParticipant = (item) => {
-  console.log(35, item);
   store.dispatch("tournament/addParticipant", {
     teamId: item.tId,
     tournamentId: route.params.tournamentId,

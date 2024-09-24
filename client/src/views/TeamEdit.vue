@@ -100,9 +100,6 @@ const shouldFetchData = computed(
 );
 
 const fetchData = async () => {
-  console.log(1, currentUser.value);
-  console.log(2, targetTeamId.value);
-  console.log(3, shouldFetchData.value);
   if (shouldFetchData.value) {
     await store.dispatch("team/setTeamWEmail", { teamId: targetTeamId.value });
   }

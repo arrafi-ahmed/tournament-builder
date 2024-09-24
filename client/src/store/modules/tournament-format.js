@@ -75,7 +75,10 @@ export const mutations = {
         position,
         type: "group",
       };
-      state.selectedTeamOptions[key] = state.teamOptions["empty"];
+      state.selectedTeamOptions[key] = {
+        ...state.teamOptions["empty"],
+        groupTeamId: newGroup.teams[position - 1].id,
+      };
     }
   },
   removeGroup(state, payload) {
@@ -110,10 +113,11 @@ export const mutations = {
         positions.forEach((position) => {
           const textPrepend = position === 1 ? "Winner" : "Loser";
           const key = `m-${match.id}-${position}`;
+
           state.teamOptions[key] = {
             name: `${textPrepend}, ${match.name}`,
             used: false,
-            phase: payload.id,
+            phase: payload.tournamentPhaseId,
             id: key,
             itemId: match.id,
             position,
@@ -217,15 +221,11 @@ export const mutations = {
     const foundItemIndex = state.tournamentFormat[
       foundPhaseIndex
     ].items.findIndex((item) => {
-      console.log(30, item, savedMatch)
       if (item.type === "group") return item.id === savedMatch.groupId;
       if (item.type === "bracket") return item.id === savedMatch.bracketId;
       if (item.type === "single_match") return item.id === savedMatch.id;
       return false;
     });
-    console.log(31, foundItemIndex, state.tournamentFormat[
-      foundPhaseIndex
-      ].items)
     // if item.type = 'single_match'
     const targetItem =
       state.tournamentFormat[foundPhaseIndex].items[foundItemIndex];
@@ -234,9 +234,8 @@ export const mutations = {
         ...targetItem,
         ...savedMatch,
       };
-      return
+      return;
     }
-
     const foundRoundIndex = state.tournamentFormat[foundPhaseIndex].items[
       foundItemIndex
     ].rounds.findIndex((round) => round.type == savedMatch.roundType);
@@ -252,7 +251,6 @@ export const mutations = {
         foundRoundIndex
       ].matches[foundMatchIndex];
 
-    console.log(21, foundMatchIndex, targetMatch, savedMatch);
     state.tournamentFormat[foundPhaseIndex].items[foundItemIndex].rounds[
       foundRoundIndex
     ].matches[foundMatchIndex] = { ...targetMatch, ...savedMatch };

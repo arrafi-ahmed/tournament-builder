@@ -4,9 +4,8 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
-import { isValidEmail, removeNullProperties } from "@/others/util";
+import { isValidEmail } from "@/others/util";
 import DatePicker from "@/components/DatePicker.vue";
-import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 
 const { mobile } = useDisplay();
 const route = useRoute();
@@ -62,9 +61,7 @@ const handleEditTournament = async () => {
   await form.value.validate();
   if (!isFormValid.value) return;
 
-  // console.log(newTournament.formatShortcode);
   await store.dispatch("tournament/save", newTournament).then((result) => {
-    // newTournament = {...newTournament, ...tournamentInit}
     Object.assign(newTournament, {
       ...tournamentInit,
     });
@@ -89,43 +86,12 @@ const fetchData = () => {
 };
 //order of checking is important cause group/group_knockout condition check result is same
 onMounted(async () => {
-  // console.log(41, newTournament?.formatShortcode);
   await fetchData();
   Object.assign(newTournament, {
     ...tournament.value,
     organizerEmail: tournament.value?.email,
-    // formatShortcode: newTournament.formatShortcode.map((obj, index) => ({
-    //   ...obj,
-    //   ...(tournament.value?.formatShortcode?.[index] || {}),
-    // })),
   });
 });
-// watch(
-//   () => newTournament.formatShortcode,
-//   (newVal) => {
-//     activeTab.value =
-//       newVal[0]?.groupCount &&
-//       newVal[0]?.groupMemberCount &&
-//       newVal[1]?.knockoutMemberCount
-//         ? "group_knockout"
-//         : newVal[0]?.groupCount &&
-//           newVal[0]?.groupMemberCount &&
-//           !newVal[0]?.knockoutMemberCount
-//         ? "group"
-//         : !newVal[0]?.groupCount &&
-//           !newVal[0]?.groupMemberCount &&
-//           newVal[0]?.knockoutMemberCount
-//         ? "knockout"
-//         : null;
-//   },
-//   { deep: true }
-// );
-// watch(
-//   () => activeTab.value,
-//   (newVal) => {
-//     formatTab.value = newVal;
-//   }
-// );
 </script>
 
 <template>
@@ -145,7 +111,6 @@ onMounted(async () => {
 
     <v-row>
       <v-col>
-        <!--        {{newTournament}}-->
         <v-form
           ref="form"
           v-model="isFormValid"

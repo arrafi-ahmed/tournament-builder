@@ -52,13 +52,6 @@ const endTime = ref(null);
 
 const setBothPicker = async (value) => {
   showStartPicker.value = showEndPicker.value = value;
-  // await nextTick();
-  // console.log(34, startDate.value);
-  // startDate.value.focus();
-  // startDate.value.click();
-  // startTime.value.focus();
-  // endDate.value.focus();
-  // endTime.value.focus();
 };
 
 // the error message to be displayed if the input is not compatible
@@ -80,7 +73,6 @@ const validate = (value, datetimeType) => {
       ? /^\d?\d:\d{2}( (AM|PM))?$/
       : null;
   if (!regex.test(value)) {
-    console.log(2, value);
     const msg = "Please enter a valid date and time";
     if (datetimeType === "start") error.start = msg;
     else if (datetimeType === "end") error.end = msg;
@@ -114,7 +106,6 @@ const submitValue = (datetimeType) => {
           ? convertTo12Hour(inputValue.startTime)
           : inputValue.startTime;
     }
-    console.log(3, start.value, end.value);
     validate(start.value, datetimeType);
     // showStartPicker.value = false;
   } else if (datetimeType === "end") {
@@ -133,7 +124,6 @@ const submitValue = (datetimeType) => {
           ? convertTo12Hour(inputValue.endTime)
           : inputValue.endTime;
     }
-    console.log(3, start.value, end.value);
     validate(start.value, datetimeType);
     setBothPicker(false);
   }

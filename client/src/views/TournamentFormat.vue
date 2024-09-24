@@ -61,29 +61,26 @@ const getRoundTitle = (roundType) =>
 
 const bracketTeamOptions = [64, 32, 16, 8, 4, 2];
 
-const updateSelectedTeamOption = ({ newSelection, prevKey, host }) => {
-  console.log(60, host);
-  console.log(61, newSelection);
-  if (newSelection.id == prevKey) return;
+const updateSelectedTeamOption = ({ newSelection, host }) => {
+  const hostKey = `${host.type[0]}-${host.id}-${host.position}`; //type[0] return the first letter
+  if (newSelection.id == hostKey) return;
   // if empty slot selected, make prev teamOptions[id].used = false; else true
-  const prevSelectedOption = selectedTeamOptions.value[prevKey];
-  const targetSelectedOptionKey = prevSelectedOption?.id;
+  const prevSelection = { ...selectedTeamOptions.value[hostKey] };
 
   if (newSelection.id === "empty") {
-    //:todo delete match futureteamref from tounamatformat
-    console.log(62, prevSelectedOption);
-    // tournamentFormat.value.
-
-    teamOptions.value[targetSelectedOptionKey].used = false;
-  } else if (teamOptions.value[targetSelectedOptionKey]?.id === "empty") {
+    teamOptions.value[prevSelection.id].used = false;
+  } else if (teamOptions.value[prevSelection.id]?.id === "empty") {
     teamOptions.value[newSelection.id].used = true;
   } else {
     // make old selection used = false, new selection used = true
-    teamOptions.value[targetSelectedOptionKey].used = false;
+    teamOptions.value[prevSelection.id].used = false;
     teamOptions.value[newSelection.id].used = true;
   }
-  //update model value
-  selectedTeamOptions.value[prevKey] = newSelection;
+  //update model value & preserve host.groupTeamId in frontend to avoid duplicate insert in gt table
+  selectedTeamOptions.value[hostKey] = {
+    ...newSelection,
+    groupTeamId: prevSelection.groupTeamId,
+  };
 
   if (host.type === "group") {
     const key = `g-${host.id}-${host.position}`;
@@ -92,21 +89,21 @@ const updateSelectedTeamOption = ({ newSelection, prevKey, host }) => {
       teamRanking: host.position,
       tournamentGroupId: host.id,
     };
-    if (newSelection.type === "team"){
-      updateGroupTeam.teamId = newSelection.itemId
+    // delete teamId/futureteamref from groups_teams table
+    if (newSelection.id === "empty") {
+      updateGroupTeam.teamId = updateGroupTeam.futureTeamReference = null;
+    } else if (newSelection.type === "team") {
+      updateGroupTeam.teamId = newSelection.itemId;
       updateGroupTeam.futureTeamReference = null;
-    } else if (newSelection.type === "group" || newSelection.type === "match"){
-      updateGroupTeam.teamId = null
-      updateGroupTeam.futureTeamReference =
-        {
-          type: newSelection.type,
-          id: newSelection.itemId,
-          position: newSelection.position,
-        }
+    } else if (newSelection.type === "group" || newSelection.type === "match") {
+      updateGroupTeam.teamId = null;
+      updateGroupTeam.futureTeamReference = {
+        type: newSelection.type,
+        id: newSelection.itemId,
+        position: newSelection.position,
+      };
     }
-    console.log(66, selectedTeamOptions.value)
-    console.log(67, key, selectedTeamOptions.value[key])
-    const groupTeamId = selectedTeamOptions.value[key]?.groupTeamId || null;
+    const groupTeamId = selectedTeamOptions.value[hostKey]?.groupTeamId || null;
     if (groupTeamId) updateGroupTeam.id = groupTeamId;
 
     store.dispatch("tournamentFormat/saveGroupTeam", {
@@ -116,7 +113,6 @@ const updateSelectedTeamOption = ({ newSelection, prevKey, host }) => {
     const updateMatch = {
       id: host.id,
     };
-    console.log(63, newSelection);
     if (newSelection.type === "team") {
       if (host.position == 1) {
         updateMatch.homeTeamId = newSelection.itemId || null;
@@ -133,8 +129,6 @@ const updateSelectedTeamOption = ({ newSelection, prevKey, host }) => {
       }
     } else {
       if (host.position == 1) {
-        console.log(64, host);
-
         updateMatch.futureTeamReference =
           newSelection.type === "group" || newSelection.type === "match"
             ? {
@@ -151,8 +145,6 @@ const updateSelectedTeamOption = ({ newSelection, prevKey, host }) => {
               };
         updateMatch.homeTeamId = updateMatch.awayTeamId = null;
       } else if (host.position == 2) {
-        console.log(65, host);
-
         updateMatch.futureTeamReference =
           newSelection.type === "group" || newSelection.type === "match"
             ? {
@@ -186,7 +178,6 @@ const updateTeamOptionsMenu = ({ id, isMenuOpen }) => {
   }
 };
 
-// todo: remove bracket match name for round > 0
 const fetchData = async () => {
   store.dispatch("tournamentFormat/setTournamentFormat", {
     tournamentId: route.params.tournamentId,
@@ -502,9 +493,6 @@ onMounted(async () => {
                                   @update:model-value="
                                     updateSelectedTeamOption({
                                       newSelection: $event,
-                                      prevKey: `g-${phaseItem.id}-${
-                                        iterationCount
-                                      }`,
                                       host: {
                                         type: 'group',
                                         id: phaseItem.id,

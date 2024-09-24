@@ -48,7 +48,7 @@ exports.saveGroup = async ({ payload: { newGroup, match, tournamentId } }) => {
     groupTeam.teamRanking = i;
     groupTeam.tournamentGroupId = savedGroup.id;
 
-    groupsTeams.push(groupTeam);
+    groupsTeams.push({ ...groupTeam });
   }
   const groupMatches = [];
   const groupMatch = {
@@ -254,9 +254,9 @@ exports.saveBracket = async ({
   // [roundType 1- roundIndex 1]
   // [roundType 0 - roundIndex 2]
 
-  // console.log(60, savedBracket);
-  // console.log(61, maxRoundCount, match);
-  // console.log(62, returnedBracket);
+  //
+  //
+  //
   for (
     let currRoundCount = maxRoundCount;
     currRoundCount > 0;
@@ -265,7 +265,7 @@ exports.saveBracket = async ({
     const newRound = { type: currRoundCount, matches: [] };
     let maxMatchCount = maxTeamCount / 2;
     let targetMatchIndex = 0;
-    // console.log(70, maxMatchCount);
+    //
     for (
       let currMatchCount = 0;
       currMatchCount < maxMatchCount;
@@ -283,7 +283,7 @@ exports.saveBracket = async ({
         bracketId: savedBracket.id,
         phaseId: returnedBracket.tournamentPhaseId,
       };
-      // console.log(71, match, newMatch);
+      //
       if (currRoundCount !== maxRoundCount) {
         //currRoundCount + 1 as reverse loop
         const refId =
@@ -291,7 +291,7 @@ exports.saveBracket = async ({
             .id;
         newMatch.futureTeamReference = {
           home: { type: "match", id: refId, position: 1 },
-          away: { type: "match", id: refId, position: 1 },
+          away: { type: "match", id: refId + 1, position: 1 }, //eg, final match away team from next match
         };
       } else {
         newMatch.futureTeamReference = null;
@@ -438,7 +438,6 @@ exports.createGroupKnockoutPhase = async ({ payload, organizerId }) => {
 
   const entityLastCount = Object.entries(entityLastCountG).reduce(
     (acc, [key, val]) => {
-      console.log(81, key, Number(val), Number(entityLastCountK[key]));
       acc[key] = Math.max(Number(val), Number(entityLastCountK[key]));
       return acc;
     },
@@ -621,6 +620,7 @@ const processTournamentData = async ({
   });
   let groups = {};
   let teams = {};
+  let groupTeams = {};
   let matches = {};
   const teamOptions = {};
   const selectedTeamOptions = {};
@@ -655,7 +655,7 @@ const processTournamentData = async ({
         };
         phase.items.push(group);
       }
-      if (row.teamId) {
+      if (row.groupTeamId) {
         const teamExists = group.teams.some(
           (team) => team.id === row.groupTeamId,
         );
@@ -670,6 +670,16 @@ const processTournamentData = async ({
           });
         }
       }
+      // // :todo make groupTeam objects
+      // if (row.groupTeamId) {
+      //   groupTeams[row.groupTeamId] = {
+      //     id: row.groupTeamId,
+      //     teamRanking: row.teamRanking,
+      //     teamId: row.teamId,
+      //     tournamentGroupId: row.tournamentGroupId,
+      //     futureTeamReference: row.groupFutureTeamReference,
+      //   };
+      // }
       if (row.matchId) {
         const matchExists = group.matches.some(
           (match) => match.id === row.matchId,
@@ -863,7 +873,7 @@ const populateTeamGroupMatch = ({ phaseMap }) => {
         );
         groups[phaseItem.id] ??= phaseItem;
         phaseItem.teams?.forEach((team) => {
-          teams[team.teamId] ??= team;
+          teams[team.id] ??= team;
         });
       } else if (phaseItem.type === "single_match") {
         phaseItem.rankingPublished =
@@ -931,7 +941,6 @@ const populateSelectedNTeamOptions = ({
 
   function populateTeamOptions({ phaseItem, phaseId }) {
     if (phaseItem.type === "group") {
-      console.log(9, Object.values(teams))
       // for group, populate teamsPerGroup times
       for (let position = 1; position <= phaseItem.teamsPerGroup; position++) {
         const id = `g-${phaseItem.id}-${position}`;
@@ -977,24 +986,31 @@ const populateSelectedNTeamOptions = ({
   }
 
   function populateGroupSelectedOption({ teams, keyId, keyPosition }) {
-    const team = Object.values(teams).find((item)=>item.teamRanking === keyPosition);
-    console.log(10, keyId, keyPosition)
-    console.log(11, team)
+    const team = Object.values(teams).find(
+      (item) => item.teamRanking === keyPosition,
+    );
     const { id, futureTeamReference: reference } = team || {};
+
+    //hostTeam gt.id
+    const hostGroupTeamId = groups[keyId]?.teams.find(
+      (t) => t.teamRanking === keyPosition,
+    )?.id;
 
     // direct team assigned -> if teamId != null && futureTeamReference == null
     if (team?.teamId && !reference?.id) {
       selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
         ...teamOptions[`t-${team.teamId}`],
-        groupTeamId: team.id,
+        groupTeamId: hostGroupTeamId,
       };
       (teamOptions[`t-${team.teamId}`] ??= {}).used = true;
       return;
     }
 
     if (!reference?.id) {
-      return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] =
-        teamOptions["empty"]);
+      return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
+        ...teamOptions["empty"],
+        groupTeamId: hostGroupTeamId,
+      });
     }
 
     const { type, id: refId, position } = reference;
@@ -1011,13 +1027,13 @@ const populateSelectedNTeamOptions = ({
         (teamOptions[`g-${keyId}-${keyPosition}`] ??= {}).used = true;
         return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
           ...teamOptions[`t-${foundTeam.teamId}`],
-          groupTeamId: foundTeam.id,
+          groupTeamId: hostGroupTeamId,
         });
       } else if (foundGroup?.rankingPublished === false) {
         (teamOptions[`g-${foundGroup.id}-${position}`] ??= {}).used = true;
         return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
           ...teamOptions[`g-${foundGroup.id}-${position}`],
-          groupTeamId: foundTeam.id,
+          groupTeamId: hostGroupTeamId,
         });
       }
     } else if (type === "match") {
@@ -1036,17 +1052,27 @@ const populateSelectedNTeamOptions = ({
         ) {
           // teams[] is obj with key teamId, teamOptions[] obj with key gt.id
           // first retrieve gt.id from teams using teamId, then retrieve teamOptions using gt.id
-          foundTeamId = teams[foundMatch?.homeTeamId]?.teamId;
+          foundTeamId = Object.values(teams).find(
+            (team) => team.teamId === foundMatch?.homeTeamId,
+          )?.teamId;
         } else {
-          foundTeamId = teams[foundMatch?.awayTeamId]?.teamId;
+          foundTeamId = Object.values(teams).find(
+            (team) => team.teamId === foundMatch?.awayTeamId,
+          )?.teamId;
         }
-        val = teamOptions[`t-${foundTeamId}`];
         (teamOptions[`t-${foundTeamId}`] ??= {}).used = true;
-        return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = val);
+
+        return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
+          ...teamOptions[`t-${foundTeamId}`],
+          groupTeamId: hostGroupTeamId,
+        });
       } else if (foundMatch?.rankingPublished === false) {
         (teamOptions[`m-${refId}-${position}`] ??= {}).used = true;
-        val = teamOptions[`m-${refId}-${position}`];
-        return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = val);
+
+        return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
+          ...teamOptions[`m-${refId}-${position}`],
+          groupTeamId: hostGroupTeamId,
+        });
       }
     }
   }
@@ -1058,78 +1084,90 @@ const populateSelectedNTeamOptions = ({
     const { id, futureTeamReference } = match;
     // matchTeamTitles[id] = ["Empty Spot", "Empty Spot"]; // Initialize both home and away slots
     // Direct assignment if team names are present, home pos =1, away pos =2
-    if (match.homeTeamId && !futureTeamReference?.home?.id) {
+
+    if (
+      match.homeTeamId &&
+      !futureTeamReference?.home?.id &&
+      presentTeamPosition === 1
+    ) {
       (teamOptions[`t-${match.homeTeamId}`] ??= {}).used = true;
-      selectedTeamOptions[`m-${match.id}-1`] =
-        teamOptions[`t-${match.homeTeamId}`];
-      if (presentTeamPosition === 1) return;
+      return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
+        teamOptions[`t-${match.homeTeamId}`]);
     }
-    if (match.awayTeamId && !futureTeamReference?.away?.id) {
+    if (
+      match.awayTeamId &&
+      !futureTeamReference?.away?.id &&
+      presentTeamPosition === 2
+    ) {
       (teamOptions[`t-${match.awayTeamId}`] ??= {}).used = true;
-      selectedTeamOptions[`m-${match.id}-2`] =
-        teamOptions[`t-${match.awayTeamId}`];
-      if (presentTeamPosition === 2) return;
+      return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
+        teamOptions[`t-${match.awayTeamId}`]);
     }
-    // reset both options to empty slot
-    selectedTeamOptions[`m-${match.id}-1`] = selectedTeamOptions[
-      `m-${match.id}-2`
-    ] = teamOptions["empty"];
 
     // Process both home and away references //todo: loop is doing repetitive task
-    Object.entries(futureTeamReference || {}).forEach(
-      ([teamType, reference], index) => {
-        const keyPosition = teamType === "home" ? 1 : 2;
-        if (!reference?.id)
-          return (selectedTeamOptions[`m-${match.id}-${keyPosition}`] =
-            teamOptions["empty"]);
+    const reference =
+      presentTeamPosition === 1
+        ? futureTeamReference?.home
+        : presentTeamPosition === 2
+          ? futureTeamReference?.away
+          : {};
 
-        //for every match, forEach loop will run twice for teamType-home(pos=1)/teamType-away(pos=2)
-        const { type, id: refId, position } = reference;
+    if (!reference?.id) {
+      return selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
+        teamOptions["empty"];
+    }
+    //for every match, forEach loop will run twice for teamType-home(pos=1)/teamType-away(pos=2)
+    const { type, id: refId, position } = reference;
 
-        if (type === "group") {
-          const foundGroup = groups[refId];
-          const foundTeam = foundGroup?.teams.find(
-            (t) => t.teamRanking === position,
-          );
-          let val = null;
+    if (type === "group") {
+      const foundGroup = groups[refId];
+      const foundTeam = foundGroup?.teams.find(
+        (t) => t.teamRanking === position,
+      );
+      let val = null;
 
-          if (foundGroup?.rankingPublished === true) {
-            (teamOptions[`t-${foundTeam.teamId}`] ??= {}).used = true;
-            val = teamOptions[`t-${foundTeam.teamId}`];
-          } else if (foundGroup?.rankingPublished === false) {
-            (teamOptions[`g-${foundGroup.id}-${position}`] ??= {}).used = true;
-            val = teamOptions[`g-${foundGroup.id}-${position}`];
-          }
-          return (selectedTeamOptions[`m-${match.id}-${keyPosition}`] = val);
-        } else if (type === "match") {
-          const foundMatch = matches[refId];
+      if (foundGroup?.rankingPublished === true) {
+        (teamOptions[`t-${foundTeam.teamId}`] ??= {}).used = true;
+        val = teamOptions[`t-${foundTeam.teamId}`];
+      } else if (foundGroup?.rankingPublished === false) {
+        (teamOptions[`g-${foundGroup.id}-${position}`] ??= {}).used = true;
+        val = teamOptions[`g-${foundGroup.id}-${position}`];
+      }
+      return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
+        val);
+    } else if (type === "match") {
+      const foundMatch = matches[refId];
 
-          let val = null;
+      let val = null;
 
-          if (foundMatch?.rankingPublished === true) {
-            let foundTeamId = null;
-            if (
-              (position === 1 &&
-                foundMatch?.homeTeamScore > foundMatch?.awayTeamScore) ||
-              (position === 2 &&
-                foundMatch?.homeTeamScore < foundMatch?.awayTeamScore)
-            ) {
-              // teams[] is obj with key teamId, teamOptions[] obj with key gt.id
-              // first retrive gt.id from teams using teamId, then retrieve teamOptions using gt.id
-              foundTeamId = teams[foundMatch?.homeTeamId]?.teamId;
-            } else {
-              foundTeamId = teams[foundMatch?.awayTeamId]?.teamId;
-            }
-            val = teamOptions[`t-${foundTeamId}`];
-            (teamOptions[`t-${foundTeamId}`] ??= {}).used = true;
-            return (selectedTeamOptions[`m-${match.id}-${keyPosition}`] = val);
-          } else if (foundMatch?.rankingPublished === false) {
-            (teamOptions[`m-${refId}-${position}`] ??= {}).used = true;
-            val = teamOptions[`m-${refId}-${position}`];
-            return (selectedTeamOptions[`m-${match.id}-${keyPosition}`] = val);
-          }
+      if (foundMatch?.rankingPublished === true) {
+        let foundTeamId = null;
+        if (
+          (position === 1 &&
+            foundMatch?.homeTeamScore > foundMatch?.awayTeamScore) ||
+          (position === 2 &&
+            foundMatch?.homeTeamScore < foundMatch?.awayTeamScore)
+        ) {
+          // teams[] is obj with key teamId, teamOptions[] obj with key gt.id
+          // first retrive gt.id from teams using teamId, then retrieve teamOptions using gt.id
+          foundTeamId = Object.values(teams).find(
+            (team) => team.teamId === foundMatch?.homeTeamId,
+          )?.teamId;
+        } else {
+          foundTeamId = Object.values(teams).find(
+            (team) => team.teamId === foundMatch?.awayTeamId,
+          )?.teamId;
         }
-      },
-    );
+        val = teamOptions[`t-${foundTeamId}`];
+        (teamOptions[`t-${foundTeamId}`] ??= {}).used = true;
+        return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
+          val);
+      } else if (foundMatch?.rankingPublished === false) {
+        (teamOptions[`m-${refId}-${position}`] ??= {}).used = true;
+        val = teamOptions[`m-${refId}-${position}`];
+        return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
+          val);
+      }
+    }
   }
 };
