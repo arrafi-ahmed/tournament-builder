@@ -464,6 +464,45 @@ export const actions = {
         });
     });
   },
+  updatePhase({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/tournament-format/savePhase", request)
+        .then((response) => {
+          commit("updatePhase", response.data?.payload);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  updateGroup({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/tournament-format/saveGroup", request)
+        .then((response) => {
+          commit("updateGroup", response.data?.payload);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  updateBracket({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/tournament-format/saveBracket", request)
+        .then((response) => {
+          commit("updateBracket", response.data?.payload);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
   updateMatch({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios

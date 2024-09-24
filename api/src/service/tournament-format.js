@@ -1,23 +1,19 @@
 const { sql } = require("../db");
 const tournamentService = require("../service/tournament");
 
-exports.saveGroupTeam = async ({ payload: { updateGroupTeam } }) => {
-  const [savedGroupTeam] = await sql`
-        insert into groups_teams ${sql(updateGroupTeam)} on conflict (id)
-        do
-        update set ${sql(updateGroupTeam)}
-            returning *`;
-  return savedGroupTeam;
-};
-
-exports.savePhase = async ({ payload: { newPhase, tournamentId } }) => {
+exports.savePhase = async ({
+  payload: { newPhase, tournamentId, onlyEntitySave = false },
+}) => {
   const [savedPhase] = await sql`
         insert into tournament_phases ${sql(newPhase)} on conflict (id)
         do
         update set ${sql(newPhase)}
             returning *`;
 
-  if (savedPhase.id) {
+  if (onlyEntitySave) return savedPhase;
+
+  // only apply when adding succeed
+  if (!newPhase.id && savedPhase.id) {
     await sql`UPDATE tournaments
                   SET entity_last_count = entity_last_count || jsonb_object(
                           ARRAY['phase'],
@@ -27,12 +23,16 @@ exports.savePhase = async ({ payload: { newPhase, tournamentId } }) => {
   return savedPhase;
 };
 
-exports.saveGroup = async ({ payload: { newGroup, match, tournamentId } }) => {
+exports.saveGroup = async ({
+  payload: { newGroup, match, tournamentId, onlyEntitySave = false },
+}) => {
   const [savedGroup] = await sql`
         insert into tournament_groups ${sql(newGroup)} on conflict (id)
         do
         update set ${sql(newGroup)}
             returning *`;
+
+  if (onlyEntitySave) return savedGroup;
 
   // add in groups_teams null teamid items for payload.teamsPerGroup times
   const groupsTeams = [];
@@ -77,7 +77,7 @@ exports.saveGroup = async ({ payload: { newGroup, match, tournamentId } }) => {
 
     groupMatches.push({ ...groupMatch });
   }
-
+  // multiple gt
   const savedGroupsTeams = await sql`
         insert into groups_teams ${sql(groupsTeams)} returning *`;
 
@@ -101,9 +101,17 @@ exports.saveGroup = async ({ payload: { newGroup, match, tournamentId } }) => {
   };
 };
 
+exports.saveGroupTeam = async ({ payload: { updateGroupTeam } }) => {
+  const [savedGroupTeam] = await sql`
+        insert into groups_teams ${sql(updateGroupTeam)} on conflict (id)
+        do
+        update set ${sql(updateGroupTeam)}
+            returning *`;
+  return savedGroupTeam;
+};
+
 exports.saveMatch = async ({
-  payload: { newMatch, tournamentId },
-  updateCount = true,
+  payload: { newMatch, tournamentId, onlyEntitySave = false },
 }) => {
   const [savedMatch] = await sql`
         insert into matches ${sql(newMatch)} on conflict (id)
@@ -111,8 +119,10 @@ exports.saveMatch = async ({
         update set ${sql(newMatch)}
             returning *`;
 
-  // only apply when adding
-  if (!newMatch.id && savedMatch.id && updateCount) {
+  if (onlyEntitySave) return savedMatch;
+
+  // only apply when adding succeed
+  if (!newMatch.id && savedMatch.id) {
     await sql`UPDATE tournaments
                   SET entity_last_count = entity_last_count || jsonb_object(
                           ARRAY['match'],
@@ -120,6 +130,128 @@ exports.saveMatch = async ({
                   WHERE id = ${tournamentId};`;
   }
   return savedMatch;
+};
+
+exports.saveBracket = async ({
+  payload: { newBracket, match, tournamentId, onlyEntitySave = false },
+}) => {
+  const [savedBracket] = await sql`
+        insert into tournament_brackets ${sql(newBracket)} on conflict (id)
+        do
+        update set ${sql(newBracket)}
+            returning *`;
+
+  if (onlyEntitySave) return savedBracket;
+
+  const returnedBracket = {
+    id: savedBracket.id,
+    type: "bracket",
+    name: savedBracket.name,
+    order: savedBracket.order,
+    teamsCount: savedBracket.teamsCount,
+    tournamentPhaseId: savedBracket.tournamentPhaseId,
+    rounds: [],
+  };
+
+  // teamsCount 64 -> round 6 -> matchCount 32 -> round of 64
+  // teamsCount 32 -> round 5 -> matchCount 16 -> round of 32
+  // teamsCount 16 -> round 4 -> matchCount 8 -> round of 16
+  // teamsCount 8 -> round 3 -> matchCount 4 -> quarter-finals
+  // teamsCount 4 -> round 2 -> matchCount 2 -> semi-finals
+  // teamsCount 2 -> round 1 -> matchCount 1 -> final
+  // round -> log2(teamsCount) -> log2(8) = 3
+  // matchCount -> teamsCount/2 -> 8/2 = 4
+
+  match.count = Number(match.count);
+  let totalMatchCount = 0;
+  let maxTeamCount = savedBracket.teamsCount;
+  let maxRoundCount = Math.round(Math.log2(maxTeamCount));
+  let targetRoundIndex = -1; //one round behind
+  // round iteration simulation
+  // [roundType 2 - roundIndex 0]
+  // [roundType 1- roundIndex 1]
+  // [roundType 0 - roundIndex 2]
+
+  for (
+    let currRoundCount = maxRoundCount;
+    currRoundCount > 0;
+    currRoundCount--
+  ) {
+    const newRound = { type: currRoundCount, matches: [] };
+    let maxMatchCount = maxTeamCount / 2;
+    let targetMatchIndex = 0;
+    //
+    for (
+      let currMatchCount = 0;
+      currMatchCount < maxMatchCount;
+      currMatchCount++
+    ) {
+      // create match
+      const newMatch = {
+        name: `Match ${match.count++}`,
+        order: currMatchCount,
+        type: "bracket",
+        roundType: currRoundCount,
+        startTime: null,
+        homeTeamId: null,
+        awayTeamId: null,
+        bracketId: savedBracket.id,
+        phaseId: returnedBracket.tournamentPhaseId,
+      };
+      //
+      if (currRoundCount !== maxRoundCount) {
+        //currRoundCount + 1 as reverse loop
+        const refId =
+          returnedBracket.rounds[targetRoundIndex].matches[targetMatchIndex++]
+            .id;
+        newMatch.futureTeamReference = {
+          home: { type: "match", id: refId, position: 1 },
+          away: { type: "match", id: refId + 1, position: 1 }, //eg, final match away team from next match
+        };
+      } else {
+        newMatch.futureTeamReference = null;
+      }
+
+      const savedMatch = await exports.saveMatch({
+        payload: { newMatch, tournamentId },
+        updateCount: false,
+      });
+
+      if (savedMatch.id) totalMatchCount++;
+
+      newRound.matches.push({
+        id: savedMatch.id,
+        name: savedMatch.name,
+        type: "bracket",
+        order: currMatchCount,
+        startTime: null,
+        homeTeamId: null,
+        awayTeamId: null,
+        homeTeamScore: null,
+        awayTeamScore: null,
+        futureTeamReference: savedMatch.futureTeamReference,
+        rankingPublished: false,
+        bracketId: savedBracket.id,
+        phaseId: returnedBracket.tournamentPhaseId,
+      });
+    }
+    targetRoundIndex++;
+    maxTeamCount = maxTeamCount / 2;
+    returnedBracket.rounds.push(newRound);
+  }
+
+  // only apply when adding succeed
+  if (!newBracket.id && savedBracket.id) {
+    await sql`
+            UPDATE tournaments
+            SET entity_last_count = entity_last_count || jsonb_object(
+                    ARRAY['bracket', 'match'],
+                    ARRAY[((entity_last_count ->> 'bracket')::int + 1)::text, 
+                                 ((entity_last_count ->> 'match')::int + ${totalMatchCount})::text])
+            WHERE id = ${tournamentId};`;
+  }
+
+  return returnedBracket;
 };
 
 exports.resetEntityLastCount = async ({
@@ -215,127 +347,6 @@ exports.removeMatch = async ({
     tournamentId,
   });
   return { deletedMatch, entityLastCount };
-};
-
-exports.saveBracket = async ({
-  payload: { newBracket, match, tournamentId },
-}) => {
-  match.count = Number(match.count);
-  const [savedBracket] = await sql`
-        insert into tournament_brackets ${sql(newBracket)} on conflict (id)
-        do
-        update set ${sql(newBracket)}
-            returning *`;
-
-  const returnedBracket = {
-    id: savedBracket.id,
-    type: "bracket",
-    name: savedBracket.name,
-    order: savedBracket.order,
-    teamsCount: savedBracket.teamsCount,
-    tournamentPhaseId: savedBracket.tournamentPhaseId,
-    rounds: [],
-  };
-  // teamsCount 64 -> round 6 -> matchCount 32 -> round of 64
-  // teamsCount 32 -> round 5 -> matchCount 16 -> round of 32
-  // teamsCount 16 -> round 4 -> matchCount 8 -> round of 16
-  // teamsCount 8 -> round 3 -> matchCount 4 -> quarter-finals
-  // teamsCount 4 -> round 2 -> matchCount 2 -> semi-finals
-  // teamsCount 2 -> round 1 -> matchCount 1 -> final
-  // round -> log2(teamsCount) -> log2(8) = 3
-  // matchCount -> teamsCount/2 -> 8/2 = 4
-
-  let totalMatchCount = 0;
-  let maxTeamCount = savedBracket.teamsCount;
-  let maxRoundCount = Math.round(Math.log2(maxTeamCount));
-  let targetRoundIndex = -1; //one round behind
-  // round iteration simulation
-  // [roundType 2 - roundIndex 0]
-  // [roundType 1- roundIndex 1]
-  // [roundType 0 - roundIndex 2]
-
-  //
-  //
-  //
-  for (
-    let currRoundCount = maxRoundCount;
-    currRoundCount > 0;
-    currRoundCount--
-  ) {
-    const newRound = { type: currRoundCount, matches: [] };
-    let maxMatchCount = maxTeamCount / 2;
-    let targetMatchIndex = 0;
-    //
-    for (
-      let currMatchCount = 0;
-      currMatchCount < maxMatchCount;
-      currMatchCount++
-    ) {
-      // create match
-      const newMatch = {
-        name: `Match ${match.count++}`,
-        order: currMatchCount,
-        type: "bracket",
-        roundType: currRoundCount,
-        startTime: null,
-        homeTeamId: null,
-        awayTeamId: null,
-        bracketId: savedBracket.id,
-        phaseId: returnedBracket.tournamentPhaseId,
-      };
-      //
-      if (currRoundCount !== maxRoundCount) {
-        //currRoundCount + 1 as reverse loop
-        const refId =
-          returnedBracket.rounds[targetRoundIndex].matches[targetMatchIndex++]
-            .id;
-        newMatch.futureTeamReference = {
-          home: { type: "match", id: refId, position: 1 },
-          away: { type: "match", id: refId + 1, position: 1 }, //eg, final match away team from next match
-        };
-      } else {
-        newMatch.futureTeamReference = null;
-      }
-
-      const savedMatch = await exports.saveMatch({
-        payload: { newMatch, tournamentId },
-        updateCount: false,
-      });
-
-      if (savedMatch.id) totalMatchCount++;
-
-      newRound.matches.push({
-        id: savedMatch.id,
-        name: savedMatch.name,
-        type: "bracket",
-        order: currMatchCount,
-        startTime: null,
-        homeTeamId: null,
-        awayTeamId: null,
-        homeTeamScore: null,
-        awayTeamScore: null,
-        futureTeamReference: savedMatch.futureTeamReference,
-        rankingPublished: false,
-        bracketId: savedBracket.id,
-        phaseId: returnedBracket.tournamentPhaseId,
-      });
-    }
-    targetRoundIndex++;
-    maxTeamCount = maxTeamCount / 2;
-    returnedBracket.rounds.push(newRound);
-  }
-
-  // only apply when adding
-  if (!newBracket.id)
-    await sql`
-            UPDATE tournaments
-            SET entity_last_count = entity_last_count || jsonb_object(
-                    ARRAY['bracket', 'match'],
-                    ARRAY[((entity_last_count ->> 'bracket')::int + 1)::text, 
-                                 ((entity_last_count ->> 'match')::int + ${totalMatchCount})::text])
-            WHERE id = ${tournamentId};`;
-
-  return returnedBracket;
 };
 
 exports.createGroupPhase = async ({
@@ -443,7 +454,6 @@ exports.createGroupKnockoutPhase = async ({ payload, organizerId }) => {
     },
     {},
   );
-
   return {
     tournamentFormat: [...tournamentFormatG, ...tournamentFormatK],
     participants: participantsK,
@@ -850,8 +860,7 @@ const populateTeamOptionsWParticipants = ({ teamOptions, participants }) => {
         used: false,
         phase: 0, // all teams phase is 0 as visible in phase 1 dropdown options
         id,
-        itemId: team.teamId, //todo:changed
-        // position,
+        itemId: team.teamId,
         type: "team",
       };
     }
@@ -957,15 +966,12 @@ const populateSelectedNTeamOptions = ({
           teams: phaseItem.teams,
           keyId: phaseItem.id,
           keyPosition: position,
-          // keyPosition: phaseItem.teams?.[position - 1]?.teamRanking || position,
         });
       }
-      // phaseItem.teams.forEach((team, teamIndex) => {
-      //   populateGroupSelectedOption(team, phaseItem.id, teamIndex + 1); // pos starts from 1
-      // });
     } else if (phaseItem.type === "single_match") {
       //for match, populate twice
-      [1, 2].forEach((position) => {
+      const positions = [1, 2];
+      positions.forEach((position) => {
         const textPrepend = position === 1 ? "Winner" : "Loser";
         const id = `m-${phaseItem.id}-${position}`;
         teamOptions[id] = {
@@ -1035,6 +1041,12 @@ const populateSelectedNTeamOptions = ({
           ...teamOptions[`g-${foundGroup.id}-${position}`],
           groupTeamId: hostGroupTeamId,
         });
+      } else {
+        // if ref group deleted & not found, return teamOptions["empty"]
+        return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
+          ...teamOptions["empty"],
+          groupTeamId: hostGroupTeamId,
+        });
       }
     } else if (type === "match") {
       const foundMatch = matches[refId];
@@ -1073,6 +1085,12 @@ const populateSelectedNTeamOptions = ({
           ...teamOptions[`m-${refId}-${position}`],
           groupTeamId: hostGroupTeamId,
         });
+      } else {
+        // if ref match deleted & not found, return teamOptions["empty"]
+        return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
+          ...teamOptions["empty"],
+          groupTeamId: hostGroupTeamId,
+        });
       }
     }
   }
@@ -1104,7 +1122,7 @@ const populateSelectedNTeamOptions = ({
         teamOptions[`t-${match.awayTeamId}`]);
     }
 
-    // Process both home and away references //todo: loop is doing repetitive task
+    // Process both home and away references
     const reference =
       presentTeamPosition === 1
         ? futureTeamReference?.home
@@ -1113,8 +1131,8 @@ const populateSelectedNTeamOptions = ({
           : {};
 
     if (!reference?.id) {
-      return selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
-        teamOptions["empty"];
+      return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
+        teamOptions["empty"]);
     }
     //for every match, forEach loop will run twice for teamType-home(pos=1)/teamType-away(pos=2)
     const { type, id: refId, position } = reference;
@@ -1132,6 +1150,10 @@ const populateSelectedNTeamOptions = ({
       } else if (foundGroup?.rankingPublished === false) {
         (teamOptions[`g-${foundGroup.id}-${position}`] ??= {}).used = true;
         val = teamOptions[`g-${foundGroup.id}-${position}`];
+      } else {
+        // if ref group deleted & not found, return teamOptions["empty"]
+        return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
+            teamOptions["empty"]);
       }
       return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
         val);
@@ -1167,6 +1189,10 @@ const populateSelectedNTeamOptions = ({
         val = teamOptions[`m-${refId}-${position}`];
         return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
           val);
+      } else{
+        // if ref match deleted & not found, return teamOptions["empty"]
+        return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
+            teamOptions["empty"]);
       }
     }
   }

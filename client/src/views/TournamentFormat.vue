@@ -63,12 +63,15 @@ const bracketTeamOptions = [64, 32, 16, 8, 4, 2];
 
 const updateSelectedTeamOption = ({ newSelection, host }) => {
   const hostKey = `${host.type[0]}-${host.id}-${host.position}`; //type[0] return the first letter
-  if (newSelection.id == hostKey) return;
+  if (newSelection.id === hostKey) return;
+
   // if empty slot selected, make prev teamOptions[id].used = false; else true
   const prevSelection = { ...selectedTeamOptions.value[hostKey] };
 
   if (newSelection.id === "empty") {
-    teamOptions.value[prevSelection.id].used = false;
+    // check if item valid & not deleted
+    if (teamOptions.value[prevSelection.id])
+      teamOptions.value[prevSelection.id].used = false;
   } else if (teamOptions.value[prevSelection.id]?.id === "empty") {
     teamOptions.value[newSelection.id].used = true;
   } else {
@@ -114,13 +117,13 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
       id: host.id,
     };
     if (newSelection.type === "team") {
-      if (host.position == 1) {
+      if (host.position === 1) {
         updateMatch.homeTeamId = newSelection.itemId || null;
         updateMatch.futureTeamReference = {
           ...host.futureTeamReference,
           home: null,
         };
-      } else if (host.position == 2) {
+      } else if (host.position === 2) {
         updateMatch.awayTeamId = newSelection.itemId || null;
         updateMatch.futureTeamReference = {
           ...host.futureTeamReference,
@@ -128,7 +131,7 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
         };
       }
     } else {
-      if (host.position == 1) {
+      if (host.position === 1) {
         updateMatch.futureTeamReference =
           newSelection.type === "group" || newSelection.type === "match"
             ? {
@@ -136,7 +139,7 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
                 home: {
                   type: newSelection.type,
                   id: newSelection.itemId,
-                  position: host.position,
+                  position: newSelection.position,
                 },
               }
             : {
@@ -144,7 +147,7 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
                 home: null,
               };
         updateMatch.homeTeamId = updateMatch.awayTeamId = null;
-      } else if (host.position == 2) {
+      } else if (host.position === 2) {
         updateMatch.futureTeamReference =
           newSelection.type === "group" || newSelection.type === "match"
             ? {
@@ -152,7 +155,7 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
                 away: {
                   type: newSelection.type,
                   id: newSelection.itemId,
-                  position: host.position,
+                  position: newSelection.position,
                 },
               }
             : {
@@ -354,17 +357,44 @@ const updatedBaseFormat = async (tournamentBaseFormat) => {
     });
   }
 };
+const updatePhase = ({ phase }) => {
+  const newPhase = { id: phase.id, name: phase.name };
+  store.dispatch("tournamentFormat/updatePhase", {
+    newPhase,
+    tournamentId: route.params.tournamentId,
+    onlyEntitySave: true,
+  });
+};
+const updateGroup = ({ group }) => {
+  const newGroup = { id: group.id, name: group.name };
+  store.dispatch("tournamentFormat/updateGroup", {
+    newGroup,
+    tournamentId: route.params.tournamentId,
+    onlyEntitySave: true,
+  });
+};
+const updateBracket = ({ bracket }) => {
+  const newBracket = { id: bracket.id, name: bracket.name };
+  store.dispatch("tournamentFormat/updateBracket", {
+    newBracket,
+    tournamentId: route.params.tournamentId,
+    onlyEntitySave: true,
+  });
+};
+const updateMatch = ({ match }) => {
+  const newMatch = { id: match.id, name: match.name };
+  store.dispatch("tournamentFormat/updateMatch", {
+    newMatch,
+    tournamentId: route.params.tournamentId,
+    onlyEntitySave: true,
+  });
+};
 onMounted(async () => {
   fetchData();
 });
 </script>
 
 <template>
-  <pre>
-<!--  {{ tournamentFormat }}-->
-    <!--      {{ entityLastCount }}-->
-    <!--  {{  selectedTeamOptions }}-->
-  </pre>
   <v-container class="format">
     <v-row>
       <v-col>
@@ -419,6 +449,7 @@ onMounted(async () => {
                   variant="plain"
                   hide-details="auto"
                   center-affix
+                  @blur="updatePhase({ phase })"
                 ></v-text-field>
                 <v-btn
                   icon="mdi-delete-outline"
@@ -448,6 +479,7 @@ onMounted(async () => {
                                 variant="plain"
                                 hide-details="auto"
                                 center-affix
+                                @blur="updateGroup({ group: phaseItem })"
                               ></v-text-field>
                               <div>
                                 <v-btn
@@ -520,6 +552,7 @@ onMounted(async () => {
                             variant="plain"
                             hide-details="auto"
                             center-affix
+                            @blur="updateBracket({ bracket: phaseItem })"
                           ></v-text-field>
                           <div>
                             <v-btn
@@ -554,6 +587,7 @@ onMounted(async () => {
                                       variant="plain"
                                       hide-details="auto"
                                       center-affix
+                                      @blur="updateMatch({ match })"
                                     ></v-text-field>
                                   </v-card-title>
                                   <v-card-text>
@@ -653,6 +687,7 @@ onMounted(async () => {
                                 variant="plain"
                                 hide-details="auto"
                                 center-affix
+                                @blur="updateMatch({ match: phaseItem })"
                               ></v-text-field>
                               <div>
                                 <v-btn
@@ -823,6 +858,7 @@ onMounted(async () => {
             hide-details="auto"
             label="Teams Per Group"
             variant="solo"
+            type="number"
           ></v-text-field>
           <v-switch
             v-model="newGroup.doubleRoundRobin"
