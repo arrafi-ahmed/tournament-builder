@@ -219,11 +219,20 @@ const routes = [
           title: "Tournament Result",
         },
       },
+      {
+        path: "settings",
+        name: "tournament-settings",
+        component: () => import("@/views/TournamentSettings.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Tournament Settings",
+        },
+      },
     ],
     beforeEnter(to, from, next) {
       if (to.matched.length > 1) return next(); //parent and child route matched
       next({
-        name: "tournament-participants",
+        name: "tournament-settings",
         params: { tournamentId: to.params.tournamentId },
       });
     },

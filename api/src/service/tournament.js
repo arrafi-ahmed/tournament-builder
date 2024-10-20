@@ -26,7 +26,7 @@ exports.save = async ({ payload, currentUser }) => {
     }
     payload.organizerId = foundUser.id;
   }
-  // currentUser is sudo
+  // currentUser is organizer
   else if (ifOrganizer(currentUser.role)) {
     payload.organizerId = currentUser.id;
   }

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import PageTitle from "@/components/PageTitle.vue";
 import { useStore } from "vuex";
@@ -8,25 +8,20 @@ const store = useStore();
 const route = useRoute();
 const router = useRouter();
 
-const fetchData = () => {
-  if (shouldFetchData.value) {
+const tournament = computed(() => store.state.tournament.tournament);
+
+const fetchData = async () => {
+  return Promise.all([
     store.dispatch("tournament/setTournament", {
       tournamentId: route.params.tournamentId,
-    });
-  }
+    }),
+    store.dispatch("tournament/setParticipants", {
+      tournamentId: route.params.tournamentId,
+    }),
+  ]);
 };
-const targetTournamentId = computed(() => route.params.tournamentId);
-const prefetchedTournament = computed(() =>
-  store.getters["tournament/getTournamentById"](targetTournamentId.value)
-);
-const shouldFetchData = computed(() => !prefetchedTournament.value?.id);
-const tournament = computed(() =>
-  shouldFetchData.value
-    ? store.state.tournament.tournament
-    : prefetchedTournament.value
-);
 
-onMounted(() => {
+onMounted(async () => {
   fetchData();
 });
 </script>
@@ -36,10 +31,10 @@ onMounted(() => {
     <v-row>
       <v-col>
         <page-title
-          justify="space-between"
           :sub-title="tournament.name"
-          title="Dashboard"
+          justify="space-between"
           show-back
+          title="Dashboard"
         >
         </page-title>
       </v-col>

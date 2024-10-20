@@ -20,7 +20,7 @@ export const mutations = {
     state.tournaments = payload;
     state.joinRequests.forEach((requestItem) => {
       const foundIndex = state.tournaments.findIndex(
-        (tournament) => requestItem.tournamentId == tournament.tournamentId
+        (tournament) => requestItem.tournamentId == tournament.tournamentId,
       );
       if (foundIndex > -1) {
         state.tournaments[foundIndex] = {
@@ -44,7 +44,7 @@ export const mutations = {
   },
   addJoinRequests(state, payload) {
     const foundIndex = state.tournaments.findIndex(
-      (item) => item.tournamentId == payload.tournamentId
+      (item) => item.tournamentId == payload.tournamentId,
     );
     if (foundIndex > -1) {
       const newJoinRequest = {
@@ -59,10 +59,10 @@ export const mutations = {
   },
   removeJoinRequests(state, payload) {
     const foundIndexRequest = state.joinRequests.findIndex(
-      (item) => item.id == payload.id
+      (item) => item.id == payload.id,
     );
     const foundIndexTournaments = state.tournaments.findIndex(
-      (item) => item.id == payload.id
+      (item) => item.id == payload.id,
     );
     state.joinRequests.splice(foundIndexRequest, 1);
     state.tournaments.splice(foundIndexTournaments, 1);
@@ -72,7 +72,7 @@ export const mutations = {
   },
   editTournament(state, payload) {
     const foundIndex = state.tournaments.findIndex(
-      (item) => item.id == payload.id
+      (item) => item.id == payload.id,
     );
     if (foundIndex !== -1) {
       state.tournaments[foundIndex] = payload;
@@ -82,7 +82,7 @@ export const mutations = {
   },
   removeTournament(state, payload) {
     const foundIndex = state.tournaments.findIndex(
-      (item) => item.id == payload.tournamentId
+      (item) => item.id == payload.tournamentId,
     );
     if (foundIndex !== -1) {
       state.tournaments.splice(foundIndex, 1);
@@ -93,7 +93,7 @@ export const mutations = {
   },
   removeParticipant(state, payload) {
     const foundIndex = state.participants.findIndex(
-      (item) => item.ttId == payload.id
+      (item) => item.ttId == payload.id,
     );
     if (foundIndex !== -1) {
       state.participants.splice(foundIndex, 1);
@@ -138,6 +138,26 @@ export const actions = {
         })
         .then((response) => {
           commit("setTournaments", response.data?.payload);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  setTournamentWEmailOptionalById({ commit, getters }, request) {
+    const prefetchedTournament = getters["getTournamentById"](
+      request.tournamentId,
+    );
+
+    return new Promise((resolve, reject) => {
+      if (prefetchedTournament) resolve(prefetchedTournament);
+      $axios
+        .get("/api/tournament/getTournamentWEmailOptionalById", {
+          params: { tournamentId: request.tournamentId },
+        })
+        .then((response) => {
+          commit("setTournament", response.data?.payload);
           resolve(response);
         })
         .catch((err) => {
@@ -213,21 +233,6 @@ export const actions = {
         });
     });
   },
-  setTournamentWEmailOptionalById({ commit }, request) {
-    return new Promise((resolve, reject) => {
-      $axios
-        .get("/api/tournament/getTournamentWEmailOptionalById", {
-          params: { tournamentId: request.tournamentId },
-        })
-        .then((response) => {
-          commit("setTournament", response.data?.payload);
-          resolve(response);
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  },
   save({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios
@@ -260,7 +265,7 @@ export const actions = {
   setParticipants({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios
-        .get("/api/tournament/getParticipants", {
+        .get("/api/tournament/getParticipantsWTournament", {
           params: {
             tournamentId: request.tournamentId,
             organizerId: request?.organizerId,

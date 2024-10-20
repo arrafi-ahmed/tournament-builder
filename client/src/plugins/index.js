@@ -9,7 +9,7 @@ import vuetify from "./vuetify";
 import router from "../router";
 import store from "../store";
 import $axios from "@/plugins/axios";
-import {getQueryParam, removeQueryParams} from "@/others/util";
+import { getQueryParam, removeQueryParams } from "@/others/util";
 
 function handleApiQueryMsg() {
   //check if message came from server through query params
@@ -29,7 +29,7 @@ function handleAuthRoutes(to, isSignedin, userRole) {
     to.matched.some((record) => record.meta.requiresAuth) &&
     !isSignedin
   ) {
-    return {name: "signin"};
+    return { name: "signin" };
   } else if (!to.name && isSignedin) {
     return store.getters["user/calcHome"]; //undefined routes visited
   }
@@ -39,7 +39,7 @@ function handleAuthRoutes(to, isSignedin, userRole) {
 export function registerPlugins(app) {
   router.beforeEach((to, from, next) => {
     //save routeinfo to state
-    store.commit("setRouteInfo", {to, from});
+    store.commit("setRouteInfo", { to, from });
 
     const isSignedin = store.getters["user/signedin"];
     const currentUser = store.getters["user/getCurrentUser"];

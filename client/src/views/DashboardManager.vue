@@ -1,11 +1,10 @@
 <script setup>
-import {onMounted} from "vue";
-import {useRouter} from "vue-router";
+import { onMounted } from "vue";
+import { useRouter } from "vue-router";
 import PageTitle from "@/components/PageTitle.vue";
 
 const router = useRouter();
-const fetchData = () => {
-};
+const fetchData = () => {};
 onMounted(() => {
   fetchData();
 });
@@ -76,9 +75,7 @@ onMounted(() => {
             })
           "
         >
-          <v-card-text class="text-center"
-          ><h2>Add Member</h2></v-card-text
-          >
+          <v-card-text class="text-center"><h2>Add Member</h2></v-card-text>
         </v-card>
       </v-col>
       <v-col>
@@ -91,7 +88,9 @@ onMounted(() => {
             })
           "
         >
-          <v-card-text class="text-center"><h2>Join Tournament</h2></v-card-text>
+          <v-card-text class="text-center"
+            ><h2>Join Tournament</h2></v-card-text
+          >
         </v-card>
       </v-col>
     </v-row>

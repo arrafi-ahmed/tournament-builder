@@ -1,11 +1,11 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import RemoveEntity from "@/components/RemoveEntity.vue";
 import NoItems from "@/components/NoItems.vue";
-import { getClientPublicImgUrl, getTeamLogoUrl } from "@/others/util";
+import { getClientPublicImgUrl } from "@/others/util";
 
 const route = useRoute();
 const store = useStore();
@@ -83,9 +83,9 @@ onMounted(() => {
       <v-col>
         <page-title
           justify="space-between"
+          show-back
           sub-title="Team"
           title="Squad"
-          show-back
         >
           <v-row align="center">
             <v-menu>
@@ -112,9 +112,9 @@ onMounted(() => {
         <v-list
           v-if="members.length > 0"
           density="default"
+          elevation="1"
           lines="three"
           rounded
-          elevation="1"
         >
           <template v-for="(item, index) in members">
             <v-list-item v-if="item" :key="index" :title="item?.name" link>
@@ -194,8 +194,8 @@ onMounted(() => {
           ></v-text-field>
           <v-select
             v-model="newMember.category"
-            :rules="[(v) => !!v || 'Category is required!']"
             :items="categoryItems"
+            :rules="[(v) => !!v || 'Category is required!']"
             class="mt-2 mt-md-4"
             hide-details="auto"
             item-title="title"
@@ -204,8 +204,8 @@ onMounted(() => {
           ></v-select>
           <v-select
             v-model="newMember.status"
-            :rules="[(v) => !!v || 'Status is required!']"
             :items="statusItems"
+            :rules="[(v) => !!v || 'Status is required!']"
             class="mt-2 mt-md-4"
             hide-details="auto"
             item-title="title"

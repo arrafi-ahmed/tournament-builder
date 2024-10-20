@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, watch } from "vue";
+import { reactive, ref } from "vue";
 
 const model = defineModel();
 const { title } = defineProps(["title"]);
@@ -146,7 +146,7 @@ const submitBaseFormat = async () => {
       <v-card-actions>
         <v-row justify="center">
           <v-col cols="auto">
-            <v-btn color="primary" variant="tonal" type="submit">Proceed</v-btn>
+            <v-btn color="primary" type="submit" variant="tonal">Proceed</v-btn>
           </v-col>
         </v-row>
       </v-card-actions>

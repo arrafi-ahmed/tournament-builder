@@ -55,6 +55,17 @@ router.post("/saveMatch", auth, (req, res, next) => {
     .catch((err) => next(err));
 });
 
+router.post("/updateMatches", auth, (req, res, next) => {
+  tournamentFormatService
+    .updateMatches({
+      payload: req.body,
+    })
+    .then((results) => {
+      res.status(200).json(new ApiResponse(null, results));
+    })
+    .catch((err) => next(err));
+});
+
 router.post("/saveBracket", auth, (req, res, next) => {
   tournamentFormatService
     .saveBracket({
@@ -201,21 +212,21 @@ router.post("/createKnockoutPhase", auth, (req, res, next) => {
 });
 
 router.post("/saveGroupTeam", auth, (req, res, next) => {
-    const organizerId = ifSudo(req.currentUser.role)
-        ? req.query.organizerId
-        : ifOrganizer(req.currentUser.role)
-            ? req.currentUser.id
-            : null;
+  const organizerId = ifSudo(req.currentUser.role)
+    ? req.query.organizerId
+    : ifOrganizer(req.currentUser.role)
+      ? req.currentUser.id
+      : null;
 
-    tournamentFormatService
-        .saveGroupTeam({
-            payload: req.body,
-            organizerId,
-        })
-        .then((results) => {
-            res.status(200).json(new ApiResponse(null, results));
-        })
-        .catch((err) => next(err));
+  tournamentFormatService
+    .saveGroupTeam({
+      payload: req.body,
+      organizerId,
+    })
+    .then((results) => {
+      res.status(200).json(new ApiResponse(null, results));
+    })
+    .catch((err) => next(err));
 });
 
 module.exports = router;

@@ -35,7 +35,7 @@ export const mutations = {
   },
   removeTeam(state, payload) {
     const foundIndex = state.teams.findIndex(
-      (item) => item.id == payload.teamId
+      (item) => item.id == payload.teamId,
     );
     if (foundIndex !== -1) {
       state.teams.splice(foundIndex, 1);
@@ -43,7 +43,7 @@ export const mutations = {
   },
   updateTeamRequest(state, payload) {
     const foundIndex = state.teamRequests.findIndex(
-      (item) => item.id == payload.id
+      (item) => item.id == payload.id,
     );
     if (foundIndex !== -1) {
       Object.assign(state.teamRequests[foundIndex], { ...payload });

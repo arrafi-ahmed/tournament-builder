@@ -3,6 +3,9 @@ import * as user from "./modules/user";
 import * as team from "./modules/team";
 import * as tournament from "./modules/tournament";
 import * as tournamentFormat from "./modules/tournament-format";
+import * as tournamentSettings from "./modules/tournament-settings";
+import * as tournamentSchedule from "./modules/tournament-schedule";
+import * as tournamentResult from "./modules/tournament-result";
 
 const store = createStore({
   modules: {
@@ -10,6 +13,9 @@ const store = createStore({
     team,
     tournament,
     tournamentFormat,
+    tournamentSettings,
+    tournamentSchedule,
+    tournamentResult,
   },
   state: () => ({
     progress: null,

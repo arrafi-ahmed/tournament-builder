@@ -19,10 +19,10 @@ router.post("/save", auth, (req, res, next) => {
 
 router.get("/getAllTournaments", auth, (req, res, next) => {
   const organizerId = ifSudo(req.currentUser.role)
-    ? (req.query.organizerId || 'all')  // if no param passed, get all tournaments
+    ? req.query.organizerId || "all" // if no param passed, get all tournaments
     : ifOrganizer(req.currentUser.role)
-    ? req.currentUser.id
-    : null;
+      ? req.currentUser.id
+      : null;
 
   tournamentService
     .getTournamentsByOrganizerId({ organizerId })
@@ -34,8 +34,8 @@ router.get("/getTournamentsByOrganizerId", auth, (req, res, next) => {
   const organizerId = ifSudo(req.currentUser.role)
     ? req.query.organizerId
     : ifOrganizer(req.currentUser.role)
-    ? req.currentUser.id
-    : null;
+      ? req.currentUser.id
+      : null;
 
   tournamentService
     .getTournamentsByOrganizerId({ organizerId })
@@ -47,8 +47,8 @@ router.get("/getJoinRequests", auth, (req, res, next) => {
   const teamId = ifSudo(req.currentUser.role)
     ? req.query.teamId
     : ifManager(req.currentUser.role)
-    ? req.currentUser.teamId
-    : null;
+      ? req.currentUser.teamId
+      : null;
 
   tournamentService
     .getJoinRequests({ teamId })
@@ -60,13 +60,13 @@ router.get("/saveTeamRequest", auth, (req, res, next) => {
   const teamId = ifSudo(req.currentUser.role)
     ? req.query.teamId
     : ifManager(req.currentUser.role)
-    ? req.currentUser.teamId
-    : null;
+      ? req.currentUser.teamId
+      : null;
 
   tournamentService
     .saveTeamRequest({ teamId, tournamentId: req.query.tournamentId })
     .then((results) =>
-      res.status(200).json(new ApiResponse("Request sent!", results))
+      res.status(200).json(new ApiResponse("Request sent!", results)),
     )
     .catch((err) => next(err));
 });
@@ -75,8 +75,8 @@ router.get("/removeTeamRequest", auth, (req, res, next) => {
   const teamId = ifSudo(req.currentUser.role)
     ? req.query.teamId
     : ifManager(req.currentUser.role)
-    ? req.currentUser.teamId
-    : null;
+      ? req.currentUser.teamId
+      : null;
 
   tournamentService
     .removeTeamRequest({
@@ -85,7 +85,7 @@ router.get("/removeTeamRequest", auth, (req, res, next) => {
       tournamentId: req.query.tournamentId,
     })
     .then((results) =>
-      res.status(200).json(new ApiResponse("Request cancelled!", results))
+      res.status(200).json(new ApiResponse("Request cancelled!", results)),
     )
     .catch((err) => next(err));
 });
@@ -101,8 +101,8 @@ router.get("/getParticipantsWTournament", auth, (req, res, next) => {
   const organizerId = ifSudo(req.currentUser.role)
     ? req.query.organizerId
     : ifOrganizer(req.currentUser.role)
-    ? req.currentUser.id
-    : null;
+      ? req.currentUser.id
+      : null;
 
   tournamentService
     .getParticipantsWTournament({
@@ -122,7 +122,7 @@ router.get("/addParticipant", (req, res, next) => {
       managerEmail: req.query.managerEmail,
     })
     .then((results) =>
-      res.status(200).json(new ApiResponse("Participant added!", results))
+      res.status(200).json(new ApiResponse("Participant added!", results)),
     )
     .catch((err) => {
       if (err instanceof CustomError)
@@ -139,7 +139,7 @@ router.get("/removeParticipant", (req, res, next) => {
       tournamentId: req.query.tournamentId,
     })
     .then((results) =>
-      res.status(200).json(new ApiResponse("Participant removed!", results[0]))
+      res.status(200).json(new ApiResponse("Participant removed!", results[0])),
     )
     .catch((err) => {
       if (err instanceof CustomError)
@@ -169,7 +169,7 @@ router.get("/removeTournament", auth, (req, res, next) => {
       tournamentId: req.query.tournamentId,
     })
     .then((results) =>
-      res.status(200).json(new ApiResponse("Tournament deleted!", results))
+      res.status(200).json(new ApiResponse("Tournament deleted!", results)),
     )
     .catch((err) => next(err));
 });
@@ -182,7 +182,7 @@ router.get("/removeMember", auth, (req, res, next) => {
       tournamentId: req.query.tournamentId,
     })
     .then((results) =>
-      res.status(200).json(new ApiResponse("Member deleted!", results))
+      res.status(200).json(new ApiResponse("Member deleted!", results)),
     )
     .catch((err) => next(err));
 });

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
@@ -12,17 +12,7 @@ const route = useRoute();
 const store = useStore();
 
 const participants = computed(() => store.state.tournament.participants);
-
-const targetTournamentId = computed(() => route.params.tournamentId);
-const prefetchedTournament = computed(() =>
-  store.getters["tournament/getTournamentById"](targetTournamentId.value)
-);
-const shouldFetchData = computed(() => !prefetchedTournament.value?.id);
-const tournament = computed(() =>
-  shouldFetchData.value
-    ? store.state.tournament.tournament
-    : prefetchedTournament.value
-);
+const tournament = computed(() => store.state.tournament.tournament);
 
 const deleteParticipant = (id, teamId, tournamentId) => {
   store.dispatch("tournament/removeParticipant", {
@@ -31,18 +21,17 @@ const deleteParticipant = (id, teamId, tournamentId) => {
     tournamentId,
   }); //TODO
 };
-const fetchData = () => {
-  if (shouldFetchData.value) {
+const fetchData = async () => {
+  return Promise.all([
     store.dispatch("tournament/setTournamentWEmailOptionalById", {
-      tournamentId: targetTournamentId.value,
-    });
-  }
-  store.dispatch("tournament/setParticipantsWTournament", {
-    tournamentId: route.params.tournamentId,
-  });
+      tournamentId: route.params.tournamentId,
+    }),
+    store.dispatch("tournament/setParticipantsWTournament", {
+      tournamentId: route.params.tournamentId,
+    }),
+  ]);
 };
-
-onMounted(() => {
+onMounted(async () => {
   fetchData();
 });
 </script>
@@ -52,10 +41,10 @@ onMounted(() => {
     <v-row>
       <v-col>
         <page-title
-          justify="space-between"
           :sub-title="tournament.name"
-          title="Participants"
+          justify="space-between"
           show-back
+          title="Participants"
         >
           <v-row align="center">
             <v-menu>
@@ -85,9 +74,9 @@ onMounted(() => {
         <v-list
           v-if="participants.length > 0"
           density="compact"
+          elevation="1"
           lines="two"
           rounded
-          elevation="1"
         >
           <template v-for="(item, index) in participants">
             <v-list-item v-if="item" :key="index" :title="item?.name" link>

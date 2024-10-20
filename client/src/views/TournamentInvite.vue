@@ -1,37 +1,30 @@
 <script setup>
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import NoItems from "@/components/NoItems.vue";
-import { formatDate, getRequestBg, getTeamLogoUrl } from "@/others/util";
+import { getRequestBg, getTeamLogoUrl } from "@/others/util";
 
 const router = useRouter();
 const route = useRoute();
 const store = useStore();
 
 const teams = computed(() => store.state.team.teams);
-
-const targetTournamentId = computed(() => route.params.tournamentId);
-const prefetchedTournament = computed(() =>
-  store.getters["tournament/getTournamentById"](targetTournamentId.value)
-);
-const shouldFetchData = computed(() => !prefetchedTournament.value?.id);
-const tournament = computed(() =>
-  shouldFetchData.value
-    ? store.state.tournament.tournament
-    : prefetchedTournament.value
-);
+const tournament = computed(() => store.state.tournament.tournament);
 const searchKeyword = ref(null);
 
 const fetchData = async () => {
-  store.dispatch("tournament/setTournamentsByOrganizerId");
+  return Promise.all([
+    store.dispatch("tournament/setTournamentWEmailOptionalById", {
+      tournamentId: route.params.tournamentId,
+    }),
+    store.dispatch("tournament/setTournamentsByOrganizerId"),
+  ]);
 };
-
 const handleSearchTeam = () => {
   store.dispatch("team/searchTeam", { searchKeyword: searchKeyword.value });
 };
-
 const addParticipant = (item) => {
   store.dispatch("tournament/addParticipant", {
     teamId: item.tId,
@@ -51,10 +44,10 @@ onMounted(async () => {
     <v-row>
       <v-col>
         <page-title
-          justify="space-between"
           :sub-title="tournament.name"
-          title="Invitation"
+          justify="space-between"
           show-back
+          title="Invitation"
         >
           <v-row align="center">
             <v-menu :close-on-content-click="false">
@@ -82,11 +75,11 @@ onMounted(async () => {
       <v-col col="12" md="6">
         <v-text-field
           v-model="searchKeyword"
+          append-inner-icon="mdi-magnify"
           item-title="name"
           item-value="id"
           label="Search by team name/manager email"
           variant="solo"
-          append-inner-icon="mdi-magnify"
           @keyup.enter="handleSearchTeam"
           @click:append-inner="handleSearchTeam"
         ></v-text-field>
@@ -94,16 +87,16 @@ onMounted(async () => {
         <v-list
           v-if="teams.length > 0"
           density="compact"
+          elevation="1"
           lines="three"
           rounded
-          elevation="1"
         >
           <template v-for="(item, index) in teams">
             <v-list-item
               v-if="item"
               :key="index"
-              :title="item?.tName"
               :class="getRequestBg(item)"
+              :title="item?.tName"
               link
             >
               <!--                    @click="-->

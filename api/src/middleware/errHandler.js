@@ -14,7 +14,9 @@ const globalErrHandler = (err, req, res, next) => {
   if (err) {
     res.setHeader("Content-Type", "application/json");
     if (err instanceof CustomError) {
-      res.status(err.statusCode).json(new ApiResponse(err.message, err.payload));
+      res
+        .status(err.statusCode)
+        .json(new ApiResponse(err.message, err.payload));
     } else {
       res.status(500).json(new ApiResponse("Something went wrong!", null));
     }

@@ -25,18 +25,30 @@ const getGreetings = computed(() => {
 </script>
 
 <template>
-  <v-app-bar :order="1" class="px-2 px-md-5" color="grey-lighten-3" dense flat density="comfortable">
-<!--      img-src="logo.png"-->
+  <v-app-bar
+    :order="1"
+    class="px-2 px-md-5"
+    color="grey-lighten-3"
+    dense
+    density="compact"
+    flat
+  >
     <logo
+      :title="true"
       :width="150"
       container-class="clickable"
       img-class="mx-auto"
-      :title="true"
       @click="router.push(calcHome)"
     ></logo>
 
     <template v-slot:append>
-      <v-btn v-if="signedin" :size="mobile ? 'default' : 'large'" icon>
+      <v-btn
+        v-if="signedin"
+        :size="mobile ? 'small' : 'default'"
+        icon
+        rounded
+        tile
+      >
         <user-avatar
           :imgSrc="currentUser.image"
           @click-avatar="drawer = !drawer"
@@ -79,7 +91,13 @@ const getGreetings = computed(() => {
     </v-list>
     <template v-slot:append>
       <div class="ma-5">
-        <v-btn :to="{ name: 'signout' }" block color="primary" prepend-icon="mdi-exit-to-app">Signout</v-btn>
+        <v-btn
+          :to="{ name: 'signout' }"
+          block
+          color="primary"
+          prepend-icon="mdi-exit-to-app"
+          >Signout
+        </v-btn>
       </div>
     </template>
   </v-navigation-drawer>

@@ -1,7 +1,6 @@
 <script setup>
 import { useDisplay } from "vuetify";
 import { appInfo, getClientPublicImgUrl } from "@/others/util";
-import { computed } from "vue";
 
 const { mobile } = useDisplay();
 const { imgSrc, title, imgClass, containerClass, maxWidth, width } =
@@ -19,9 +18,9 @@ const { imgSrc, title, imgClass, containerClass, maxWidth, width } =
   <div :class="`d-flex align-center ${containerClass}`">
     <v-img
       v-if="imgSrc"
-      :src="getClientPublicImgUrl(imgSrc)"
       :class="` ${imgClass}`"
       :max-width="maxWidth"
+      :src="getClientPublicImgUrl(imgSrc)"
       :width="width"
     ></v-img>
 

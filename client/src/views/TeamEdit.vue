@@ -17,15 +17,10 @@ const targetTeamId = computed(() =>
   currentUser.value.role === "sudo" || currentUser.value.role === "organizer"
     ? route.params.teamId
     : currentUser.value.role === "team_manager"
-    ? currentUser.value.teamId
-    : null
+      ? currentUser.value.teamId
+      : null,
 );
-const prefetchedTeam = computed(() =>
-  store.getters["team/getTeamById"](targetTeamId.value)
-);
-const team = computed(() =>
-  shouldFetchData.value ? store.state.team.team : prefetchedTeam.value
-);
+const team = computed(() => store.state.team.team);
 
 const teamInit = {
   id: null,
@@ -56,8 +51,8 @@ const redirectDestination = computed(() =>
   currentUser.value.role === "sudo" || currentUser.value.role === "organizer"
     ? "team-list"
     : currentUser.value.role === "team_manager"
-    ? "dashboard-manager"
-    : null
+      ? "dashboard-manager"
+      : null,
 );
 
 const ageGroups = [
@@ -92,21 +87,13 @@ const handleEditTeam = async () => {
     });
   });
 };
-const shouldFetchData = computed(
-  () =>
-    !prefetchedTeam.value?.id ||
-    (targetTeamId.value == prefetchedTeam.value?.id &&
-      !prefetchedTeam.value?.email)
-);
 
 const fetchData = async () => {
-  if (shouldFetchData.value) {
-    await store.dispatch("team/setTeamWEmail", { teamId: targetTeamId.value });
-  }
+  store.dispatch("team/setTeamWEmail", { teamId: targetTeamId.value });
 };
 
 onMounted(async () => {
-  await fetchData();
+  fetchData();
   Object.assign(newTeam, {
     ...team.value,
   });
@@ -120,8 +107,8 @@ onMounted(async () => {
         <page-title
           :sub-title="team?.name"
           justify="space-between"
-          title="Edit Team"
           show-back
+          title="Edit Team"
         >
         </page-title>
       </v-col>
@@ -195,7 +182,7 @@ onMounted(async () => {
                 :rules="[
                   (v) =>
                     (Array.isArray(v) ? v : [v]).every((file) =>
-                      isValidImage(file)
+                      isValidImage(file),
                     ) || 'Only jpg/jpeg/png allowed!',
                 ]"
                 accept="image/*"

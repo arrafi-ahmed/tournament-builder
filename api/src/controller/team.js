@@ -60,8 +60,8 @@ router.get("/getTeamRequestsByOrganizerId", auth, (req, res, next) => {
   const organizerId = ifSudo(req.currentUser.role)
     ? req.query.organizerId
     : ifOrganizer(req.currentUser.role)
-    ? req.currentUser.id
-    : null;
+      ? req.currentUser.id
+      : null;
 
   teamService
     .getTeamRequestsByOrganizerId({ organizerId })
@@ -74,8 +74,8 @@ router.get("/getTeamRequestsByTournamentId", auth, (req, res, next) => {
   const organizerId = ifSudo(req.currentUser.role)
     ? req.query.organizerId
     : ifOrganizer(req.currentUser.role)
-    ? req.currentUser.id
-    : null;
+      ? req.currentUser.id
+      : null;
 
   teamService
     .getTeamRequestsByTournamentId({ tournamentId, organizerId })
@@ -87,8 +87,8 @@ router.get("/getTeamWSquad", auth, (req, res, next) => {
   const teamId = ifSudo(req.currentUser.role)
     ? req.query.teamId
     : ifManager(req.currentUser.role)
-    ? req.currentUser.teamId
-    : null;
+      ? req.currentUser.teamId
+      : null;
 
   teamService
     .getTeamWSquad({ teamId })
@@ -103,7 +103,7 @@ router.get("/removeTeam", auth, (req, res, next) => {
       teamId: req.query.teamId,
     })
     .then((results) =>
-      res.status(200).json(new ApiResponse("Team deleted!", results))
+      res.status(200).json(new ApiResponse("Team deleted!", results)),
     )
     .catch((err) => next(err));
 });
@@ -112,8 +112,8 @@ router.get("/removeMember", auth, (req, res, next) => {
   const teamId = ifSudo(req.currentUser.role)
     ? req.query.teamId
     : ifManager(req.currentUser.role)
-    ? req.currentUser.teamId
-    : null;
+      ? req.currentUser.teamId
+      : null;
 
   teamService
     .removeMember({
@@ -121,7 +121,7 @@ router.get("/removeMember", auth, (req, res, next) => {
       teamId,
     })
     .then((results) =>
-      res.status(200).json(new ApiResponse("Member deleted!", results))
+      res.status(200).json(new ApiResponse("Member deleted!", results)),
     )
     .catch((err) => next(err));
 });
@@ -142,16 +142,16 @@ router.post("/updateTeamRequest", auth, (req, res, next) => {
       else res.status(200).json(new ApiResponse("Request rejected!", results));
     })
     .then((results2) =>
-      res.status(200).json(new ApiResponse("Request approved!", results))
+      res.status(200).json(new ApiResponse("Request approved!", results)),
     )
     .catch((err) => next(err));
 });
 
 router.get("/searchTeam", (req, res, next) => {
   teamService
-      .searchTeam({ searchKeyword: req.query.searchKeyword })
-      .then((results) => res.status(200).json(new ApiResponse(null, results)))
-      .catch((err) => next(err));
+    .searchTeam({ searchKeyword: req.query.searchKeyword })
+    .then((results) => res.status(200).json(new ApiResponse(null, results)))
+    .catch((err) => next(err));
 });
 
 module.exports = router;

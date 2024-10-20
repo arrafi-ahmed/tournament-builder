@@ -1,7 +1,7 @@
 <script setup>
 import { useRoute } from "vue-router";
-import {computed, ref} from "vue";
-import {useStore} from "vuex";
+import { computed, ref } from "vue";
+import { useStore } from "vuex";
 
 const route = useRoute();
 const store = useStore();

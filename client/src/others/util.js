@@ -7,11 +7,40 @@ export const clientBaseUrl = import.meta.env.VITE_BASE_URL;
 export const isProd = import.meta.env.PROD;
 
 export const formatDate = (inputDate) => {
-  const date = new Date(inputDate);
-  const day = `0${date.getDate()}`.slice(-2);
-  const month = `0${date.getMonth() + 1}`.slice(-2);
-  const year = date.getFullYear();
+  if (!inputDate) return "";
+  const parsedDate = new Date(inputDate);
+  if (!parsedDate.getTime()) return "";
+
+  const day = `0${parsedDate.getDate()}`.slice(-2);
+  const month = `0${parsedDate.getMonth() + 1}`.slice(-2);
+  const year = parsedDate.getFullYear();
   return `${day}/${month}/${year}`;
+};
+
+export const getDateOnly = (inputDate) => {
+  // YYYY-MM-DD format
+  if (!inputDate) return "";
+  return new Date(inputDate).toLocaleDateString("en-CA");
+};
+
+export const getTimeOnly = (inputDate) => {
+  if (!inputDate) return "";
+
+  const date = new Date(inputDate);
+  let hours = date.getHours().toString().padStart(2, "0"); // Ensures two digits
+  let minutes = date.getMinutes().toString().padStart(2, "0"); // Ensures two digits
+
+  return `${hours}:${minutes}`;
+};
+
+export const calcMatchType = (type) => {
+  return type === "group"
+    ? { title: "Group", bgColor: "bg-secondary", color: "secondary" }
+    : type === "bracket"
+      ? { title: "Bracket", bgColor: "bg-primary", color: "primary" }
+      : type === "single_match"
+        ? { title: "Single Match", bgColor: "bg-tertiary", color: "tertiary" }
+        : null;
 };
 
 export const sendToWhatsapp = (phone, message) => {
@@ -80,10 +109,10 @@ export const getRequestBg = (item) =>
   item.requestStatus === 0
     ? "bg-red-lighten-3"
     : item.requestStatus === 1
-    ? "bg-green-lighten-3"
-    : item.requestStatus === 2
-    ? "bg-yellow-lighten-3"
-    : null;
+      ? "bg-green-lighten-3"
+      : item.requestStatus === 2
+        ? "bg-yellow-lighten-3"
+        : null;
 
 export const getQueryParam = (param) => {
   const queryParams = new URLSearchParams(window.location.search);

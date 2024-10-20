@@ -5,7 +5,7 @@ import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import RemoveEntity from "@/components/RemoveEntity.vue";
 import NoItems from "@/components/NoItems.vue";
-import {formatDate, getRequestBg, toLocalISOString} from "../others/util";
+import { formatDate, getRequestBg, toLocalISOString } from "../others/util";
 // import { getTournamentLogoUrl } from "@/others/util";
 
 const router = useRouter();
@@ -56,7 +56,7 @@ const fetchData = () => {
 
 const shouldShowJoinRequests = ref(false);
 const generateTitle = computed(() =>
-  shouldShowJoinRequests.value ? "Sent Requests" : "Search"
+  shouldShowJoinRequests.value ? "Sent Requests" : "Search",
 );
 
 onMounted(() => {
@@ -69,10 +69,10 @@ onMounted(() => {
     <v-row>
       <v-col>
         <page-title
-          justify="space-between"
-          sub-title="Tournament Join"
           :title="generateTitle"
+          justify="space-between"
           show-back
+          sub-title="Tournament Join"
         >
           <v-row align="center">
             <v-menu>
@@ -82,10 +82,10 @@ onMounted(() => {
               </template>
               <v-list density="compact">
                 <v-list-item
-                  @click="showJoinRequests"
                   density="compact"
                   prepend-icon="mdi-eye"
                   title="Show Join Requests"
+                  @click="showJoinRequests"
                 ></v-list-item>
               </v-list>
             </v-menu>
@@ -108,19 +108,19 @@ onMounted(() => {
 
         <v-list
           v-if="tournaments.length > 0"
+          class="mt-2 mt-md-4"
           density="default"
+          elevation="1"
           lines="three"
           rounded
-          elevation="1"
-          class="mt-2 mt-md-4"
         >
           <template v-for="(item, index) in tournaments">
             <v-list-item
               v-if="item"
               :key="index"
+              :class="getRequestBg(item)"
               :title="item?.name"
               link
-              :class="getRequestBg(item)"
             >
               <template v-slot:append>
                 <v-menu>
@@ -136,9 +136,9 @@ onMounted(() => {
                   <v-list density="compact">
                     <v-list-item
                       v-if="!item.sentRequest"
+                      class="text-primary"
                       prepend-icon="mdi-plus"
                       title="Join"
-                      class="text-primary"
                       @click="handleJoinTournament(item.tournamentId)"
                     ></v-list-item>
 

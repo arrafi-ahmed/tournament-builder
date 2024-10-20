@@ -1,5 +1,4 @@
-<script setup>
-</script>
+<script setup></script>
 <template>
   <v-main>
     <div class="fill-height limit-max-width-xl mx-auto">

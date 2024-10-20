@@ -62,9 +62,9 @@ const handleAddTeam = async () => {
       <v-col>
         <page-title
           justify="space-between"
+          show-back
           sub-title="Team"
           title="Add"
-          show-back
         >
         </page-title>
       </v-col>
@@ -116,7 +116,7 @@ const handleAddTeam = async () => {
             :rules="[
               (v) =>
                 (Array.isArray(v) ? v : [v]).every((file) =>
-                  isValidImage(file)
+                  isValidImage(file),
                 ) || 'Only jpg/jpeg/png allowed!',
             ]"
             accept="image/*"

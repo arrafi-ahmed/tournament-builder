@@ -1,5 +1,5 @@
 const nodeMailer = require("nodemailer");
-const {appInfo} = require("../others/util");
+const { appInfo } = require("../others/util");
 const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS } = process.env;
 // let html = ``;
 

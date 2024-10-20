@@ -1,68 +1,75 @@
 <script setup>
-import { computed, defineEmits, defineProps, onMounted, ref, watch } from "vue";
+import { defineProps, onMounted, ref, watch } from "vue";
 import { useDisplay } from "vuetify";
 import { formatDate } from "@/others/util";
 
-//use new Date() in parent before passing v-model in child
 const model = defineModel();
-const { width, height, mobile } = useDisplay();
-const emit = defineEmits(["update:modelValue"]);
+const { width, height, xs } = useDisplay();
 
-const { label, color, customClass, rules, variant, density } = defineProps({
-  label: { type: String },
-  color: { type: String },
-  customClass: { type: String },
-  rules: { type: Object },
-  variant: { type: String },
-  density: { type: String },
-});
+const { label, color, customClass, rules, variant, density, showIcon } =
+  defineProps([
+    "label",
+    "color",
+    "customClass",
+    "rules",
+    "variant",
+    "density",
+    "showIcon",
+  ]);
 const menu = ref(false);
+const formattedDate = ref(formatDate(model.value));
 
 const handleDateChange = (newDate) => {
-  emit("update:modelValue", new Date(newDate));
+  model.value = newDate;
 };
-const selectedDate = ref();
 watch(
   () => model.value,
   (newVal) => {
-    selectedDate.value = new Date(newVal);
-    selectedDate.value = newVal ? formatDate(newVal) : "";
-  }
-);
-watch(
-  () => model.value,
-  () => {
+    formattedDate.value = formatDate(newVal);
     menu.value = false;
-  }
+  },
 );
+onMounted(() => {
+  model.value = model.value ? new Date(model.value) : null;
+});
 </script>
 
-<template v-if="selectedDate">
-  <v-menu v-model="menu" :close-on-content-click="false">
+<template v-if="formattedDate">
+  <v-menu v-model="menu" :close-on-content-click="false" location="center">
     <template v-slot:activator="{ props }">
       <v-text-field
-        v-model="selectedDate"
+        v-model="formattedDate"
         :class="customClass"
+        :density="density"
         :label="label"
+        :prepend-inner-icon="showIcon ? 'mdi-calendar' : null"
         :rules="rules"
         :variant="variant"
-        :density="density"
         hide-details="auto"
-        prepend-inner-icon="mdi-calendar"
         readonly
         v-bind="props"
-        @click:clear="selectedDate = null"
+        @click:clear="formattedDate = null"
       />
     </template>
-    <v-date-picker
-      v-model="model"
-      :color="color"
-      :height="mobile ? height : 'auto'"
-      :width="mobile ? width : 'auto'"
-      show-adjacent-months
-      title=""
-      @update:modelValue="handleDateChange"
-    />
+    <div class="position-relative">
+      <v-date-picker
+        v-model="model"
+        :color="color"
+        :width="xs ? width - 30 : 'auto'"
+        height="auto"
+        show-adjacent-months
+        title=""
+        @update:modelValue="handleDateChange"
+      />
+      <v-btn
+        class="position-absolute top-0 right-0"
+        color="white"
+        icon="mdi-close"
+        size="small"
+        variant="text"
+        @click="menu = false"
+      ></v-btn>
+    </div>
   </v-menu>
 </template>
 <style>

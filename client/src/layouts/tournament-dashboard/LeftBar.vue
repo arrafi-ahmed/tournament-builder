@@ -16,6 +16,8 @@ const rail = ref(true);
       <template v-slot:append>
         <v-btn
           :icon="`mdi-chevron-${rail ? 'right' : 'left'}`"
+          class="mt-1"
+          density="comfortable"
           variant="text"
           @click.stop="rail = !rail"
         ></v-btn>
@@ -26,40 +28,49 @@ const rail = ref(true);
 
     <v-list density="compact" nav>
       <v-list-item
-        prepend-icon="mdi-tshirt-crew"
-        title="Participants"
-        value="participants"
+        :to="{
+          name: 'tournament-settings',
+          params: { tournamentId: $route.params.tournamentId },
+        }"
+        prepend-icon="mdi-cog"
+        title="Settings"
+        value="settings"
+      ></v-list-item>
+      <v-list-item
         :to="{
           name: 'tournament-participants',
           params: { tournamentId: $route.params.tournamentId },
         }"
+        prepend-icon="mdi-tshirt-crew"
+        title="Participants"
+        value="participants"
       ></v-list-item>
       <v-list-item
-        prepend-icon="mdi-tournament"
-        title="Format"
-        value="format"
         :to="{
           name: 'tournament-format',
           params: { tournamentId: $route.params.tournamentId },
         }"
+        prepend-icon="mdi-tournament"
+        title="Format"
+        value="format"
       ></v-list-item>
       <v-list-item
-        prepend-icon="mdi-calendar-clock"
-        title="Schedule"
-        value="schedule"
         :to="{
           name: 'tournament-schedule',
           params: { tournamentId: $route.params.tournamentId },
         }"
+        prepend-icon="mdi-calendar-clock"
+        title="Schedule"
+        value="schedule"
       ></v-list-item>
       <v-list-item
-        prepend-icon="mdi-graph"
-        title="Result"
-        value="result"
         :to="{
           name: 'tournament-result',
           params: { tournamentId: $route.params.tournamentId },
         }"
+        prepend-icon="mdi-graph"
+        title="Result"
+        value="result"
       ></v-list-item>
     </v-list>
   </v-navigation-drawer>

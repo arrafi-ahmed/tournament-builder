@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 
 // the input data in JSON format
 const { data, step, type } = defineProps({
@@ -32,7 +32,7 @@ watch(
     inputValue.startTime = newVal.startTime;
     inputValue.endDate = newVal.endDate;
     inputValue.endTime = newVal.endTime;
-  }
+  },
 );
 
 const start = ref(null);
@@ -68,10 +68,10 @@ const validate = (value, datetimeType) => {
     type === "date-time"
       ? /^\d{4}-\d{2}-\d{2} \d?\d:\d{2}( (AM|PM))?$/
       : type === "date"
-      ? /^\d{4}-\d{2}-\d{2}$/
-      : type === "time"
-      ? /^\d?\d:\d{2}( (AM|PM))?$/
-      : null;
+        ? /^\d{4}-\d{2}-\d{2}$/
+        : type === "time"
+          ? /^\d?\d:\d{2}( (AM|PM))?$/
+          : null;
   if (!regex.test(value)) {
     const msg = "Please enter a valid date and time";
     if (datetimeType === "start") error.start = msg;
@@ -149,19 +149,19 @@ const startLabel = computed(() =>
   type === "date-time"
     ? "Start Date-Time"
     : type === "date"
-    ? "Start Date"
-    : type === "time"
-    ? "Start Time"
-    : null
+      ? "Start Date"
+      : type === "time"
+        ? "Start Time"
+        : null,
 );
 const endLabel = computed(() =>
   type === "date-time"
     ? "End Date-Time"
     : type === "date"
-    ? "End Date"
-    : type === "time"
-    ? "End Time"
-    : null
+      ? "End Date"
+      : type === "time"
+        ? "End Time"
+        : null,
 );
 </script>
 <template>
@@ -169,18 +169,18 @@ const endLabel = computed(() =>
   <div class="date-time-component" @click="setBothPicker(true)">
     <div class="text-box">
       <label for="start">{{ startLabel }}</label> <br />
-      <input v-model="start" readonly type="text" id="start" />
+      <input id="start" v-model="start" readonly type="text" />
       <button v-if="start" @click="clearValue('start')">x</button>
     </div>
-    <div class="picker" v-if="showStartPicker">
+    <div v-if="showStartPicker" class="picker">
       <div class="calendar">
         <input
-          ref="startDate"
           v-if="type === 'date' || type === 'date-time'"
-          type="datetime-local"
+          ref="startDate"
           v-model="inputValue.startDate"
-          :min="data?.startDate || ''"
           :max="data?.endDate || ''"
+          :min="data?.startDate || ''"
+          type="datetime-local"
         />
       </div>
       <div class="clock">
@@ -193,10 +193,10 @@ const endLabel = computed(() =>
         <!--        />-->
         <div v-if="type === 'date-time' || type === 'time'" class="format">
           <label
-            ><input type="radio" value="24" v-model="format" />24-hour</label
+            ><input v-model="format" type="radio" value="24" />24-hour</label
           >
           <label
-            ><input type="radio" value="12" v-model="format" />12-hour</label
+            ><input v-model="format" type="radio" value="12" />12-hour</label
           >
         </div>
       </div>
@@ -205,7 +205,7 @@ const endLabel = computed(() =>
         <button @click="submitValue('start')">OK</button>
       </div>
     </div>
-    <div class="error" v-if="error.start">{{ error.start }}</div>
+    <div v-if="error.start" class="error">{{ error.start }}</div>
   </div>
 
   <!--  end date-time-->
@@ -213,39 +213,39 @@ const endLabel = computed(() =>
     <div class="text-box">
       <label for="end">{{ endLabel }}</label> br
       <input
-        v-model="end"
-        type="text"
         id="end"
+        v-model="end"
         readonly
+        type="text"
         @click="showEndPicker = true"
       />
       <button v-if="end" @click="clearValue('end')">x</button>
     </div>
-    <div class="picker" v-if="showEndPicker">
+    <div v-if="showEndPicker" class="picker">
       <div class="calendar">
         <input
-          ref="endDate"
           v-if="type === 'date' || type === 'date-time'"
-          type="date"
+          ref="endDate"
           v-model="inputValue.endDate"
-          :min="data?.endDate || ''"
           :max="data?.endDate || ''"
+          :min="data?.endDate || ''"
+          type="date"
         />
       </div>
       <div class="clock">
         <input
-          ref="endTime"
           v-if="type === 'time' || type === 'date-time'"
-          type="time"
+          ref="endTime"
           v-model="inputValue.endTime"
           :step="step * 60 || 1"
+          type="time"
         />
         <div v-if="type === 'date-time' || type === 'time'" class="format">
           <label
-            ><input type="radio" value="24" v-model="format" />24-hour</label
+            ><input v-model="format" type="radio" value="24" />24-hour</label
           >
           <label
-            ><input type="radio" value="12" v-model="format" />12-hour</label
+            ><input v-model="format" type="radio" value="12" />12-hour</label
           >
         </div>
       </div>
@@ -254,7 +254,7 @@ const endLabel = computed(() =>
         <button @click="submitValue('end')">OK</button>
       </div>
     </div>
-    <div class="error" v-if="error.end">{{ error.end }}</div>
+    <div v-if="error.end" class="error">{{ error.end }}</div>
   </div>
 </template>
 <style>
@@ -268,7 +268,11 @@ const endLabel = computed(() =>
 }
 
 .text-box {
-  //display: flex; align-items: center; border: 1px solid var(--color-border); border-radius: 4px; padding: 4px;
+  //display: flex;
+  align-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 4px;
 }
 
 /*
@@ -298,7 +302,10 @@ const endLabel = computed(() =>
 }
 
 .clock {
-  //display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;
+  //display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
 .format {

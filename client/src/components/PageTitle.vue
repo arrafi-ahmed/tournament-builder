@@ -1,5 +1,4 @@
 <script setup>
-
 const { title, subTitle, justify, customClass, showBack, borderB, routeName } =
   defineProps({
     title: { type: String },
@@ -14,14 +13,14 @@ const { title, subTitle, justify, customClass, showBack, borderB, routeName } =
 
 <template>
   <v-row :class="customClass" :justify="justify" align="center" no-gutters>
-    <v-col cols="9" class="d-flex align-center">
+    <v-col class="d-flex align-center" cols="9">
       <v-btn
         v-if="showBack"
         class="mr-1"
+        icon="mdi-chevron-left"
+        size="md"
         style="font-size: xx-large"
         variant="text"
-        size="md"
-        icon="mdi-chevron-left"
         @click="routeName || $router.back()"
       >
       </v-btn>

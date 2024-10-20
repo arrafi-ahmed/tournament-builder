@@ -16,11 +16,11 @@ watch(route, (to) => {
   <progress-loader />
   <Toaster
     :expand="true"
+    class="custom-toast"
     closeButton
     position="bottom-left"
     richColors
     theme="dark"
-    class="custom-toast"
   />
   <router-view />
 </template>
@@ -30,6 +30,7 @@ watch(route, (to) => {
 .v-application {
   font-family: "Poppins", sans-serif;
 }
+
 body,
 .custom-toast {
   font-family: "Poppins", sans-serif !important;
@@ -61,5 +62,9 @@ body,
 
 .z-index-max {
   z-index: 999999 !important;
+}
+
+.text-overline {
+  line-height: 1.5;
 }
 </style>

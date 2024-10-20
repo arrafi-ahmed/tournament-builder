@@ -64,7 +64,7 @@ const removeUser = async (id) => {
 };
 const copyToClipboard = async (item) => {
   await navigator.clipboard.writeText(
-    `Username: ${item.username}, Password: ${item.password}`
+    `Username: ${item.username}, Password: ${item.password}`,
   );
   toast.info("Copied to clipboard!");
 };
@@ -82,9 +82,9 @@ onMounted(async () => {
       <v-col>
         <page-title
           justify="space-between"
-          title="Credentials"
-          sub-title="Super Admin"
           show-back
+          sub-title="Super Admin"
+          title="Credentials"
         >
         </page-title>
       </v-col>
@@ -145,9 +145,9 @@ onMounted(async () => {
                         <v-divider></v-divider>
                         <remove-entity
                           custom-class="text-error"
-                          text="Delete"
-                          prepend-icon="mdi-delete"
                           label="Delete"
+                          prepend-icon="mdi-delete"
+                          text="Delete"
                           variant="list"
                           @remove-entity="removeUser(item.id)"
                         ></remove-entity>
@@ -217,9 +217,9 @@ onMounted(async () => {
                         <v-divider></v-divider>
                         <remove-entity
                           custom-class="text-error"
-                          text="Delete"
-                          prepend-icon="mdi-delete"
                           label="Delete"
+                          prepend-icon="mdi-delete"
+                          text="Delete"
                           variant="list"
                           @remove-entity="removeUser(item.id)"
                         ></remove-entity>
@@ -261,7 +261,7 @@ onMounted(async () => {
       </v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
-        <v-btn color="primary" @click="handleSubmitCredential">Generate </v-btn>
+        <v-btn color="primary" @click="handleSubmitCredential">Generate</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

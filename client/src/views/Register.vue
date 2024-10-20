@@ -2,7 +2,6 @@
 import { onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { isValidEmail, isValidPass, showApiQueryMsg } from "@/others/util";
-import PageTitle from "@/components/PageTitle.vue";
 import { useDisplay } from "vuetify";
 
 const { mobile } = useDisplay();
@@ -16,8 +15,8 @@ const userInit = {
     route.params.role === "team"
       ? "team_manager"
       : route.params.role === "organizer"
-      ? "organizer"
-      : null,
+        ? "organizer"
+        : null,
 };
 const user = reactive({ ...userInit });
 const confirmPassword = ref(null);
@@ -105,7 +104,8 @@ onMounted(() => {
                 v-model="confirmPassword"
                 :rules="[
                   (v) => !!v || 'Confirm Password is required!',
-                  (v) => v === user.password || 'Confirm password didn\'t match!',
+                  (v) =>
+                    v === user.password || 'Confirm password didn\'t match!',
                 ]"
                 class="mt-2 mt-md-4"
                 clearable

@@ -68,7 +68,7 @@ const remove = (id) => {
       :variant="btnVariant"
       density="default"
       @click.stop="dialog = !dialog"
-    >{{ label || "Remove" }}
+      >{{ label || "Remove" }}
     </v-btn>
   </template>
   <template v-else-if="variant === 'list'">
@@ -96,13 +96,13 @@ const remove = (id) => {
           :color="color"
           :density="xs ? 'comfortable' : 'default'"
           @click="remove(id)"
-        >Yes
+          >Yes
         </v-btn>
         <v-btn
           :color="color"
           :density="xs ? 'comfortable' : 'default'"
           @click="dialog = !dialog"
-        >No
+          >No
         </v-btn>
       </v-card-actions>
     </v-card>

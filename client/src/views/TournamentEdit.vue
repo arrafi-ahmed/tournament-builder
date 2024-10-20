@@ -1,6 +1,6 @@
 <script setup>
 import PageTitle from "@/components/PageTitle.vue";
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
@@ -13,16 +13,7 @@ const router = useRouter();
 const store = useStore();
 
 const currentUser = computed(() => store.state.user.currentUser);
-const targetTournamentId = computed(() => route.params.tournamentId);
-const prefetchedTournament = computed(() =>
-  store.getters["tournament/getTournamentById"](targetTournamentId.value)
-);
-const tournament = computed(() =>
-  shouldFetchData.value
-    ? store.state.tournament.tournament
-    : prefetchedTournament.value
-);
-
+const tournament = computed(() => store.state.tournament.tournament);
 const isSudo = computed(() => store.getters["user/isSudo"]);
 
 const tournamentInit = {
@@ -45,8 +36,8 @@ const redirectDestination = computed(() =>
   currentUser.value.role === "sudo" || currentUser.value.role === "organizer"
     ? "tournament-list"
     : currentUser.value.role === "tournament_manager"
-    ? "dashboard-manager"
-    : null
+      ? "dashboard-manager"
+      : null,
 );
 
 const types = [
@@ -70,19 +61,10 @@ const handleEditTournament = async () => {
     });
   });
 };
-const shouldFetchData = computed(
-  () =>
-    !prefetchedTournament.value?.id ||
-    (targetTournamentId.value == prefetchedTournament.value?.id &&
-      !prefetchedTournament.value?.email)
-);
-
-const fetchData = () => {
-  if (shouldFetchData.value) {
-    return store.dispatch("tournament/setTournamentWEmailOptionalById", {
-      tournamentId: targetTournamentId.value,
-    });
-  }
+const fetchData = async () => {
+  await store.dispatch("tournament/setTournamentWEmailOptionalById", {
+    tournamentId: route.params.tournamentId,
+  });
 };
 //order of checking is important cause group/group_knockout condition check result is same
 onMounted(async () => {
@@ -101,9 +83,9 @@ onMounted(async () => {
         <page-title
           :sub-title="tournament.name"
           justify="space-between"
+          show-back
           sub-title="Tournament"
           title="Edit"
-          show-back
         >
         </page-title>
       </v-col>
@@ -154,8 +136,8 @@ onMounted(async () => {
             :rules="[(v) => !!v || 'Start Date is required!']"
             color="primary"
             custom-class="mt-2 mt-md-4"
-            label="Start Date"
             density="default"
+            label="Start Date"
           ></date-picker>
 
           <date-picker
@@ -168,8 +150,8 @@ onMounted(async () => {
             ]"
             color="primary"
             custom-class="mt-2 mt-md-4"
-            label="End Date"
             density="default"
+            label="End Date"
           ></date-picker>
 
           <v-textarea

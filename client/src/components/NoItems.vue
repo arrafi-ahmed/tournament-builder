@@ -9,16 +9,19 @@ const { title, subTitle, justify, customClass } = defineProps({
 </script>
 
 <template>
-  <v-row :justify="justify" :class="customClass">
-    <v-col :cols="cols">
-      <v-alert
-        closable
-        icon="mdi-information-outline"
-        :text="text"
-        :variant="variant"
-      ></v-alert>
-    </v-col>
-  </v-row>
+  <v-container>
+    <v-row :class="`${customClass} text-wrap`" :justify="justify">
+      <v-col :cols="cols">
+        <v-alert
+          :text="text"
+          :variant="variant"
+          closable
+          density="compact"
+          icon="mdi-information-outline"
+        ></v-alert>
+      </v-col>
+    </v-row>
+  </v-container>
   <!--  <v-divider class="my-2"></v-divider>-->
 </template>
 

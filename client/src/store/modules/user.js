@@ -42,7 +42,7 @@ export const mutations = {
   },
   editOrganizer(state, payload) {
     const foundIndex = state.organizers.findIndex(
-      (item) => item.id == payload.id
+      (item) => item.id == payload.id,
     );
     if (foundIndex !== -1) {
       state.organizers[foundIndex] = payload;
@@ -50,7 +50,7 @@ export const mutations = {
   },
   editManager(state, payload) {
     const foundIndex = state.managers.findIndex(
-      (item) => item.id == payload.id
+      (item) => item.id == payload.id,
     );
     if (foundIndex !== -1) {
       state.managers[foundIndex] = payload;
@@ -102,8 +102,8 @@ export const actions = {
             request.role === "organizer"
               ? `${actionType}Organizer`
               : request.role === "team_manager"
-              ? `${actionType}Manager`
-              : null;
+                ? `${actionType}Manager`
+                : null;
           commit(actionName, response.data?.payload);
           resolve(response);
         })
@@ -164,9 +164,9 @@ export const getters = {
     return state.currentUser.role === "sudo"
       ? { name: "dashboard-sudo" }
       : state.currentUser.role === "organizer"
-      ? { name: "dashboard-organizer" }
-      : state.currentUser.role === "team_manager"
-      ? { name: "dashboard-manager" }
-      : { name: "signout" };
+        ? { name: "dashboard-organizer" }
+        : state.currentUser.role === "team_manager"
+          ? { name: "dashboard-manager" }
+          : { name: "signout" };
   },
 };

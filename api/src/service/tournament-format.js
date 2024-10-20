@@ -37,31 +37,15 @@ exports.saveGroup = async ({
   // add in groups_teams null teamid items for payload.teamsPerGroup times
   const groupsTeams = [];
 
-  const groupTeam = {
-    teamRanking: null,
-    futureTeamReference: null,
-    tournamentGroupId: null,
-    teamId: null,
-  };
-
   for (let i = 1; i <= savedGroup.teamsPerGroup; i++) {
-    groupTeam.teamRanking = i;
-    groupTeam.tournamentGroupId = savedGroup.id;
-
-    groupsTeams.push({ ...groupTeam });
+    const groupTeam = {
+      teamId: null,
+      teamRanking: i,
+      tournamentGroupId: savedGroup.id,
+    };
+    groupsTeams.push(groupTeam);
   }
   const groupMatches = [];
-  const groupMatch = {
-    name: null,
-    order: null,
-    type: "group",
-    futureTeamReference: null,
-    roundType: null,
-    startTime: null,
-    homeTeamId: null,
-    awayTeamId: null,
-    groupId: savedGroup.id,
-  };
 
   const matchCount =
     (savedGroup.teamsPerGroup * savedGroup.teamsPerGroup -
@@ -72,17 +56,58 @@ exports.saveGroup = async ({
     : matchCount;
 
   for (let i = 1; i <= totalMatchCount; i++) {
-    groupMatch.name = `Match ${match.count++}`;
-    groupMatch.order = i;
-
-    groupMatches.push({ ...groupMatch });
+    const groupMatch = {
+      name: `Match ${match.count++}`,
+      order: i,
+      type: "group",
+      roundType: null,
+      startTime: null,
+      homeTeamId: null,
+      awayTeamId: null,
+      groupId: savedGroup.id,
+      futureTeamReference: null,
+      groupTeamReference: null, //todo: fill after inserting savedGroupsTeams
+      tournamentId: tournamentId,
+    };
+    groupMatches.push(groupMatch);
   }
   // multiple gt
   const savedGroupsTeams = await sql`
         insert into groups_teams ${sql(groupsTeams)} returning *`;
 
-  const savedGroupsMatches = await sql`
-        insert into matches ${sql(groupMatches)} returning *`;
+  // save gt_stat
+  const groupsTeamsStat = [];
+  savedGroupsTeams.forEach((item, index) => {
+    const groupTeamStat = {
+      played: 0,
+      won: 0,
+      draw: 0,
+      lost: 0,
+      points: 0,
+      goalsFor: 0,
+      goalsAway: 0,
+      goalDifference: 0,
+      groupsTeamsId: item.id,
+    };
+    groupsTeamsStat.push(groupTeamStat);
+  });
+
+  const savedGroupsTeamsStat = await sql`
+        insert into groups_teams_stats ${sql(groupsTeamsStat)} returning *`;
+
+  // todo: modify match->group_team_reference before insert
+  let currMatchCount = 0;
+  for (let i = 0; i < savedGroupsTeams?.length - 1; i++) {
+    for (let j = i + 1; j < savedGroupsTeams?.length; j++) {
+      groupMatches[currMatchCount++].groupTeamReference = {
+        home: { groupTeamId: savedGroupsTeams?.[i]?.id },
+        away: { groupTeamId: savedGroupsTeams?.[j]?.id },
+      };
+    }
+  }
+  const savedGroupsMatches = await exports.insertMatches({
+    payload: { matches: groupMatches },
+  });
 
   // only apply when adding
   if (!newGroup.id && savedGroupsTeams.length && savedGroupsMatches.length) {
@@ -99,6 +124,21 @@ exports.saveGroup = async ({
     teams: savedGroupsTeams,
     matches: savedGroupsMatches,
   };
+};
+
+exports.insertMatches = async ({ payload: { matches } }) => {
+  return sql`
+        insert into matches ${sql(matches)} returning *`;
+};
+
+exports.updateMatches = async ({ payload: { matches } }) => {
+  const updatePromises = matches.map(async (match) => {
+    return sql`
+            update matches
+            set ${sql(match)}
+            where id = ${match.id} returning *`;
+  });
+  return Promise.all(updatePromises);
 };
 
 exports.saveGroupTeam = async ({ payload: { updateGroupTeam } }) => {
@@ -197,6 +237,7 @@ exports.saveBracket = async ({
         awayTeamId: null,
         bracketId: savedBracket.id,
         phaseId: returnedBracket.tournamentPhaseId,
+        tournamentId: tournamentId,
       };
       //
       if (currRoundCount !== maxRoundCount) {
@@ -233,6 +274,7 @@ exports.saveBracket = async ({
         rankingPublished: false,
         bracketId: savedBracket.id,
         phaseId: returnedBracket.tournamentPhaseId,
+        tournamentId: tournamentId,
       });
     }
     targetRoundIndex++;
@@ -372,6 +414,7 @@ exports.createGroupPhase = async ({
   for (let i = 1; i <= groupCount; i++) {
     const newGroup = {
       name: `Group ${entityLastCount.group++}`,
+      rankingPublished: false,
       teamsPerGroup: groupMemberCount,
       doubleRoundRobin: false,
       order: i,
@@ -546,6 +589,9 @@ exports.getTournamentFormat = async ({ tournamentId, organizerId }) => {
                             WHEN m.type = 'group' THEN tg.name
                             END                 AS group_name,
                         CASE
+                            WHEN m.type = 'group' THEN tg.ranking_published
+                            END                 AS ranking_published,
+                        CASE
                             WHEN m.type = 'group' THEN tg.order
                             END                 AS group_order,
                         CASE
@@ -558,17 +604,17 @@ exports.getTournamentFormat = async ({ tournamentId, organizerId }) => {
                             WHEN m.type = 'group' THEN gt.id
                             END                 AS group_team_id,
                         CASE
-                            WHEN m.type = 'group' THEN gt.team_ranking
-                            END                 AS team_ranking,
-                        CASE
                             WHEN m.type = 'group' THEN gt.team_id
                             END                 AS team_id,
                         CASE
-                            WHEN m.type = 'group' THEN t1.name
-                            END                 AS group_team_name, -- Group team name
+                            WHEN m.type = 'group' THEN gt.team_ranking
+                            END                 AS team_ranking,
                         CASE
-                            WHEN m.type = 'group' THEN gt.future_team_reference
-                            END                 AS group_future_team_reference,
+                            WHEN m.type = 'group' THEN t1.name
+                            END                 AS group_team_name,
+                        CASE
+                            WHEN m.type = 'group' THEN m.group_team_reference
+                            END                 AS match_group_team_reference,
                         CASE
                             WHEN m.type = 'bracket' THEN tb.id
                             END                 AS bracket_id,
@@ -591,7 +637,8 @@ exports.getTournamentFormat = async ({ tournamentId, organizerId }) => {
                         m.home_team_id,
                         m.away_team_id,
                         mr.home_team_score,
-                        mr.away_team_score
+                        mr.away_team_score,
+                        mr.winner_id
         FROM tournament_phases tp
                  LEFT JOIN tournament_groups tg
                            ON tg.tournament_phase_id = tp.id
@@ -657,6 +704,7 @@ const processTournamentData = async ({
           id: row.groupId,
           type: "group",
           name: row.groupName,
+          rankingPublished: row.rankingPublished,
           order: row.groupOrder,
           doubleRoundRobin: row.doubleRoundRobin,
           teamsPerGroup: row.teamsPerGroup,
@@ -669,32 +717,20 @@ const processTournamentData = async ({
         const teamExists = group.teams.some(
           (team) => team.id === row.groupTeamId,
         );
-
         if (!teamExists) {
           group.teams.push({
             id: row.groupTeamId,
             teamId: row.teamId,
             name: row.groupTeamName,
             teamRanking: row.teamRanking,
-            futureTeamReference: row.groupFutureTeamReference,
+            futureTeamReference: row.matchFutureTeamReference,
           });
         }
       }
-      // // :todo make groupTeam objects
-      // if (row.groupTeamId) {
-      //   groupTeams[row.groupTeamId] = {
-      //     id: row.groupTeamId,
-      //     teamRanking: row.teamRanking,
-      //     teamId: row.teamId,
-      //     tournamentGroupId: row.tournamentGroupId,
-      //     futureTeamReference: row.groupFutureTeamReference,
-      //   };
-      // }
       if (row.matchId) {
         const matchExists = group.matches.some(
           (match) => match.id === row.matchId,
         );
-
         if (!matchExists) {
           group.matches.push({
             id: row.matchId,
@@ -706,12 +742,13 @@ const processTournamentData = async ({
             awayTeamId: row.awayTeamId,
             homeTeamScore: row.homeTeamScore,
             awayTeamScore: row.awayTeamScore,
+            winnerId: row.winnerId,
             futureTeamReference: row.matchFutureTeamReference,
+            groupTeamReference: row.matchGroupTeamReference,
           });
         }
       }
     }
-
     // Process bracket data if available
     else if (row.bracketId) {
       let bracket = phase.items.find(
@@ -728,11 +765,8 @@ const processTournamentData = async ({
         };
         phase.items.push(bracket);
       }
-
       // Add round data to the bracket
       if (row.matchId) {
-        //
-
         const match = {
           id: row.matchId,
           name: row.matchName,
@@ -743,6 +777,7 @@ const processTournamentData = async ({
           awayTeamId: row.awayTeamId,
           homeTeamScore: row.homeTeamScore,
           awayTeamScore: row.awayTeamScore,
+          winnerId: row.winnerId,
           futureTeamReference: row.matchFutureTeamReference,
         };
 
@@ -769,6 +804,7 @@ const processTournamentData = async ({
         awayTeamId: row.awayTeamId,
         homeTeamScore: row.homeTeamScore,
         awayTeamScore: row.awayTeamScore,
+        winnerId: row.winnerId,
         futureTeamReference: row.matchFutureTeamReference,
       });
     }
@@ -827,6 +863,7 @@ const processTournamentData = async ({
     phaseMap,
     teamOptions,
     selectedTeamOptions,
+    participants,
     teams,
     groups,
     matches,
@@ -876,10 +913,10 @@ const populateTeamGroupMatch = ({ phaseMap }) => {
     ...phase,
     items: phase.items.map((phaseItem) => {
       if (phaseItem.type === "group") {
-        phaseItem.rankingPublished = phaseItem.matches.some(
-          (match) =>
-            match?.homeTeamScore != null && match?.awayTeamScore != null,
-        );
+        // phaseItem.rankingPublished = phaseItem.matches.some(
+        //   (match) =>
+        //     match?.homeTeamScore != null && match?.awayTeamScore != null,
+        // );
         groups[phaseItem.id] ??= phaseItem;
         phaseItem.teams?.forEach((team) => {
           teams[team.id] ??= team;
@@ -912,6 +949,7 @@ const populateSelectedNTeamOptions = ({
   phaseMap,
   teamOptions,
   selectedTeamOptions,
+  participants,
   teams,
   groups,
   matches,
@@ -1153,7 +1191,7 @@ const populateSelectedNTeamOptions = ({
       } else {
         // if ref group deleted & not found, return teamOptions["empty"]
         return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
-            teamOptions["empty"]);
+          teamOptions["empty"]);
       }
       return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
         val);
@@ -1164,6 +1202,7 @@ const populateSelectedNTeamOptions = ({
 
       if (foundMatch?.rankingPublished === true) {
         let foundTeamId = null;
+        //TODO: replace foundTeamId with winnerid
         if (
           (position === 1 &&
             foundMatch?.homeTeamScore > foundMatch?.awayTeamScore) ||
@@ -1172,11 +1211,11 @@ const populateSelectedNTeamOptions = ({
         ) {
           // teams[] is obj with key teamId, teamOptions[] obj with key gt.id
           // first retrive gt.id from teams using teamId, then retrieve teamOptions using gt.id
-          foundTeamId = Object.values(teams).find(
+          foundTeamId = participants.find(
             (team) => team.teamId === foundMatch?.homeTeamId,
           )?.teamId;
         } else {
-          foundTeamId = Object.values(teams).find(
+          foundTeamId = participants.find(
             (team) => team.teamId === foundMatch?.awayTeamId,
           )?.teamId;
         }
@@ -1189,10 +1228,10 @@ const populateSelectedNTeamOptions = ({
         val = teamOptions[`m-${refId}-${position}`];
         return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
           val);
-      } else{
+      } else {
         // if ref match deleted & not found, return teamOptions["empty"]
         return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
-            teamOptions["empty"]);
+          teamOptions["empty"]);
       }
     }
   }

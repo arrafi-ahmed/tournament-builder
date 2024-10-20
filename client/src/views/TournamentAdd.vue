@@ -3,14 +3,9 @@ import PageTitle from "@/components/PageTitle.vue";
 import { computed, reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import {
-  isValidEmail,
-  isValidImage,
-  removeNullProperties,
-} from "@/others/util";
+import { isValidEmail } from "@/others/util";
 import { useDisplay } from "vuetify";
 import DatePicker from "@/components/DatePicker.vue";
-import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 
 const { mobile } = useDisplay();
 const router = useRouter();
@@ -64,9 +59,9 @@ const handleAddTournament = async () => {
       <v-col>
         <page-title
           justify="space-between"
+          show-back
           sub-title="Tournament"
           title="Add"
-          show-back
         >
         </page-title>
       </v-col>

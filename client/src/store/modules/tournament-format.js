@@ -174,6 +174,7 @@ export const mutations = {
       homeTeamScore: null,
       awayTeamScore: null,
       futureTeamReference: payload.futureTeamReference,
+      tournamentId: payload.tournamentId,
     };
     if (payload.type === "single_match") {
       const foundPhaseIndex = state.tournamentFormat.findIndex(
@@ -221,15 +222,22 @@ export const mutations = {
     const foundItemIndex = state.tournamentFormat[
       foundPhaseIndex
     ].items.findIndex((item) => {
+      if (item.type === "single_match") return item.id === savedMatch.id;
       if (item.type === "group") return item.id === savedMatch.groupId;
       if (item.type === "bracket") return item.id === savedMatch.bracketId;
-      if (item.type === "single_match") return item.id === savedMatch.id;
       return false;
     });
     // if item.type = 'single_match'
     const targetItem =
       state.tournamentFormat[foundPhaseIndex].items[foundItemIndex];
+
     if (targetItem.type === "single_match") {
+      state.tournamentFormat[foundPhaseIndex].items[foundItemIndex] = {
+        ...targetItem,
+        ...savedMatch,
+      };
+      return;
+    } else if (targetItem.type === "group") {
       state.tournamentFormat[foundPhaseIndex].items[foundItemIndex] = {
         ...targetItem,
         ...savedMatch,
@@ -254,6 +262,22 @@ export const mutations = {
     state.tournamentFormat[foundPhaseIndex].items[foundItemIndex].rounds[
       foundRoundIndex
     ].matches[foundMatchIndex] = { ...targetMatch, ...savedMatch };
+  },
+  updateGroupMatches(state, payload) {
+    const targetPhaseId = payload[0].phaseId;
+    const targetGroupId = payload[0].groupId;
+
+    payload.forEach((updatedMatch, updatedMatchIndex) => {
+      state.tournamentFormat[targetPhaseId].items[
+        targetGroupId
+      ].matches.forEach((oldMatch, oldMatchIndex) => {
+        if (updatedMatch.id === oldMatch.id) {
+          state.tournamentFormat[targetPhaseId].items[targetGroupId].matches[
+            oldMatchIndex
+          ] = { ...oldMatch, ...updatedMatch };
+        }
+      });
+    });
   },
   setEntityLastCount(state, payload) {
     Object.assign(state.entityLastCount, { ...payload });
@@ -306,6 +330,19 @@ export const actions = {
     return new Promise((resolve, reject) => {
       $axios
         .post("/api/tournament-format/saveMatch", request)
+        .then((response) => {
+          commit("addMatch", response.data?.payload);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  saveMatches({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/tournament-format/saveMatches", request)
         .then((response) => {
           commit("addMatch", response.data?.payload);
           resolve(response);
@@ -509,6 +546,19 @@ export const actions = {
         .post("/api/tournament-format/saveMatch", request)
         .then((response) => {
           commit("updateMatch", response.data?.payload);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  updateGroupMatches({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/tournament-format/updateMatches", request)
+        .then((response) => {
+          commit("updateGroupMatches", response.data?.payload);
           resolve(response);
         })
         .catch((err) => {

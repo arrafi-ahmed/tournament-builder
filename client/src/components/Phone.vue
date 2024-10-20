@@ -33,7 +33,7 @@ const formatPhoneInput = () => {
 
 const formatSelectedDialCode = (selectedCode) => {
   const { flag, code, name, dialCode } = inputItem.options.find(
-    (item) => item.code == selectedCode
+    (item) => item.code == selectedCode,
   );
   Object.assign(selectedCountry, {
     ...selectedCountry,
@@ -77,7 +77,7 @@ onMounted(() => {
         <template v-slot:selection="{}">
           <v-row no-gutters>
             <v-col cols="auto"
-            ><span>{{ selectedCountry.flag }}</span></v-col
+              ><span>{{ selectedCountry.flag }}</span></v-col
             >
             <v-col class="flex-grow-1 ml-2" cols="auto">
               <span>{{ selectedCountry.dialCode }}</span></v-col

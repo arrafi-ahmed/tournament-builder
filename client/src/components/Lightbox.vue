@@ -71,8 +71,8 @@ const switchFullsize = () => {
         icon="mdi-close"
         location="top end"
         position="absolute"
-        size="sm"
         rounded
+        size="sm"
         @click="dialog = !dialog"
       ></v-btn>
 
@@ -98,7 +98,7 @@ const switchFullsize = () => {
               color="grey"
               size="x-large"
               @click.stop="getPrevImage"
-            >mdi-chevron-left-circle
+              >mdi-chevron-left-circle
             </v-icon>
           </v-col>
           <v-col class="d-flex justify-center" cols="auto">
@@ -108,7 +108,7 @@ const switchFullsize = () => {
               color="grey"
               size="x-large"
               @click.stop="getNextImage"
-            >mdi-chevron-right-circle
+              >mdi-chevron-right-circle
             </v-icon>
           </v-col>
         </v-row>

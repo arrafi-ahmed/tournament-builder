@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "setup": "npm install && npm update --save",
-    "dev": "vite --host",
+    "clear-cache": "rm -rf node_modules/.cache node_modules/.vite",
+    "dev": "npm run clear-cache && vite --host",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint  --fix --ignore-path .gitignore"

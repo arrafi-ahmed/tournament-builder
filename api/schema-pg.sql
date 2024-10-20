@@ -30,16 +30,18 @@ CREATE TABLE team_members
 -- entity_last_count = {phase:1, group:1, bracket:1, match:1}
 CREATE TABLE tournaments
 (
-    id                SERIAL PRIMARY KEY,
-    name              VARCHAR(255) NOT NULL,
-    type              int CHECK (type IN (5, 6, 7, 8, 11)),
-    location          VARCHAR(255),
-    start_date        DATE         NOT NULL,
-    end_date          DATE         NOT NULL,
-    rules             TEXT,
-    entity_last_count JSONB,
-    updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    organizer_id      INT REFERENCES users (id) ON DELETE CASCADE
+    id                  SERIAL PRIMARY KEY,
+    name                VARCHAR(255) NOT NULL,
+    type                int CHECK (type IN (5, 6, 7, 8, 11)),
+    location            VARCHAR(255),
+    start_date          DATE         NOT NULL,
+    end_date            DATE         NOT NULL,
+    rules               TEXT,
+    entity_last_count   JSONB,
+    match_duration      int       DEFAULT 90,
+    match_interval_time int       DEFAULT 30,
+    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    organizer_id        INT REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE teams_tournaments
@@ -59,10 +61,21 @@ CREATE TABLE tournament_phases
     tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
 );
 
+CREATE TABLE tournament_brackets
+(
+    id                  SERIAL PRIMARY KEY,
+    name                VARCHAR(255),
+    bracket_order       INT,
+    teams_count         INT,
+    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tournament_phase_id INT REFERENCES tournament_phases (id) ON DELETE CASCADE
+);
+
 CREATE TABLE tournament_groups
 (
     id                  SERIAL PRIMARY KEY,
     name                VARCHAR(255),
+    ranking_published   BOOLEAN,  --added
     group_order         INT,
     teams_per_group     INT,
     double_round_robin  BOOLEAN,
@@ -79,23 +92,29 @@ CREATE TABLE tournament_groups
 -- with related group_teams->future_team_reference
 CREATE TABLE groups_teams
 (
-    id                    SERIAL PRIMARY KEY,
-    team_ranking          INT,
-    updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    future_team_reference jsonb,
-    tournament_group_id   INT REFERENCES tournament_groups (id) ON DELETE CASCADE,
-    team_id               INT REFERENCES teams (id)
+    id                  SERIAL PRIMARY KEY,
+    team_ranking        INT,
+    tournament_group_id INT REFERENCES tournament_groups (id) ON DELETE CASCADE,
+    team_id             INT REFERENCES teams (id),
+    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 );
 
-CREATE TABLE tournament_brackets
+--added
+CREATE TABLE groups_teams_stats
 (
-    id                  SERIAL PRIMARY KEY,
-    name                VARCHAR(255),
-    bracket_order       INT,
-    teams_count         INT,
-    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    tournament_phase_id INT REFERENCES tournament_phases (id) ON DELETE CASCADE
+    id              SERIAL PRIMARY KEY,
+    played          INT,
+    won             INT,
+    draw            INT,
+    lost            INT,
+    points          INT,
+    goals_for       INT,
+    goals_away      INT,
+    goal_difference INT,
+    groups_teams_id INT REFERENCES groups_teams (id) ON DELETE CASCADE,
+    updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
 -- #host_id:
 -- host can be group/bracket/single match based on match_type,
 -- match_type = group -> host id = group_id
@@ -107,6 +126,9 @@ CREATE TABLE tournament_brackets
 -- {home:{type:'match', id:1, position:0}, away:{type:'match', id:2, position:1}}
 -- for match position 1 = winner, position 2 = loser
 
+--group_team_reference:
+-- {home:{group_team_id:1}, away:{group_team_id:2}}
+
 -- #round_type
 -- 0=final, 1=semi final
 CREATE TABLE matches
@@ -115,24 +137,28 @@ CREATE TABLE matches
     name                  VARCHAR(255),
     match_order           INT,
     match_type            VARCHAR(50) CHECK (match_type IN ('group', 'bracket', 'single_match')) NOT NULL,
-    future_team_reference jsonb,
     round_type            INT,
     start_time            TIMESTAMP,
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     home_team_id          INT REFERENCES teams (id) ON DELETE CASCADE,
     away_team_id          INT REFERENCES teams (id) ON DELETE CASCADE,
-    phase_id              INT REFERENCES tournament_phases (id) ON DELETE CASCADE,  -- used in match
-    group_id              INT REFERENCES tournament_groups (id) ON DELETE CASCADE,  -- used in groups
-    bracket_id            INT REFERENCES tournament_brackets (id) ON DELETE CASCADE  -- used in brackets
+    phase_id              INT REFERENCES tournament_phases (id) ON DELETE CASCADE,                                                              -- used in match
+    group_id              INT REFERENCES tournament_groups (id) ON DELETE CASCADE,                                                              -- used in groups
+    bracket_id            INT REFERENCES tournament_brackets (id) ON DELETE CASCADE,                                                            -- used in brackets
+    future_team_reference JSONB,
+    group_team_reference  JSONB,
+    match_day_id          INT                                                                    REFERENCES match_days (id) ON DELETE SET NULL, -- added
+    field_id              INT                                                                    REFERENCES fields (id) ON DELETE SET NULL,     -- added
+    tournament_id         INT REFERENCES tournaments (id),                                                                                      -- added
 );
-match
+
 CREATE TABLE match_results
 (
     id              SERIAL PRIMARY KEY,
     home_team_score INT,
     away_team_score INT,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    match_id        INT REFERENCES matches (id) ON DELETE CASCADE,
+    match_id        INT UNIQUE REFERENCES matches (id) ON DELETE CASCADE,
     winner_id       INT REFERENCES teams (id) ON DELETE CASCADE
 );
 
@@ -159,6 +185,24 @@ CREATE TABLE subscriptions
     pending_cancel         BOOLEAN,
     updated_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     organizer_id           INT REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE match_days
+(
+    id            SERIAL PRIMARY KEY,
+    match_date    DATE not null,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
+);
+
+CREATE TABLE fields
+(
+    id            SERIAL PRIMARY KEY,
+    name          varchar(255) not null,
+    start_time    time         not null,
+    field_order   int, -- added
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
 );
 
 ALTER TABLE teams_tournaments

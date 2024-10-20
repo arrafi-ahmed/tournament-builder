@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
@@ -30,9 +30,9 @@ onMounted(() => {
       <v-col>
         <page-title
           justify="space-between"
+          show-back
           sub-title="Tournament"
           title="List"
-          show-back
         >
           <v-row align="center">
             <v-menu>
@@ -61,9 +61,9 @@ onMounted(() => {
         <v-list
           v-if="tournaments.length > 0"
           density="compact"
+          elevation="1"
           lines="three"
           rounded
-          elevation="1"
         >
           <template v-for="(item, index) in tournaments">
             <v-list-item

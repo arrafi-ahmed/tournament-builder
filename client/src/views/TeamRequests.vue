@@ -5,12 +5,7 @@ import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import RemoveEntity from "@/components/RemoveEntity.vue";
 import NoItems from "@/components/NoItems.vue";
-import {
-  formatDate,
-  getRequestBg,
-  getTeamLogoUrl,
-  toLocalISOString,
-} from "@/others/util";
+import { formatDate, getRequestBg, getTeamLogoUrl } from "@/others/util";
 
 const router = useRouter();
 const store = useStore();
@@ -56,7 +51,7 @@ watch(
     store.dispatch("team/setTeamRequestsByTournamentId", {
       tournamentId: newVal,
     });
-  }
+  },
 );
 </script>
 
@@ -66,9 +61,9 @@ watch(
       <v-col>
         <page-title
           justify="space-between"
+          show-back
           sub-title="Tournament Join"
           title="Team Requests"
-          show-back
         >
           <v-row align="center">
             <v-menu :close-on-content-click="false">
@@ -100,23 +95,23 @@ watch(
           item-title="name"
           item-value="id"
           label="Filter by tournament"
-          variant="solo"
           prepend-inner-icon="mdi-filter"
+          variant="solo"
         ></v-select>
 
         <v-list
           v-if="teams.length > 0"
           density="compact"
+          elevation="1"
           lines="three"
           rounded
-          elevation="1"
         >
           <template v-for="(item, index) in teams">
             <v-list-item
               v-if="item"
               :key="index"
-              :title="item?.tmName"
               :class="getRequestBg(item)"
+              :title="item?.tmName"
               link
             >
               <!--                    @click="-->
