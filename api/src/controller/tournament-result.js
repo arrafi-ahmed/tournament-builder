@@ -20,9 +20,20 @@ router.post("/updateFutureTeamReferenceForSingleMatch", auth, (req, res, next) =
     .catch((err) => next(err));
 });
 
-router.post("/saveMatchResultByMatchId", auth, (req, res, next) => {
+router.post("/saveSingleMatchResult", auth, (req, res, next) => {
   tournamentResultService
-    .saveMatchResultByMatchId({
+    .saveSingleMatchResult({
+      payload: req.body,
+    })
+    .then((result) => {
+      res.status(200).json(new ApiResponse("Result saved!", result));
+    })
+    .catch((err) => next(err));
+});
+
+router.post("/saveGroupMatchResult", auth, (req, res, next) => {
+  tournamentResultService
+    .saveGroupMatchResult({
       payload: req.body,
     })
     .then((result) => {

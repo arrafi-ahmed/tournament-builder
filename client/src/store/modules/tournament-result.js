@@ -17,7 +17,7 @@ export const mutations = {
     if (foundMatchDayIndex !== -1) {
       state.results[foundMatchDayIndex].matches[
         payload.selectedMatchIndex
-      ].resultId = payload.saveMatchResult.id;
+      ].resultId = payload.savedMatchResult.id;
     }
     const updatedMatchesMap = new Map(
       payload.updatedMatches.map((updatedMatch) => [
@@ -44,11 +44,6 @@ export const mutations = {
             match.awayTeamName = selectedMatch.awayTeamName;
           if (updatedMatch.awayTeamId === selectedMatch.homeTeamId)
             match.awayTeamName = selectedMatch.homeTeamName;
-
-          console.log(6, selectedMatch);
-          console.log(7, updatedMatch);
-          console.log(8, payload);
-          console.log(9, state.results);
         }
       });
     });
@@ -69,6 +64,9 @@ export const mutations = {
           resultId: null,
           homeTeamScore: null,
           awayTeamScore: null,
+          homeTeamId: null,
+          awayTeamId: null,
+          winnerId: null,
         };
       }
     }
@@ -91,13 +89,31 @@ export const actions = {
         });
     });
   },
-  saveMatchResultByMatchId({ commit }, request) {
+  saveSingleMatchResult({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios
-        .post("/api/tournament-result/saveMatchResultByMatchId", request)
+        .post("/api/tournament-result/saveSingleMatchResult", request)
         .then((response) => {
           commit("saveResult", {
-            saveMatchResult: response.data?.payload?.saveMatchResult,
+            savedMatchResult: response.data?.payload?.savedMatchResult,
+            selectedMatchDate: request.selectedMatchDate,
+            selectedMatchIndex: request.selectedMatchIndex,
+            updatedMatches: response.data?.payload?.updatedMatches,
+          });
+          resolve(response.data.payload);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  saveGroupMatchResult({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/tournament-result/saveGroupMatchResult", request)
+        .then((response) => {
+          commit("saveResult", {
+            savedMatchResult: response.data?.payload?.savedMatchResult,
             selectedMatchDate: request.selectedMatchDate,
             selectedMatchIndex: request.selectedMatchIndex,
             updatedMatches: response.data?.payload?.updatedMatches,

@@ -59,12 +59,10 @@ exports.updateMatchesStartTime = async ({ matches }) => {
     match.id,
     new Date(match.startTime).toISOString().slice(0, 19),
   ]);
-
   return sql`
         update matches
         set start_time = update_data.startTime::timestamp
-        from (values ${sql(matches)}) as update_data (id
-                , startTime)
+        from (values ${sql(matches)}) as update_data (id, startTime)
         where matches.id = (update_data.id):: int
             returning *;
     `;
@@ -73,12 +71,6 @@ exports.updateMatchesStartTime = async ({ matches }) => {
 exports.deleteMatch = async ({
   payload: { selectedMatch, updatingMatches },
 }) => {
-  // tournamentService.saveMatch({
-  //   newMatch: selectedMatch,
-  //   onlyEntitySave: true,
-  // });
-  //
-  // exports.updateMatchesStartTime({ matches: updatingMatches });
   return Promise.all([
     tournamentFormatService.saveMatch({
       payload: { newMatch: selectedMatch, onlyEntitySave: true },
@@ -185,5 +177,6 @@ const processScheduleData = async (matchRows) => {
       });
     }
   });
+  unplannedMatches.sort((a, b) => a.id - b.id);
   return { fields, unplannedMatches };
 };

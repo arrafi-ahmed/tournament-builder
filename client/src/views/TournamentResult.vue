@@ -38,7 +38,6 @@ const currSelectedMatchIndex = ref(0);
 
 const saveResult = ({ matchIndex }) => {
   const targetMatch = matchesForSelectedDate.value[matchIndex];
-  // console.log(1, matchesForSelectedDate.value[matchIndex]);
   if (targetMatch.homeTeamScore > targetMatch.awayTeamScore) {
     targetMatch.winnerId = targetMatch.homeTeamId;
   } else if (targetMatch.homeTeamScore < targetMatch.awayTeamScore) {
@@ -48,20 +47,29 @@ const saveResult = ({ matchIndex }) => {
     targetMatch.winnerId = selectedWinner.value.teamId;
   }
   const matchResult = {
+    id: targetMatch.resultId,
     matchId: targetMatch.id,
     homeTeamScore: targetMatch.homeTeamScore,
     awayTeamScore: targetMatch.awayTeamScore,
     winnerId: targetMatch.winnerId,
   };
-  let refData = {
-    updatedMatchHomeTeamId: targetMatch.homeTeamId,
-    updatedMatchAwayTeamId: targetMatch.awayTeamId,
-  };
-  store.dispatch("tournamentResult/saveMatchResultByMatchId", {
+  let actionName = null;
+  let refData = {};
+  if (targetMatch.futureTeamReference) {
+    actionName = "saveSingleMatchResult";
+    refData = {
+      updatedMatchHomeTeamId: targetMatch.homeTeamId,
+      updatedMatchAwayTeamId: targetMatch.homeTeamId,
+    };
+  } else if (targetMatch.groupTeamReference) {
+    actionName = "saveGroupMatchResult";
+  }
+  store.dispatch(`tournamentResult/${actionName}`, {
     matchResult,
-    refData,
+    groupId: targetMatch.groupId,
     selectedMatchDate: selectedMatchDate.value,
     selectedMatchIndex: matchIndex,
+    refData,
   });
 };
 const clearResult = ({ matchIndex }) => {
@@ -253,7 +261,7 @@ onMounted(async () => {
 
               <v-row class="mt-2">
                 <pre>
-                  {{item}}
+                  {{ item }}
                 </pre>
                 <v-col>
                   <div class="d-flex align-center">

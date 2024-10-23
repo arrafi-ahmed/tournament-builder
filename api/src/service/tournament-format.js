@@ -1141,20 +1141,12 @@ const populateSelectedNTeamOptions = ({
     // matchTeamTitles[id] = ["Empty Spot", "Empty Spot"]; // Initialize both home and away slots
     // Direct assignment if team names are present, home pos =1, away pos =2
 
-    if (
-      match.homeTeamId &&
-      !futureTeamReference?.home?.id &&
-      presentTeamPosition === 1
-    ) {
+    if (match.homeTeamId && presentTeamPosition === 1) {
       (teamOptions[`t-${match.homeTeamId}`] ??= {}).used = true;
       return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
         teamOptions[`t-${match.homeTeamId}`]);
     }
-    if (
-      match.awayTeamId &&
-      !futureTeamReference?.away?.id &&
-      presentTeamPosition === 2
-    ) {
+    if (match.awayTeamId && presentTeamPosition === 2) {
       (teamOptions[`t-${match.awayTeamId}`] ??= {}).used = true;
       return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
         teamOptions[`t-${match.awayTeamId}`]);

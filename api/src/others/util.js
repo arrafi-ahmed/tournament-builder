@@ -26,6 +26,15 @@ const generatePassResetContent = (token, CLIENT_BASE_URL) => {
     ${appInfo.name}`;
 };
 
+const removeOtherParams = (obj, allowedKeys) => {
+  Object.keys(obj).forEach(key => {
+    if (!allowedKeys.includes(key)) {
+      delete obj[key]; // Remove the key if it is not in allowedKeys
+    }
+  });
+  return obj;
+}
+
 const generateManagerCredentialContent = ({ teamName, credential }) => {
   return `
     Greetings!<br><br>
@@ -129,6 +138,7 @@ module.exports = {
   getFilePath,
   removeImages,
   formatDate,
+  removeOtherParams,
   ifSudo,
   ifOrganizer,
   ifManager,
