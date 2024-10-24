@@ -12,9 +12,9 @@ const route = useRoute();
 const store = useStore();
 
 const results = computed(() => store.state.tournamentResult.results);
-const matchDays = computed(() =>
-  results.value.map(({ id, matchDate }) => ({ id, matchDate })),
-);
+const matchDays = computed(() => store.state.tournamentResult.results);
+const titles = computed(() => store.state.tournamentResult.titles);
+
 const tournament = computed(() => store.state.tournament.tournament);
 const participants = computed(() => store.state.tournament.participants);
 
@@ -53,23 +53,18 @@ const saveResult = ({ matchIndex }) => {
     awayTeamScore: targetMatch.awayTeamScore,
     winnerId: targetMatch.winnerId,
   };
-  let actionName = null;
-  let refData = {};
-  if (targetMatch.futureTeamReference) {
-    actionName = "saveSingleMatchResult";
-    refData = {
-      updatedMatchHomeTeamId: targetMatch.homeTeamId,
-      updatedMatchAwayTeamId: targetMatch.homeTeamId,
-    };
-  } else if (targetMatch.groupTeamReference) {
-    actionName = "saveGroupMatchResult";
-  }
+  let actionName =
+    targetMatch.type === "group"
+      ? "saveGroupMatchResult"
+      : "saveSingleMatchResult";
+
   store.dispatch(`tournamentResult/${actionName}`, {
     matchResult,
     groupId: targetMatch.groupId,
     selectedMatchDate: selectedMatchDate.value,
     selectedMatchIndex: matchIndex,
-    refData,
+    updatedMatchHomeTeamId: targetMatch.homeTeamId,
+    updatedMatchAwayTeamId: targetMatch.awayTeamId,
   });
 };
 const clearResult = ({ matchIndex }) => {
@@ -77,6 +72,12 @@ const clearResult = ({ matchIndex }) => {
   store.dispatch("tournamentResult/clearResult", {
     resultId: targetMatch.resultId,
     selectedMatchDate: selectedMatchDate.value,
+    match: {
+      id: targetMatch.id,
+      home: { teamId: targetMatch.homeTeamId },
+      away: { teamId: targetMatch.awayTeamId },
+    },
+    groupTeamReference: targetMatch.groupTeamReference,
   });
 };
 
@@ -109,6 +110,25 @@ const checkMatchScore = ({ match, matchIndex }) => {
   selectedWinner.value = selectWinnerOptions.value.find(
     (item) => item.teamId === match.winnerId,
   );
+};
+const getTeamName = (item, selectedType) => {
+  const { home, away } = item.futureTeamReference || {};
+  if (selectedType === "home") {
+    if (home?.type === "match") {
+      return `${home.position == 1 ? "Winner" : "Looser"}, ${titles.value.match[home.id]}`;
+    } else if (home?.type === "group") {
+      return `Group ${titles.value.group[home.id]}, Ranking ${home.position}`;
+    }
+    // return `Team ${item.homeTeamId}`;
+  } else if (selectedType === "away") {
+    if (away?.type === "match") {
+      return `${away.position == 1 ? "Winner" : "Looser"}, ${titles.value.match[away.id]}`;
+    } else if (away?.type === "group") {
+      return `Group ${titles.value.group[away.id]}, Ranking ${away.position}`;
+    }
+    // return `Team ${item.awayTeamId}`;
+  }
+  return "Empty Slot";
 };
 
 const fetchData = () => {
@@ -192,11 +212,7 @@ onMounted(async () => {
           rounded
         >
           <template v-for="(item, index) in matchesForSelectedDate">
-            <v-list-item
-              v-if="item"
-              :key="index"
-              :disabled="!item.homeTeamId || !item.awayTeamId"
-            >
+            <v-list-item v-if="item" :key="index">
               <v-list-item-title
                 class="d-flex align-center justify-space-between"
               >
@@ -227,6 +243,7 @@ onMounted(async () => {
                     density="comfortable"
                     variant="outlined"
                     class="ml-2"
+                    :disabled="!item.homeTeamId || !item.awayTeamId"
                     @click="saveResult({ matchIndex: index })"
                   ></v-btn>
                 </span>
@@ -260,15 +277,15 @@ onMounted(async () => {
               </v-row>
 
               <v-row class="mt-2">
-                <pre>
-                  {{ item }}
-                </pre>
+<!--                <pre>-->
+<!--                  {{ item }}-->
+<!--                </pre>-->
                 <v-col>
                   <div class="d-flex align-center">
                     <!--                    TODO:fix name-->
-                    <h3>
-                      {{ item.homeTeamName || `Team ${item.homeTeamId}` }}
-                    </h3>
+                    <h4>
+                      {{ item.homeTeamName || getTeamName(item, "home") }}
+                    </h4>
                     <v-chip
                       v-if="
                         item.winnerId !== null &&
@@ -303,9 +320,9 @@ onMounted(async () => {
                 </v-col>
                 <v-col>
                   <div class="d-flex align-center">
-                    <h3>
-                      {{ item.awayTeamName || `Team ${item.awayTeamId}` }}
-                    </h3>
+                    <h4>
+                      {{ item.awayTeamName || getTeamName(item, "away") }}
+                    </h4>
                     <v-chip
                       v-if="
                         item.winnerId !== null &&

@@ -49,9 +49,9 @@ router.get("/getResults", (req, res, next) => {
       .catch((err) => next(err));
 });
 
-router.get("/clearResult", (req, res, next) => {
+router.post("/clearResult", (req, res, next) => {
   tournamentResultService
-      .clearResult({ resultId: req.query.resultId })
+      .clearResult({ payload: req.body })
       .then((results) => res.status(200).json(new ApiResponse("Result removed!", results)))
       .catch((err) => next(err));
 });

@@ -4,11 +4,15 @@ export const namespaced = true;
 
 export const state = {
   results: [],
+  titles: {},
 };
 
 export const mutations = {
   setResults(state, payload) {
     state.results = payload;
+  },
+  setTitles(state, payload) {
+    state.titles = payload;
   },
   saveResult(state, payload) {
     const foundMatchDayIndex = state.results.findIndex(
@@ -48,15 +52,15 @@ export const mutations = {
       });
     });
   },
-  clearResult(state, payload) {
+  clearResult(state, { request, updatedMatches }) {
     const foundMatchDayIndex = state.results.findIndex(
-      (item) => item.id === payload.selectedMatchDate.id,
+      (item) => item.id === request.selectedMatchDate.id,
     );
     if (foundMatchDayIndex !== -1) {
       const foundResultIndex = state.results[
         foundMatchDayIndex
       ].matches?.findIndex(
-        (item) => item.resultId && item.resultId === payload.resultId,
+        (item) => item.resultId && item.resultId === request.resultId,
       );
       if (foundResultIndex !== -1) {
         state.results[foundMatchDayIndex].matches[foundResultIndex] = {
@@ -64,12 +68,28 @@ export const mutations = {
           resultId: null,
           homeTeamScore: null,
           awayTeamScore: null,
-          homeTeamId: null,
-          awayTeamId: null,
           winnerId: null,
         };
       }
     }
+    //clear teamId, score of ref match
+    state.results.forEach((item, dayIndex) => {
+      updatedMatches.forEach((updatedMatch) => {
+        const foundMatchIndex = item.matches?.findIndex(
+          (match) => match.id === updatedMatch.id,
+        );
+        if (foundMatchIndex !== -1) {
+          state.results[dayIndex].matches[foundMatchIndex] = {
+            ...state.results[dayIndex].matches[foundMatchIndex],
+            homeTeamId: null,
+            awayTeamId: null,
+            homeTeamScore: null,
+            awayTeamScore: null,
+            winnerId: null,
+          };
+        }
+      });
+    });
   },
 };
 
@@ -81,7 +101,8 @@ export const actions = {
           params: { tournamentId: request.tournamentId },
         })
         .then((response) => {
-          commit("setResults", response.data?.payload);
+          commit("setResults", response.data?.payload?.matchDays);
+          commit("setTitles", response.data?.payload?.titles);
           resolve(response.data.payload);
         })
         .catch((err) => {
@@ -128,11 +149,12 @@ export const actions = {
   clearResult({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios
-        .get("/api/tournament-result/clearResult", {
-          params: { resultId: request.resultId },
-        })
+        .post("/api/tournament-result/clearResult", request)
         .then((response) => {
-          commit("clearResult", request);
+          commit("clearResult", {
+            request,
+            updatedMatches: response.data.payload?.updatedMatches,
+          });
           resolve(response.data.payload);
         })
         .catch((err) => {

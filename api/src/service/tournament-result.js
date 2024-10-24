@@ -1,15 +1,118 @@
 const { sql } = require("../db");
 const scheduleService = require("../service/tournament-schedule");
-const { raw } = require("express");
-const { removeOtherParams } = require("../others/util");
+const matches = require("nodemailer/lib/smtp-connection");
 
-exports.clearResult = async ({ resultId }) => {
+exports.clearResult = async ({ payload: { resultId, match } }) => {
   const [deletedResult] = await sql`
         delete
         from match_results
         where id = ${resultId} returning *`;
 
-  return deletedResult;
+  // get selected home/away teamId group ranking first
+  console.log(1, match);
+  const ids =
+    (match &&
+      Object.values(match)
+        .filter((item) => item.teamId)
+        .map((item) => item?.teamId)) ||
+    [];
+  const groupTeams = ids.length
+    ? await sql`
+                select *
+                from groups_teams
+                where team_id in ${sql(ids)}
+        `
+    : [];
+  groupTeams.length &&
+    groupTeams.forEach((item) => {
+      if (item.teamId == match.home?.teamId) {
+        match.home.tournamentGroupId = item.tournamentGroupId;
+        match.home.teamRanking = item.teamRanking;
+      } else if (item.teamId == match.away?.teamId) {
+        match.away.tournamentGroupId = item.tournamentGroupId;
+        match.away.teamRanking = item.teamRanking;
+      }
+    });
+  console.log(2, match);
+  // set ref home/away team id to null
+  //@formatter:off
+  const updatedMatches = await sql`
+    UPDATE matches
+    SET home_team_id =
+            CASE
+                WHEN (future_team_reference -> 'home') IS NOT NULL
+                    AND (future_team_reference -> 'home' ->> 'type' = 'match')
+                    AND (future_team_reference -> 'home' ->> 'id')::INT = ${match.id}::INT
+                    THEN NULL
+                WHEN ${match.home.tournamentGroupId}::INT IS NOT NULL
+                    AND (future_team_reference -> 'home') IS NOT NULL
+                    AND (future_team_reference -> 'home' ->> 'type' = 'group')
+                    AND (future_team_reference -> 'home' ->> 'id')::INT = ${match.home.tournamentGroupId}::INT
+                    AND (
+                         (future_team_reference -> 'home' ->> 'position')::INT = ${match.home.teamRanking}::INT
+                             OR (future_team_reference -> 'home' ->> 'position')::INT = ${match.away.teamRanking}::INT
+                         )
+                    THEN NULL
+                ELSE home_team_id
+                END,
+        away_team_id =
+            CASE
+                WHEN (future_team_reference -> 'away') IS NOT NULL
+                    AND (future_team_reference -> 'away' ->> 'type' = 'match')
+                    AND (future_team_reference -> 'away' ->> 'id')::INT = ${match.id}::INT
+                    THEN NULL
+                WHEN ${match.away.tournamentGroupId}::INT IS NOT NULL
+                    AND (future_team_reference -> 'away') IS NOT NULL
+                    AND (future_team_reference -> 'away' ->> 'type' = 'group')
+                    AND (future_team_reference -> 'away' ->> 'id')::INT = ${match.away.tournamentGroupId}::INT
+                    AND (
+                         (future_team_reference -> 'away' ->> 'position')::INT = ${match.away.teamRanking}::INT
+                             OR (future_team_reference -> 'away' ->> 'position')::INT = ${match.home.teamRanking}::INT
+                         )
+                    THEN NULL
+                ELSE away_team_id
+                END
+    WHERE id <> ${match.id}
+      AND (((future_team_reference -> 'home') IS NOT NULL
+        AND (future_team_reference -> 'home' ->> 'type' = 'match')
+        AND (future_team_reference -> 'home' ->> 'id')::INT = ${match.id}::INT)
+        OR ((future_team_reference -> 'away') IS NOT NULL
+            AND (future_team_reference -> 'away' ->> 'type' = 'match')
+            AND (future_team_reference -> 'away' ->> 'id')::INT = ${match.id}::INT)
+        OR (${match.home.tournamentGroupId}::INT IS NOT NULL
+            AND (future_team_reference -> 'home') IS NOT NULL
+            AND (future_team_reference -> 'home' ->> 'type' = 'group')
+            AND (future_team_reference -> 'home' ->> 'id')::INT = ${match.home.tournamentGroupId}::INT
+            AND (
+                (future_team_reference -> 'home' ->> 'position')::INT = ${match.home.teamRanking}::INT
+                    OR (future_team_reference -> 'home' ->> 'position')::INT = ${match.away.teamRanking}::INT
+                ))
+        OR (${match.away.tournamentGroupId}::INT IS NOT NULL
+            AND (future_team_reference -> 'away') IS NOT NULL
+            AND (future_team_reference -> 'away' ->> 'type' = 'group')
+            AND (future_team_reference -> 'away' ->> 'id')::INT = ${match.away.tournamentGroupId}::INT
+            AND (
+                (future_team_reference -> 'away' ->> 'position')::INT = ${match.away.teamRanking}::INT
+                    OR (future_team_reference -> 'away' ->> 'position')::INT = ${match.home.teamRanking}::INT
+                )))
+    RETURNING *;
+`;
+  //@formatter:on
+
+  // set selected home/away team result->score to null
+  let updatedScores = [];
+  if (updatedMatches.length) {
+    const ids = updatedMatches.map((item) => item.id);
+    console.log(2, ids);
+    updatedScores = await sql`
+            update match_results
+            set home_team_score = null,
+                away_team_score = null,
+                winner_id       = null
+            where match_id in ${sql(ids)} returning *;
+        `;
+  }
+  return { deletedResult, updatedMatches, updatedScores };
 };
 
 exports.saveMatchResult = async ({ matchResult }) => {
@@ -144,28 +247,6 @@ exports.updateGroupTeamReferenceForGroupMatches = async ({
         WHERE groups_teams_stats.id = update_data.id:: int
             RETURNING *;
     `;
-  // const allowedKeys = [
-  //   "id",
-  //   "played",
-  //   "won",
-  //   "draw",
-  //   "lost",
-  //   "points",
-  //   "goalsFor",
-  //   "goalsAway",
-  //   "goalDifference",
-  //   "groupsTeamsId",
-  // ];
-  // const resultExistsPreSave = !!matchResult.resultId;
-  // check if score, winner id changed, if so then update group_team_stats
-  // let winnerIdChanged = false;
-  // let scoresChanged = false;
-  // if (oldMatchResult){
-  //   winnerIdChanged = matchResult.winnerId !== oldMatchResult.winnerId;
-  //   scoresChanged =
-  //       matchResult.homeTeamScore !== oldMatchResult.homeTeamScore ||
-  //       matchResult.awayTeamScore !== oldMatchResult.awayTeamScore;
-  // }
 
   let rankingPublished = false;
   let matchesWValidResult = matchWResult.filter(
@@ -217,40 +298,41 @@ exports.updateGroupTeamReferenceForGroupMatches = async ({
   //update matches homeTeamId, awayTeamId
   // @formatter:off
   const updatedMatches = await sql`
-  UPDATE matches
-  SET home_team_id = CASE
-      WHEN (future_team_reference -> 'home') IS NOT NULL
-           AND (future_team_reference -> 'home' ->> 'type' = 'group')
-           AND (future_team_reference -> 'home' ->> 'id')::INT = (update_data.tournamentGroupId)::INT
-           AND (future_team_reference -> 'home' ->> 'position')::INT = (update_data.teamRanking)::INT
-      THEN update_data.teamId::INT
-      ELSE home_team_id::INT
-  END,
-      away_team_id = CASE
-      WHEN (future_team_reference -> 'away') IS NOT NULL
-           AND (future_team_reference -> 'away' ->> 'type' = 'group')
-           AND (future_team_reference -> 'away' ->> 'id')::INT = (update_data.tournamentGroupId)::INT
-           AND (future_team_reference -> 'away' ->> 'position')::INT = (update_data.teamRanking)::INT
-      THEN update_data.teamId::INT
-      ELSE away_team_id::INT
-  END
-  FROM (VALUES ${sql(formattedGroupTeam)}) AS update_data (groupTeamId, tournamentGroupId, teamId, teamRanking)
-  WHERE (future_team_reference -> 'home' ->> 'id')::INT = (update_data.tournamentGroupId)::INT
-    AND (future_team_reference -> 'home' ->> 'position')::INT = (update_data.teamRanking)::INT
-  OR (future_team_reference -> 'away' ->> 'id')::INT = (update_data.tournamentGroupId)::INT
-    AND (future_team_reference -> 'away' ->> 'position')::INT = (update_data.teamRanking)::INT
-  RETURNING *;
+    UPDATE matches
+    SET home_team_id = CASE
+        WHEN (future_team_reference -> 'home') IS NOT NULL
+             AND (future_team_reference -> 'home' ->> 'type' = 'group')
+             AND (future_team_reference -> 'home' ->> 'id')::INT = (update_data.tournamentGroupId)::INT
+             AND (future_team_reference -> 'home' ->> 'position')::INT = (update_data.teamRanking)::INT
+        THEN update_data.teamId::INT
+        ELSE home_team_id::INT
+    END,
+        away_team_id = CASE
+        WHEN (future_team_reference -> 'away') IS NOT NULL
+             AND (future_team_reference -> 'away' ->> 'type' = 'group')
+             AND (future_team_reference -> 'away' ->> 'id')::INT = (update_data.tournamentGroupId)::INT
+             AND (future_team_reference -> 'away' ->> 'position')::INT = (update_data.teamRanking)::INT
+        THEN update_data.teamId::INT
+        ELSE away_team_id::INT
+    END
+    FROM (VALUES ${sql(formattedGroupTeam)}) AS update_data (groupTeamId, tournamentGroupId, teamId, teamRanking)
+    WHERE (future_team_reference -> 'home' ->> 'id')::INT = (update_data.tournamentGroupId)::INT
+      AND (future_team_reference -> 'home' ->> 'position')::INT = (update_data.teamRanking)::INT
+    OR (future_team_reference -> 'away' ->> 'id')::INT = (update_data.tournamentGroupId)::INT
+      AND (future_team_reference -> 'away' ->> 'position')::INT = (update_data.teamRanking)::INT
+    RETURNING *;
   `;
   // @formatter:on
   return updatedMatches;
 };
 
 exports.saveSingleMatchResult = async ({
-  payload: { matchResult, refData },
+  payload: { matchResult, updatedMatchHomeTeamId, updatedMatchAwayTeamId },
 }) => {
   const [savedMatchResult] = await exports.saveMatchResult({ matchResult });
   let updatedMatches = await exports.updateFutureTeamReferenceForSingleMatch({
-    refData,
+    updatedMatchHomeTeamId,
+    updatedMatchAwayTeamId,
     matchId: matchResult.matchId,
     winnerId: matchResult.winnerId,
   });
@@ -259,11 +341,11 @@ exports.saveSingleMatchResult = async ({
 };
 
 exports.updateFutureTeamReferenceForSingleMatch = async ({
-  refData,
+  updatedMatchHomeTeamId,
+  updatedMatchAwayTeamId,
   matchId,
   winnerId,
 }) => {
-  const { updatedMatchHomeTeamId, updatedMatchAwayTeamId } = refData || {};
   if (!updatedMatchHomeTeamId && !updatedMatchAwayTeamId) return [];
 
   const looserId =
@@ -336,8 +418,10 @@ exports.getResults = async ({ tournamentId }) => {
                END AS type_id,
                CASE
                    WHEN m.type = 'group' THEN m.group_team_reference
+               END AS group_team_reference,
+               CASE
                    WHEN m.type = 'bracket' THEN m.future_team_reference                
-               END AS reference
+               END AS future_team_reference
         FROM matches m
                  LEFT JOIN fields f ON m.field_id = f.id
                  LEFT JOIN match_days md ON m.match_day_id = md.id
@@ -348,6 +432,7 @@ exports.getResults = async ({ tournamentId }) => {
         ORDER BY md.match_date, m.start_time;
     `;
   // @formatter:on
+  const titles = { match: {}, group: {} };
   // Process rows into matchDays object
   const matchDays = rows.reduce((acc, row) => {
     const { matchDayId } = row;
@@ -374,34 +459,67 @@ exports.getResults = async ({ tournamentId }) => {
       winnerId: row.winnerId,
       fieldId: row.fieldId,
       fieldName: row.fieldName,
+      futureTeamReference: row.futureTeamReference,
+      groupTeamReference: row.groupTeamReference,
     };
     if (newMatch.type === "group") {
       newMatch.groupId = row.typeId;
-      newMatch.groupTeamReference = row.reference;
     }
     if (newMatch.type === "bracket") {
       newMatch.bracketId = row.typeId;
-      newMatch.futureTeamReference = row.reference;
     }
     if (newMatch.type === "single_match") {
       newMatch.phaseId = row.typeId;
-      newMatch.futureTeamReference = row.reference;
     }
     acc[matchDayId].matches.push(newMatch);
+
+    // store match title
+    const { home, away } = newMatch.futureTeamReference || {};
+    if (home?.type === "match" && !titles.match[home.id])
+      titles.match[home.id] = home.id;
+    if (away?.type === "match" && !titles.match[away.id])
+      titles.match[away.id] = away.id;
+
+    if (home?.type === "group" && !titles.group[home.id])
+      titles.group[home.id] = home.id;
+    if (away?.type === "group" && !titles.group[away.id])
+      titles.group[away.id] = away.id;
 
     return acc;
   }, {});
 
+  const matchIds = Object.values(titles.match).filter((item) => item);
+  const groupIds = Object.values(titles.group).filter((item) => item);
+  const fetchedMatches = await sql`
+        select id, name
+        from matches
+        where matches.id in ${sql(matchIds)}
+    `;
+  fetchedMatches.forEach((match) => {
+    titles.match[match.id] = match.name;
+  });
+  const fetchedGroups = await sql`
+        select id, name
+        from tournament_groups
+        where tournament_groups.id in ${sql(groupIds)}
+    `;
+  fetchedGroups.forEach((group) => {
+    titles.group[group.id] = group.name;
+  });
+  console.log(22, titles)
   // Retrieve matchDays data from scheduleService
   const matchDaysFromService = await scheduleService.getMatchDays({
     tournamentId,
   });
 
   // Map over matchDays from service, combining data from rows
-  return matchDaysFromService.map((matchDay) => {
-    return {
-      ...matchDay,
-      matches: matchDays[matchDay.id]?.matches || [],
-    };
-  });
+  return {
+    matchDays: matchDaysFromService.map((matchDay) => {
+      return {
+        ...matchDay,
+        matches: matchDays[matchDay.id]?.matches || [],
+      };
+    }),
+    titles,
+  };
 };
