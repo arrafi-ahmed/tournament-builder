@@ -117,14 +117,14 @@ const getTeamName = (item, selectedType) => {
     if (home?.type === "match") {
       return `${home.position == 1 ? "Winner" : "Looser"}, ${titles.value.match[home.id]}`;
     } else if (home?.type === "group") {
-      return `Group ${titles.value.group[home.id]}, Ranking ${home.position}`;
+      return `${titles.value.group[home.id]}, Ranking ${home.position}`;
     }
     // return `Team ${item.homeTeamId}`;
   } else if (selectedType === "away") {
     if (away?.type === "match") {
       return `${away.position == 1 ? "Winner" : "Looser"}, ${titles.value.match[away.id]}`;
     } else if (away?.type === "group") {
-      return `Group ${titles.value.group[away.id]}, Ranking ${away.position}`;
+      return `${titles.value.group[away.id]}, Ranking ${away.position}`;
     }
     // return `Team ${item.awayTeamId}`;
   }

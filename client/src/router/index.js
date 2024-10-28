@@ -228,6 +228,15 @@ const routes = [
           title: "Tournament Settings",
         },
       },
+      {
+        path: "standing",
+        name: "tournament-standing",
+        component: () => import("@/views/TournamentStanding.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Tournament Standing",
+        },
+      },
     ],
     beforeEnter(to, from, next) {
       if (to.matched.length > 1) return next(); //parent and child route matched
@@ -236,6 +245,17 @@ const routes = [
         params: { tournamentId: to.params.tournamentId },
       });
     },
+  },
+  {
+    path: "/",
+    component: import("@/layouts/headerless/Headerless.vue"),
+    children: [
+      {
+        path: "public/tournament/:tournamentId",
+        name: "public-view",
+        component: import("@/views/PublicView.vue"),
+      },
+    ],
   },
   {
     path: "",

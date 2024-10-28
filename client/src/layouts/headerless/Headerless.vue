@@ -1,4 +1,6 @@
-<script setup></script>
+<script setup>
+import DefaultFooter from "@/layouts/commons/Footer.vue";
+</script>
 
 <template>
   <v-app>
@@ -7,6 +9,7 @@
         <router-view />
       </div>
     </v-main>
+    <default-footer />
   </v-app>
 </template>
 

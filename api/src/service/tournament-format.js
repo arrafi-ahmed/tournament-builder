@@ -65,6 +65,7 @@ exports.saveGroup = async ({
       homeTeamId: null,
       awayTeamId: null,
       groupId: savedGroup.id,
+      phaseId: newGroup.tournamentPhaseId,
       futureTeamReference: null,
       groupTeamReference: null, //todo: fill after inserting savedGroupsTeams
       tournamentId: tournamentId,
@@ -423,7 +424,7 @@ exports.createGroupPhase = async ({
     const savedGroup = await exports.saveGroup({
       payload: {
         newGroup,
-        match: { count: entityLastCount.match },
+        match: { count: entityLastCount.match, phaseId: savedPhase.id },
         tournamentId,
       },
     });

@@ -42,6 +42,20 @@ export const calcMatchType = (type) => {
         ? { title: "Single Match", bgColor: "bg-tertiary", color: "tertiary" }
         : null;
 };
+export const getRoundTitle = (roundType) =>
+  roundType == 1
+    ? "Final"
+    : roundType == 2
+      ? "Semi-finals"
+      : roundType == 3
+        ? "Quarter-finals"
+        : roundType == 4
+          ? "Round of 16"
+          : roundType == 5
+            ? "Round of 32"
+            : roundType == 6
+              ? "Round of 64"
+              : null;
 
 export const sendToWhatsapp = (phone, message) => {
   const encodedMessage = encodeURIComponent(message);

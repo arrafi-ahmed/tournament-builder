@@ -72,6 +72,15 @@ const rail = ref(true);
         title="Result"
         value="result"
       ></v-list-item>
+      <v-list-item
+        :to="{
+          name: 'tournament-standing',
+          params: { tournamentId: $route.params.tournamentId },
+        }"
+        prepend-icon="mdi-table-arrow-up"
+        title="Standing"
+        value="standing"
+      ></v-list-item>
     </v-list>
   </v-navigation-drawer>
 </template>

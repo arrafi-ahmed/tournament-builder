@@ -32,6 +32,7 @@ app.use("/api/tournament-format", require("./src/controller/tournament-format"))
 app.use("/api/tournament-settings", require("./src/controller/tournament-settings"));
 app.use("/api/tournament-schedule", require("./src/controller/tournament-schedule"));
 app.use("/api/tournament-result", require("./src/controller/tournament-result"));
+app.use("/api/tournament-standing", require("./src/controller/tournament-standing"));
 
 app.get("/api/info", (req, res) => {
   res.status(200).json(appInfo);

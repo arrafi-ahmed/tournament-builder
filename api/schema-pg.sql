@@ -56,7 +56,7 @@ CREATE TABLE tournament_phases
 (
     id            SERIAL PRIMARY KEY,
     name          VARCHAR(255),
-    phase_order   INT,
+    order         INT,
     updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
 );
@@ -65,7 +65,7 @@ CREATE TABLE tournament_brackets
 (
     id                  SERIAL PRIMARY KEY,
     name                VARCHAR(255),
-    bracket_order       INT,
+    order               INT,
     teams_count         INT,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tournament_phase_id INT REFERENCES tournament_phases (id) ON DELETE CASCADE
@@ -75,8 +75,8 @@ CREATE TABLE tournament_groups
 (
     id                  SERIAL PRIMARY KEY,
     name                VARCHAR(255),
-    ranking_published   BOOLEAN,  --added
-    group_order         INT,
+    ranking_published   BOOLEAN, --added
+    order               INT,
     teams_per_group     INT,
     double_round_robin  BOOLEAN,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -135,7 +135,7 @@ CREATE TABLE matches
 (
     id                    SERIAL PRIMARY KEY,
     name                  VARCHAR(255),
-    match_order           INT,
+    order                 INT,
     match_type            VARCHAR(50) CHECK (match_type IN ('group', 'bracket', 'single_match')) NOT NULL,
     round_type            INT,
     start_time            TIMESTAMP,

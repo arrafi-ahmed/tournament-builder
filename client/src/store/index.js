@@ -6,6 +6,7 @@ import * as tournamentFormat from "./modules/tournament-format";
 import * as tournamentSettings from "./modules/tournament-settings";
 import * as tournamentSchedule from "./modules/tournament-schedule";
 import * as tournamentResult from "./modules/tournament-result";
+import * as tournamentStanding from "./modules/tournament-standing";
 
 const store = createStore({
   modules: {
@@ -16,6 +17,7 @@ const store = createStore({
     tournamentSettings,
     tournamentSchedule,
     tournamentResult,
+    tournamentStanding,
   },
   state: () => ({
     progress: null,

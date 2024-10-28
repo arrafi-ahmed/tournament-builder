@@ -5,7 +5,7 @@ import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 import { useDisplay } from "vuetify";
-import { calcMatchType } from "@/others/util";
+import {calcMatchType, getRoundTitle} from "@/others/util";
 
 const route = useRoute();
 const store = useStore();
@@ -43,21 +43,6 @@ const calcPhaseColWrapper = computed(() => {
 const calcPhaseCol = (index) => {
   return 12 / (calcPhaseColWrapper.value[index] / phaseSingleColUnit.value);
 };
-
-const getRoundTitle = (roundType) =>
-  roundType == 1
-    ? "Final"
-    : roundType == 2
-      ? "Semi-finals"
-      : roundType == 3
-        ? "Quarter-finals"
-        : roundType == 4
-          ? "Round of 16"
-          : roundType == 5
-            ? "Round of 32"
-            : roundType == 6
-              ? "Round of 64"
-              : null;
 
 const bracketTeamOptions = [64, 32, 16, 8, 4, 2];
 
@@ -285,7 +270,7 @@ const openAddGroup = ({ order, phaseId }) => {
   newGroup.tournamentPhaseId = phaseId;
   newGroup.order = order;
 };
-const addGroup = async () => {
+const addGroup = async ({ phaseId }) => {
   await form.value.validate();
   if (!isFormValid.value) return;
 
