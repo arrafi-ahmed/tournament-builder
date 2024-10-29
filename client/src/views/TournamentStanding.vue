@@ -7,6 +7,7 @@ import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 import { useDisplay } from "vuetify";
 import { calcMatchType, getRoundTitle } from "@/others/util";
 import * as tournamentStanding from "@/store/modules/tournament-standing";
+import MatchCard from "@/components/MatchCard.vue";
 
 const route = useRoute();
 const store = useStore();
@@ -34,7 +35,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <v-container class="format">
+  <v-container class="standing">
     <v-row>
       <v-col>
         <page-title
@@ -68,7 +69,13 @@ onMounted(async () => {
 
     <v-row justify="center">
       <v-col>
-        <v-tabs v-model="tab" v-if="standing.length" bg-color="primary">
+        <v-tabs
+          v-model="tab"
+          v-if="standing.length"
+          bg-color="transparent"
+          color="secondary"
+          density="compact"
+        >
           <template v-for="(phase, phaseIndex) in standing">
             <v-tab :value="phase.phaseId">{{ phase.phaseName }}</v-tab>
           </template>
@@ -76,14 +83,10 @@ onMounted(async () => {
 
         <v-tabs-window v-model="tab">
           <template v-for="(phase, phaseIndex) in standing">
-            <v-tabs-window-item :value="phase.phaseId">
+            <v-tabs-window-item :value="phase.phaseId" class="ma-1">
               <template v-for="(phaseItem, phaseItemIndex) in phase.items">
                 <div v-if="phaseItem.type === 'group'">
-                  <v-card
-                    :title="phaseItem.name"
-                    class="my-5"
-                    variant="outlined"
-                  >
+                  <v-card :title="phaseItem.name" class="my-5">
                     <v-card-text>
                       <v-table density="compact">
                         <thead>
@@ -123,110 +126,51 @@ onMounted(async () => {
                   </v-card>
                 </div>
                 <div v-else-if="phaseItem.type === 'bracket'">
-                  <v-card
-                    :title="phaseItem.name"
-                    class="my-5"
-                    variant="outlined"
-                  >
+                  <v-card :title="phaseItem.name" class="my-5">
                     <v-card-text>
-                      <template v-for="round in phaseItem.rounds">
-                        <h4>{{ getRoundTitle(round.roundType) }}</h4>
+                      <v-row class="scrollable-container">
+                        <v-col
+                          :cols="phaseItem.rounds.length * 3"
+                          class="max-content"
+                        >
+                          <v-row>
+                            <template
+                              v-for="(round, roundIndex) in phaseItem.rounds"
+                            >
+                              <v-col :cols="12 / phaseItem.rounds.length">
+                                <div class="text-body-1 font-weight-medium">
+                                  {{ getRoundTitle(round.roundType) }}
+                                </div>
 
-                        <template v-for="(match, matchIndex) in round.matches">
-                          <v-card
-                            :title="match.name"
-                            :subtitle="match.fieldName"
-                            class="my-5"
-                            variant="outlined"
-                          >
-                            <v-card-text>
-                              <v-row>
-                                <v-col>
-                                  {{ match.homeTeamName || match.homeTeamId }}
-                                  <v-chip
-                                    :color="
-                                      match.winnerId === match.homeTeamId
-                                        ? 'success'
-                                        : 'error'
-                                    "
-                                    class="ml-4"
-                                    size="large"
-                                    label
-                                    rounded
-                                    inline
-                                    >{{ match.homeTeamScore }}
-                                  </v-chip>
-                                </v-col>
-                                <v-col>
-                                  {{ match.awayTeamName || match.awayTeamId }}
-                                  <v-chip
-                                    :color="
-                                      match.winnerId === match.awayTeamId
-                                        ? 'success'
-                                        : 'error'
-                                    "
-                                    class="ml-4"
-                                    size="large"
-                                    label
-                                    rounded
-                                    inline
-                                    >{{ match.awayTeamScore }}
-                                  </v-chip>
-                                </v-col>
-                              </v-row>
-                            </v-card-text>
-                          </v-card>
-                        </template>
-                      </template>
-                    </v-card-text>
-                  </v-card>
-                </div>
-
-                <div v-else-if="phaseItem.type === 'single_match'">
-                  <v-card
-                    :title="phaseItem.name"
-                    :subtitle="phaseItem.fieldName"
-                    class="my-5"
-                    variant="outlined"
-                  >
-                    <v-card-text>
-                      <v-row>
-                        <v-col>
-                          {{ phaseItem.homeTeamName || phaseItem.homeTeamId }}
-                          <v-chip
-                            :color="
-                              phaseItem.winnerId === phaseItem.homeTeamId
-                                ? 'success'
-                                : 'error'
-                            "
-                            class="ml-4"
-                            size="large"
-                            label
-                            rounded
-                            inline
-                            >{{ phaseItem.homeTeamScore }}
-                          </v-chip>
-                        </v-col>
-                        <v-col>
-                          {{ phaseItem.awayTeamName || phaseItem.awayTeamId }}
-                          <v-chip
-                            :color="
-                              phaseItem.winnerId === phaseItem.awayTeamId
-                                ? 'success'
-                                : 'error'
-                            "
-                            class="ml-4"
-                            size="large"
-                            label
-                            rounded
-                            inline
-                            >{{ phaseItem.awayTeamScore }}
-                          </v-chip>
+                                <template
+                                  v-for="(match, matchIndex) in round.matches"
+                                >
+                                  <match-card
+                                    :match="match"
+                                    :show-time="false"
+                                    :show-field="false"
+                                    container-class="mt-4"
+                                  ></match-card>
+                                </template>
+                              </v-col>
+                            </template>
+                          </v-row>
                         </v-col>
                       </v-row>
                     </v-card-text>
                   </v-card>
                 </div>
+
+                <v-row v-else-if="phaseItem.type === 'single_match'">
+                  <v-col cols="3">
+                    <match-card
+                      :match="phaseItem"
+                      :showTime="false"
+                      :showField="false"
+                      :show-lg-title="true"
+                    ></match-card>
+                  </v-col>
+                </v-row>
               </template>
             </v-tabs-window-item>
           </template>
@@ -236,4 +180,8 @@ onMounted(async () => {
   </v-container>
 </template>
 
-<style></style>
+<style>
+.standing .v-col {
+  max-width: 100% !important;
+}
+</style>

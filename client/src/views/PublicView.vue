@@ -284,4 +284,5 @@ onMounted(async () => {
 .public .v-col {
   max-width: 100% !important;
 }
+
 </style>
