@@ -249,8 +249,8 @@ onMounted(async () => {
       </v-col>
     </v-row>
 
-    <v-row justify="center">
-      <v-col class="scrollable-container" col="12">
+    <v-row justify="center" class="scrollable-container">
+      <v-col col="12">
         <v-row>
           <v-col
             v-for="(field, fieldIndex) in schedule"
@@ -524,19 +524,5 @@ onMounted(async () => {
 <style>
 .schedule .v-col {
   max-width: 100% !important;
-}
-
-.max-content {
-  min-width: max-content;
-}
-
-.scrollable-container {
-  overflow-x: auto; /* Allows horizontal scrolling */
-  white-space: nowrap; /* Prevents wrapping of child elements */
-}
-
-.scrollable-container .v-row {
-  flex-wrap: nowrap; /* Prevents row from wrapping */
-  /* width: max-content; /* Ensures the row expands based on its content */
 }
 </style>

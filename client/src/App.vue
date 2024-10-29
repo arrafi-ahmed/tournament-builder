@@ -67,4 +67,18 @@ body,
 .text-overline {
   line-height: 1.5;
 }
+
+.max-content {
+  min-width: max-content;
+}
+
+.scrollable-container {
+  overflow-x: auto; /* Allows horizontal scrolling */
+  white-space: nowrap; /* Prevents wrapping of child elements */
+}
+
+.scrollable-container .v-row {
+  flex-wrap: nowrap; /* Prevents row from wrapping */
+  /* width: max-content; /* Ensures the row expands based on its content */
+}
 </style>

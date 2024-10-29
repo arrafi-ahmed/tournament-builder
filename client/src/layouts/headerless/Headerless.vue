@@ -5,7 +5,7 @@ import DefaultFooter from "@/layouts/commons/Footer.vue";
 <template>
   <v-app>
     <v-main>
-      <div class="fill-height">
+      <div class="fill-height limit-max-width-xl mx-auto">
         <router-view />
       </div>
     </v-main>

@@ -32,8 +32,8 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
                t1.name                                                           AS home_team_name,
                t2.name                                                           AS away_team_name,
                m.round_type,
-               tb.id AS bracket_id,
-               tb.name AS bracket_name
+               tb.id                                                             AS bracket_id,
+               tb.name                                                           AS bracket_name
         FROM match_days md
                  LEFT JOIN matches m ON md.id = m.match_day_id
                  LEFT JOIN match_results mr ON m.id = mr.match_id
@@ -113,6 +113,12 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
         fieldName,
         homeTeamName,
         awayTeamName,
+        hostName:
+          matchType === "group"
+            ? groupName
+            : matchType === "bracket"
+              ? bracketName
+              : "Match",
       });
     }
 
@@ -156,12 +162,29 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
         });
       }
     } else if (matchType === "bracket") {
-      // Group matches by round type only for bracket matches
-      let roundEntry = {
-        roundType,
-        matches: [],
-      };
+      // Add bracket entry with rounds
+      let bracketEntry = phaseEntry.items.find((i) => i.type === "bracket");
+      if (!bracketEntry) {
+        bracketEntry = {
+          type: "bracket",
+          bracketId,
+          name: bracketName,
+          rounds: [],
+        };
+        phaseEntry.items.push(bracketEntry);
+      }
 
+      let roundEntry = bracketEntry.rounds.find(
+        (i) => i.roundType === roundType,
+      );
+      if (roundType && !roundEntry) {
+        // Push the round into the bracket entry
+        roundEntry = {
+          roundType,
+          matches: [],
+        };
+        bracketEntry.rounds.push(roundEntry);
+      }
       // Add match to the appropriate round type group
       roundEntry.matches.push({
         matchId,
@@ -177,21 +200,6 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
         homeTeamName,
         awayTeamName,
       });
-
-      // Add bracket entry with rounds
-      let bracketEntry = phaseEntry.items.find((i) => i.type === "bracket");
-      if (!bracketEntry) {
-        bracketEntry = {
-          type: "bracket",
-          bracketId,
-          name: bracketName,
-          rounds: [],
-        };
-        phaseEntry.items.push(bracketEntry);
-      }
-
-      // Push the round into the bracket entry
-      bracketEntry.rounds.push(roundEntry);
     } else if (matchType === "single_match") {
       // Add single matches directly into the phase items without nesting
       phaseEntry.items.push({
