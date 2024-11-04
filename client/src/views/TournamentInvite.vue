@@ -13,27 +13,38 @@ const store = useStore();
 const teams = computed(() => store.state.team.teams);
 const tournament = computed(() => store.state.tournament.tournament);
 const searchKeyword = ref(null);
+const currentUser = store.getters["user/getCurrentUser"];
 
+const handleSearchTeam = () => {
+  store.dispatch("team/searchTeam", { searchKeyword: searchKeyword.value });
+};
+const addParticipant = async (item) => {
+  const canAddParticipant = await store.dispatch(
+    "subscription/canAddParticipant",
+    { userId: currentUser.id, tournamentId: route.params.tournamentId },
+  );
+  if (canAddParticipant) {
+    store.dispatch("tournament/addParticipant", {
+      teamId: item.tId,
+      tournamentId: route.params.tournamentId,
+      tournamentName: tournament.value.name,
+      managerEmail: item.email,
+    });
+  } else {
+    router.push({
+      name: "pricing",
+      params: { tournamentId: tournament.value.id },
+    });
+  }
+};
 const fetchData = async () => {
-  return Promise.all([
+  Promise.all([
     store.dispatch("tournament/setTournamentWEmailOptionalById", {
       tournamentId: route.params.tournamentId,
     }),
     store.dispatch("tournament/setTournamentsByOrganizerId"),
   ]);
 };
-const handleSearchTeam = () => {
-  store.dispatch("team/searchTeam", { searchKeyword: searchKeyword.value });
-};
-const addParticipant = (item) => {
-  store.dispatch("tournament/addParticipant", {
-    teamId: item.tId,
-    tournamentId: route.params.tournamentId,
-    tournamentName: tournament.value.name,
-    managerEmail: item.email,
-  });
-};
-
 onMounted(async () => {
   fetchData();
 });

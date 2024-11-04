@@ -13,6 +13,7 @@ const store = useStore();
 
 const participants = computed(() => store.state.tournament.participants);
 const tournament = computed(() => store.state.tournament.tournament);
+const currentUser = store.getters["user/getCurrentUser"];
 
 const deleteParticipant = (id, teamId, tournamentId) => {
   store.dispatch("tournament/removeParticipant", {
@@ -20,6 +21,27 @@ const deleteParticipant = (id, teamId, tournamentId) => {
     teamId,
     tournamentId,
   }); //TODO
+};
+const goInvitePage = async () => {
+  const canAddParticipant = await store.dispatch(
+    "subscription/canAddParticipant",
+    {
+      userId: currentUser.id,
+      tournamentId: route.params.tournamentId,
+    },
+  );
+  console.log(11, canAddParticipant)
+  if (canAddParticipant) {
+    router.push({
+      name: "tournament-invite",
+      params: { tournamentId: tournament.value.id },
+    });
+  } else {
+    router.push({
+      name: "pricing",
+      params: { tournamentId: tournament.value.id },
+    });
+  }
 };
 const fetchData = async () => {
   return Promise.all([
@@ -54,10 +76,7 @@ onMounted(async () => {
               </template>
               <v-list density="compact">
                 <v-list-item
-                  :to="{
-                    name: 'tournament-invite',
-                    params: { tournamentId: tournament.id },
-                  }"
+                  @click="goInvitePage"
                   density="compact"
                   prepend-icon="mdi-plus"
                   title="Invite Team"

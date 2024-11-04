@@ -180,11 +180,20 @@ CREATE TABLE subscriptions
     stripe_subscription_id varchar(255)   NOT NULL,
     subscription_amount    decimal(10, 2) NOT NULL,
     activation_date        TIMESTAMP      NOT NULL,
-    expire_date            TIMESTAMP      NOT NULL,
+    expire_date            TIMESTAMP,
     active                 BOOLEAN        NOT NULL,
     pending_cancel         BOOLEAN,
     updated_at             TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    organizer_id           INT REFERENCES users (id) ON DELETE CASCADE
+    user_id                INT REFERENCES users (id) ON DELETE CASCADE, -- ref organizer
+    tournament_id          INT REFERENCES tournaments (id) ON DELETE CASCADE
+);
+
+CREATE TABLE subscription_plan
+(
+    id      SERIAL PRIMARY KEY,
+    title   varchar(255) NOT NULL,
+    tagline varchar(255),
+    price   decimal(10, 2)
 );
 
 CREATE TABLE match_days

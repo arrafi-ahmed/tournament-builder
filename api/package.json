@@ -20,6 +20,7 @@
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^6.9.7",
     "postgres": "^3.4.3",
+    "stripe": "^17.3.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

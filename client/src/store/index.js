@@ -7,9 +7,11 @@ import * as tournamentSettings from "./modules/tournament-settings";
 import * as tournamentSchedule from "./modules/tournament-schedule";
 import * as tournamentResult from "./modules/tournament-result";
 import * as tournamentStanding from "./modules/tournament-standing";
+import * as subscription from "./modules/subscription";
 
 const store = createStore({
   modules: {
+    subscription,
     user,
     team,
     tournament,
@@ -32,6 +34,7 @@ const store = createStore({
     },
   },
   actions: {},
+  getters: {},
 });
 
 export default store;

@@ -9,7 +9,7 @@ const {
   globalErrHandler,
   uncaughtErrHandler,
 } = require("./src/middleware/errHandler");
-const {appInfo} = require("./src/others/util");
+const { appInfo } = require("./src/others/util");
 const port = process.env.PORT || 3000;
 
 //middlewares
@@ -17,22 +17,38 @@ app.use(userAgent);
 app.use(customCors);
 app.use(express.static(path.join(__dirname, "public")));
 // // stripe webhook needs raw req.body
-// app.use(
-//     "/api/webhook",
-//     express.raw({ type: "application/json" }),
-//     require("./src/controller/subscription")
-// );
+app.use(
+  "/api/webhook",
+  express.raw({ type: "application/json" }),
+  require("./src/controller/subscription"),
+);
 app.use(express.json());
 
 //routes
 app.use("/api/user", require("./src/controller/user"));
 app.use("/api/team", require("./src/controller/team"));
 app.use("/api/tournament", require("./src/controller/tournament"));
-app.use("/api/tournament-format", require("./src/controller/tournament-format"));
-app.use("/api/tournament-settings", require("./src/controller/tournament-settings"));
-app.use("/api/tournament-schedule", require("./src/controller/tournament-schedule"));
-app.use("/api/tournament-result", require("./src/controller/tournament-result"));
-app.use("/api/tournament-standing", require("./src/controller/tournament-standing"));
+app.use(
+  "/api/tournament-format",
+  require("./src/controller/tournament-format"),
+);
+app.use(
+  "/api/tournament-settings",
+  require("./src/controller/tournament-settings"),
+);
+app.use(
+  "/api/tournament-schedule",
+  require("./src/controller/tournament-schedule"),
+);
+app.use(
+  "/api/tournament-result",
+  require("./src/controller/tournament-result"),
+);
+app.use(
+  "/api/tournament-standing",
+  require("./src/controller/tournament-standing"),
+);
+app.use("/api/subscription", require("./src/controller/subscription"));
 
 app.get("/api/info", (req, res) => {
   res.status(200).json(appInfo);

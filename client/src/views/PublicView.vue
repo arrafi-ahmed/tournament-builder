@@ -60,25 +60,25 @@ onMounted(async () => {
           :show-back="false"
           :title="tournament.name"
         >
-          <v-row align="center">
-            <v-menu>
-              <template v-slot:activator="{ props }">
-                <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">
-                </v-btn>
-              </template>
-              <v-list density="compact">
-                <v-list-item
-                  :to="{
-                    name: 'tournament-invite',
-                    params: { tournamentId: tournament.id },
-                  }"
-                  density="compact"
-                  prepend-icon="mdi-plus"
-                  title="Invite Team"
-                ></v-list-item>
-              </v-list>
-            </v-menu>
-          </v-row>
+<!--          <v-row align="center">-->
+<!--            <v-menu>-->
+<!--              <template v-slot:activator="{ props }">-->
+<!--                <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">-->
+<!--                </v-btn>-->
+<!--              </template>-->
+<!--              <v-list density="compact">-->
+<!--                <v-list-item-->
+<!--                  :to="{-->
+<!--                    name: 'tournament-invite',-->
+<!--                    params: { tournamentId: tournament.id },-->
+<!--                  }"-->
+<!--                  density="compact"-->
+<!--                  prepend-icon="mdi-plus"-->
+<!--                  title="Invite Team"-->
+<!--                ></v-list-item>-->
+<!--              </v-list>-->
+<!--            </v-menu>-->
+<!--          </v-row>-->
         </page-title>
       </v-col>
     </v-row>

@@ -176,6 +176,15 @@ const routes = [
           title: "Credentials",
         },
       },
+      {
+        path: "tournament/:tournamentId/pricing",
+        name: "pricing",
+        component: () => import("@/views/Pricing.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Pricing",
+        },
+      },
     ],
   },
   {
@@ -237,6 +246,7 @@ const routes = [
           title: "Tournament Standing",
         },
       },
+
     ],
     beforeEnter(to, from, next) {
       if (to.matched.length > 1) return next(); //parent and child route matched
