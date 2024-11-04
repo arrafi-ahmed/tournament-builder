@@ -2,6 +2,73 @@ const { sql } = require("../db");
 const CustomError = require("../model/CustomError");
 const stripe = require("stripe")(process.env.STRIPE_SECRET);
 
+exports.payOnce = async ({
+  subscription: { planId, planTitle, tournamentId },
+  userId,
+}) => {
+  const existingSubscription = await exports.getSubscription({
+    userId,
+    tournamentId,
+  });
+  console.log(22, existingSubscription);
+  if (existingSubscription)
+    throw new CustomError("Already have a subscription!", 409);
+
+  const baseReturnUrl = `${process.env.VUE_BASE_URL}/tournament/${tournamentId}/pricing?subscription_success=1`;
+  planTitle = planTitle.toLowerCase();
+
+  let price = await exports.getPrice({
+    planTitle: planTitle.toLowerCase(),
+  });
+  const newSubscription = {
+    planId,
+    stripeSubscriptionId: planTitle === "basic" ? "0" : "-1",
+    subscriptionAmount: planTitle === "basic" ? 0 : price.unit_amount / 100,
+    activationDate: new Date(),
+    expireDate: null,
+    active: true,
+    pendingCancel: false,
+    updatedAt: new Date(),
+    userId,
+    tournamentId,
+  };
+  const insertedSubscription = await exports.saveSubscription({
+    newSubscription,
+  });
+  if (planTitle === "basic")
+    return {
+      insertedSubscription,
+      url: baseReturnUrl, // to show notif in vue
+    };
+
+  const session = await stripe.checkout.sessions.create({
+    billing_address_collection: "auto",
+    line_items: [
+      {
+        price: price.id,
+        quantity: 1,
+      },
+    ],
+    mode: "payment",
+    success_url: `${baseReturnUrl}&session_id={CHECKOUT_SESSION_ID}`,
+    metadata: {
+      planId,
+      planTitle,
+      userId,
+      tournamentId,
+    },
+  });
+  return session;
+};
+
+exports.cancelOncePayment = async ({ subscription: { subscriptionId } }) => {
+  const [canceledSubscription] = await sql`
+        delete
+        from subscription
+        where id = ${subscriptionId} RETURNING *`;
+  return canceledSubscription;
+};
+
 exports.getSubscription = async ({ userId, tournamentId }) => {
   const [subscription] = await sql`
         select *
@@ -21,8 +88,8 @@ exports.fetchPremiumSubscriptionData = async ({ userId, tournamentId }) => {
   if (!subscription) {
     return null;
   }
-  // check if basic subscription
-  if (subscription && subscription.stripeSubscriptionId === "0") {
+  // check if basic subscription (0)/pay once (-1)
+  if (subscription && Number(subscription.stripeSubscriptionId) < 1) {
     return { subscription };
   }
   const stripeSubscription = await exports.getStripeSubscription({
@@ -96,14 +163,14 @@ exports.deleteSubscription = async ({ userId }) => {
   return deletedStripeSubscription ? "premium_deleted" : null;
 };
 
-exports.getPriceId = async ({ planTitle }) => {
+exports.getPrice = async ({ planTitle }) => {
   const prices =
     planTitle === "premium"
       ? await stripe.prices.list({
           lookup_keys: ["premium"],
         })
       : null;
-  return prices && prices.data && prices.data[0] && prices.data[0].id;
+  return prices && prices.data && prices.data[0];
 };
 
 exports.saveSubscription = async ({ newSubscription }) => {
@@ -154,7 +221,7 @@ exports.saveSubscriptionUnique = async ({
       url: baseReturnUrl, // to show notif in vue
     };
   }
-  let priceId = await exports.getPriceId({
+  let price = await exports.getPrice({
     planTitle: planTitle.toLowerCase(),
   });
 
@@ -162,12 +229,11 @@ exports.saveSubscriptionUnique = async ({
     billing_address_collection: "auto",
     line_items: [
       {
-        price: priceId,
+        price: price.id,
         quantity: 1,
       },
     ],
     mode: "subscription",
-    // mode: "payment",
     success_url: `${baseReturnUrl}&session_id={CHECKOUT_SESSION_ID}`,
     metadata: {
       planId,

@@ -5,6 +5,19 @@ const { auth } = require("../middleware/auth");
 const subscriptionService = require("../service/subscription");
 const CustomError = require("../model/CustomError");
 
+router.get("/payOnce", auth, (req, res, next) => {
+    const subscription = req.query && req.query.subscription;
+    subscriptionService
+        .payOnce({
+            subscription,
+            userId: req.currentUser.id,
+        })
+        .then((result) => {
+            res.status(200).json(new ApiResponse(null, result));
+        })
+        .catch((err) => next(err));
+});
+
 router.get("/getStripeSubscription", auth, (req, res, next) => {
   const subscriptionId = req.query && req.query.subscriptionId;
   subscriptionService
@@ -61,6 +74,16 @@ router.get("/saveSubscription", auth, (req, res, next) => {
     })
     .then((result) => {
       res.status(200).json(new ApiResponse(null, result));
+    })
+    .catch((err) => next(err));
+});
+
+router.get("/cancelOncePayment", auth, (req, res, next) => {
+  const subscription = req.query && req.query.subscription;
+  subscriptionService
+    .cancelOncePayment({ subscription })
+    .then((result) => {
+      res.status(200).json(new ApiResponse("Subscription cancelled!", result));
     })
     .catch((err) => next(err));
 });

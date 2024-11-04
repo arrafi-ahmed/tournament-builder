@@ -77,7 +77,7 @@ export const actions = {
           commit("resetSubscription");
           commit("resetStripeSubscription");
           commit("setSubscription", response.data?.payload?.subscription);
-          console.log(17, response.data?.payload?.subscription)
+          console.log(17, response.data?.payload?.subscription);
           if (
             response.data?.payload?.subscription?.stripeSubscriptionId !== "0"
           ) {
@@ -100,6 +100,28 @@ export const actions = {
         .then((response) => {
           commit("setSubscriptionPlans", response.data?.payload);
           resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  payOnce({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .get("/api/subscription/payOnce", {
+          params: {
+            subscription: request.subscription,
+          },
+        })
+        .then((response) => {
+          if (request.title === "basic") {
+            commit(
+              "setSubscription",
+              response.data?.payload?.insertedSubscription,
+            );
+          }
+          resolve(response.data?.payload);
         })
         .catch((err) => {
           reject(err);
@@ -155,7 +177,6 @@ export const actions = {
           },
         })
         .then((response) => {
-          console.log(33, response.data?.payload);
           if (response.data?.payload?.stripeSubscriptionId === "0") {
             commit("resetSubscription");
           } else {
@@ -165,6 +186,23 @@ export const actions = {
                 : "setSubscriptionPendingCancel";
             commit(action, true);
           }
+          resolve(response.data?.payload);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  cancelOncePayment({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .get("/api/subscription/cancelOncePayment", {
+          params: {
+            subscription: request.subscription,
+          },
+        })
+        .then((response) => {
+          commit("resetSubscription");
           resolve(response.data?.payload);
         })
         .catch((err) => {
@@ -196,11 +234,7 @@ export const actions = {
     console.log(13, getters.isSubscriptionValid(tournamentId));
     console.log(14, rootState.subscription.subscription);
     console.log(15, rootState.tournament.participants);
-    if (
-      !isSudo &&
-      (!rootState.subscription.subscription?.id ||
-        !rootState.subscription.stripeSubscription?.id)
-    ) {
+    if (!isSudo && !rootState.subscription.subscription?.id) {
       await dispatch(
         "subscription/fetchPremiumSubscriptionData",
         {
@@ -224,15 +258,12 @@ export const actions = {
     }
     if (isSudo) {
       return true;
-    } else
-      console.log(
-        44,
-        rootGetters["subscription/isSubscriptionValid"](tournamentId),
+    } else {
+      return (
+        rootState.tournament.participants?.length < 6 ||
+        rootGetters["subscription/isPremiumSubscriptionActive"](tournamentId)
       );
-    return (
-      rootState.tournament.participants?.length < 6 ||
-      rootGetters["subscription/isSubscriptionValid"](tournamentId)
-    );
+    }
   },
 };
 
@@ -250,6 +281,14 @@ export const getters = {
     return (
       Number(tournamentId) === state.subscription?.tournamentId &&
       state.subscription?.active === true
+    );
+  },
+  isPremiumSubscriptionActive: (state) => (tournamentId) => {
+    console.log(91, state.subscription)
+    return (
+      Number(tournamentId) === state.subscription?.tournamentId &&
+      state.subscription?.active === true &&
+      state.subscription?.stripeSubscriptionId !== "0"
     );
   },
   pendingCancel: (state) => (tournamentId) => {

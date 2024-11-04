@@ -45,7 +45,7 @@ const handleClickSubscription = (plan) => {
     tournamentId: route.params.tournamentId,
   };
   store
-    .dispatch("subscription/saveSubscription", {
+    .dispatch("subscription/payOnce", {
       subscription,
     })
     .then((result) => {
@@ -57,7 +57,7 @@ const handleClickSubscription = (plan) => {
     .finally(() => store.commit("setProgress", false));
 };
 const handleClickSubscriptionCancel = (subscription) => {
-  store.dispatch("subscription/cancelSubscription", {
+  store.dispatch("subscription/cancelOncePayment", {
     subscription: { ...subscription, instantCancel: true },
   });
 };
@@ -185,7 +185,7 @@ onMounted(async () => {
           :density="mobile ? 'comfortable' : 'default'"
           :to="{
             name: 'tournament-participants',
-            params: { tournamentId: currentUser.id },
+            params: { tournamentId: $route.params.tournamentId },
           }"
           class="text-center"
           color="primary"
