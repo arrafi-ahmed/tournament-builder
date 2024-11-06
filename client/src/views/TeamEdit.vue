@@ -89,11 +89,11 @@ const handleEditTeam = async () => {
 };
 
 const fetchData = async () => {
-  store.dispatch("team/setTeamWEmail", { teamId: targetTeamId.value });
+  return store.dispatch("team/setTeamWEmail", { teamId: targetTeamId.value });
 };
 
 onMounted(async () => {
-  fetchData();
+  await fetchData();
   Object.assign(newTeam, {
     ...team.value,
   });

@@ -5,7 +5,7 @@ import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 import { useDisplay } from "vuetify";
-import {calcMatchType, getRoundTitle} from "@/others/util";
+import { calcMatchType, getRoundTitle } from "@/others/util";
 
 const route = useRoute();
 const store = useStore();
@@ -354,27 +354,32 @@ const addBracketDialog = ref(false);
 const form = ref(null);
 const isFormValid = ref(true);
 
-const removePhase = ({ phaseId }) => {
+const removePhase = ({ phase }) => {
+  modifyPhaseTeamOption({ phase });
   store.dispatch("tournamentFormat/removePhase", {
-    phaseId,
+    phaseId: phase.id,
     tournamentId: route.params.tournamentId,
   });
 };
-const removeGroup = ({ groupId }) => {
+const removeGroup = ({ group }) => {
+  modifyGroupTeamOption({ group });
   store.dispatch("tournamentFormat/removeGroup", {
-    groupId,
+    groupId: group.id,
     tournamentId: route.params.tournamentId,
   });
 };
-const removeBracket = ({ bracketId }) => {
+
+const removeBracket = ({ bracket }) => {
+  modifyBracketTeamOption({ bracket });
   store.dispatch("tournamentFormat/removeBracket", {
-    bracketId,
+    bracketId: bracket.id,
     tournamentId: route.params.tournamentId,
   });
 };
-const removeMatch = ({ matchId }) => {
+const removeMatch = ({ match }) => {
+  modifyMatchTeamOption({ match });
   store.dispatch("tournamentFormat/removeMatch", {
-    matchId,
+    matchId: match.id,
     tournamentId: route.params.tournamentId,
   });
 };
@@ -383,6 +388,44 @@ const tournamentBaseFormat = reactive({
   groupMemberCount: null,
   knockoutMemberCount: null,
 });
+const modifyPhaseTeamOption = ({ phase }) => {
+  phase.items.forEach((item) => {
+    if (item.type === "group") {
+      modifyGroupTeamOption({ group: item });
+    } else if (item.type === "bracket") {
+      modifyBracketTeamOption({ bracket: item });
+    } else if (item.type === "single_match") {
+      modifyMatchTeamOption({ match: item });
+    }
+  });
+};
+const modifyGroupTeamOption = ({ group }) => {
+  const targetIds = group.teams
+    .map((_, i) => selectedTeamOptions.value[`g-${group.id}-${i + 1}`]?.id)
+    .filter((id) => id !== "empty");
+
+  targetIds.forEach((id) => {
+    if (teamOptions.value[id]) {
+      teamOptions.value[id].used = false;
+    }
+  });
+};
+const modifyBracketTeamOption = ({ bracket }) => {
+  const matches = bracket.rounds.flatMap((round) => round.matches);
+  matches.forEach((match) => modifyMatchTeamOption({ match }));
+};
+const modifyMatchTeamOption = ({ match }) => {
+  const targetIds = [
+    selectedTeamOptions.value[`m-${match.id}-1`]?.id,
+    selectedTeamOptions.value[`m-${match.id}-2`]?.id,
+  ].filter((item) => item !== "empty");
+
+  targetIds.forEach((id) => {
+    if (teamOptions.value[id]) {
+      teamOptions.value[id].used = false;
+    }
+  });
+};
 const updatedBaseFormat = async (tournamentBaseFormat) => {
   if (
     tournamentBaseFormat.groupCount &&
@@ -486,8 +529,8 @@ onMounted(async () => {
     </v-row>
 
     <v-row v-else justify="center">
-      <v-col col="12">
-        <v-row class="scrollable-container">
+      <v-col class="scrollable-container" col="12">
+        <v-row>
           <template v-for="(phase, phaseIndex) in tournamentFormat">
             <v-col :cols="calcPhaseColWrapper[phaseIndex]" class="max-content">
               <div
@@ -508,7 +551,7 @@ onMounted(async () => {
                   size="small"
                   tile
                   variant="tonal"
-                  @click="removePhase({ phaseId: phase.id })"
+                  @click="removePhase({ phase })"
                 ></v-btn>
               </div>
 
@@ -539,18 +582,14 @@ onMounted(async () => {
                                   size="small"
                                   tile
                                   variant="tonal"
-                                  @click="
-                                    removeGroup({ groupId: phaseItem.id })
-                                  "
+                                  @click="removeGroup({ group: phaseItem })"
                                 ></v-btn>
                               </div>
                             </v-card-title>
                             <v-card-text>
-                              <!--                      TODO: replace id with name-->
                               <template
                                 v-for="iterationCount in phaseItem.teamsPerGroup"
                               >
-                                <!--                                {{`g-${phaseItem.id}-${iterationCount}`}}-->
                                 <v-select
                                   :disabled="phaseItem?.rankingPublished"
                                   :items="visibleTeamOptions"
@@ -613,9 +652,7 @@ onMounted(async () => {
                               size="small"
                               tile
                               variant="tonal"
-                              @click="
-                                removeBracket({ bracketId: phaseItem.id })
-                              "
+                              @click="removeBracket({ bracket: phaseItem })"
                             ></v-btn>
                           </div>
                         </v-card-title>
@@ -748,9 +785,7 @@ onMounted(async () => {
                                   size="small"
                                   tile
                                   variant="tonal"
-                                  @click="
-                                    removeMatch({ matchId: phaseItem.id })
-                                  "
+                                  @click="removeMatch({ match: phaseItem })"
                                 ></v-btn>
                               </div>
                             </v-card-title>

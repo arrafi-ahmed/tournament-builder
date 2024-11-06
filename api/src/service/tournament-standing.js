@@ -1,6 +1,7 @@
 const { sql } = require("../db");
+
 exports.getTournamentStanding = async ({ tournamentId }) => {
-  const combinedData = await sql`
+  const rawData = await sql`
         SELECT md.id                                                             AS match_day_id,
                md.match_date,
                m.id                                                              AS match_id,
@@ -9,6 +10,7 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
                m.start_time,
                m.home_team_id,
                m.away_team_id,
+               m.future_team_reference,
                mr.home_team_score,
                mr.away_team_score,
                mr.winner_id,
@@ -20,6 +22,7 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
                CASE WHEN m.type = 'group' THEN tg.id ELSE NULL END               AS group_id,
                CASE WHEN m.type = 'group' THEN tg.name ELSE NULL END             AS group_name,
                CASE WHEN m.type = 'group' THEN gt.team_id ELSE NULL END          AS team_id,
+               CASE WHEN m.type = 'group' THEN t3.name ELSE NULL END             AS team_name,
                CASE WHEN m.type = 'group' THEN gt.team_ranking ELSE NULL END     AS team_ranking,
                CASE WHEN m.type = 'group' THEN gts.played ELSE NULL END          AS played,
                CASE WHEN m.type = 'group' THEN gts.won ELSE NULL END             AS won,
@@ -43,6 +46,7 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
                  LEFT JOIN tournament_groups tg ON tp.id = tg.tournament_phase_id AND m.type = 'group'
                  LEFT JOIN groups_teams gt ON tg.id = gt.tournament_group_id AND m.type = 'group'
                  LEFT JOIN groups_teams_stats gts ON gt.id = gts.groups_teams_id AND m.type = 'group'
+                 LEFT JOIN teams t3 ON gt.team_id = t3.id AND m.type = 'group'
                  LEFT JOIN teams t1 ON m.home_team_id = t1.id
                  LEFT JOIN teams t2 ON m.away_team_id = t2.id
         WHERE tp.tournament_id = ${tournamentId}
@@ -52,8 +56,8 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
   const schedule = [];
   const standing = [];
 
-  combinedData.forEach((item) => {
-    const {
+  rawData.forEach((item) => {
+    let {
       matchDayId,
       matchDate,
       matchId,
@@ -62,6 +66,7 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
       startTime,
       homeTeamId,
       awayTeamId,
+      futureTeamReference,
       homeTeamScore,
       awayTeamScore,
       winnerId,
@@ -72,6 +77,7 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
       groupId,
       groupName,
       teamId,
+      teamName,
       played,
       won,
       draw,
@@ -87,6 +93,36 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
       bracketId,
       bracketName,
     } = item;
+
+    // replace home/away team name with ref if teamId null
+    if (!homeTeamId) {
+      const {
+        home: { id, type, position },
+      } = futureTeamReference;
+
+      if (type === "match") {
+        const foundRow = rawData.find((row) => row.matchId === id);
+        homeTeamName =
+          (position === 1 ? "Winner" : "Loser") + `, ${foundRow.matchName}`;
+      } else if (type === "group") {
+        const foundRow = rawData.find((row) => row.groupId === id);
+        homeTeamName = `${foundRow.groupName}, Ranking ${position}`;
+      }
+    }
+    if (!awayTeamId) {
+      const {
+        away: { id, type, position },
+      } = futureTeamReference;
+
+      if (type === "match") {
+        const foundRow = rawData.find((row) => row.matchId === id);
+        awayTeamName =
+          (position === 1 ? "Winner" : "Loser") + `, ${foundRow.matchName}`;
+      } else if (type === "group") {
+        const foundRow = rawData.find((row) => row.groupId === id);
+        awayTeamName = `${foundRow.groupName}, ` + `, Ranking ${position}`;
+      }
+    }
 
     // 1. Schedule data grouped by match day
     let matchDay = schedule.find((md) => md.matchDayId === matchDayId);
@@ -106,6 +142,7 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
         startTime,
         homeTeamId,
         awayTeamId,
+        futureTeamReference,
         homeTeamScore,
         awayTeamScore,
         winnerId,
@@ -150,6 +187,7 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
       if (teamId && !groupEntry.teamStats.some((t) => t.teamId === teamId)) {
         groupEntry.teamStats.push({
           teamId,
+          teamName,
           played,
           won,
           draw,
@@ -192,6 +230,7 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
         startTime,
         homeTeamId,
         awayTeamId,
+        futureTeamReference,
         homeTeamScore,
         awayTeamScore,
         winnerId,
@@ -209,6 +248,7 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
         startTime,
         homeTeamId,
         awayTeamId,
+        futureTeamReference,
         homeTeamScore,
         awayTeamScore,
         winnerId,

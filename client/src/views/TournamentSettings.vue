@@ -136,8 +136,8 @@ onMounted(async () => {
                   <v-btn
                     :density="xs ? 'comfortable' : 'default'"
                     color="primary"
-                    variant="tonal"
                     type="submit"
+                    variant="tonal"
                     >Save
                   </v-btn>
                 </v-card-actions>
@@ -147,7 +147,7 @@ onMounted(async () => {
 
           <v-expansion-panel value="match_days">
             <v-expansion-panel-title>
-              <v-row justify="space-between" align="center">
+              <v-row align="center" justify="space-between">
                 <v-col cols="auto">
                   <span>Match Days</span>
                 </v-col>
@@ -186,12 +186,12 @@ onMounted(async () => {
 
                     <template #append>
                       <v-btn
+                        color="error"
+                        density="comfortable"
                         icon="mdi-delete"
                         rounded
                         size="small"
                         variant="tonal"
-                        density="comfortable"
-                        color="error"
                         @click="deleteMatchDay({ matchDayId: item.id })"
                       ></v-btn>
                     </template>

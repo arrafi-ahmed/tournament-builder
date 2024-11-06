@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import NoItems from "@/components/NoItems.vue";
-import {calcMatchType, getTimeOnly} from "@/others/util";
+import { calcMatchType, getTimeOnly } from "@/others/util";
 import { useDisplay } from "vuetify";
 import TimePicker from "@/components/TimePicker.vue";
 
@@ -249,7 +249,7 @@ onMounted(async () => {
       </v-col>
     </v-row>
 
-    <v-row justify="center" class="scrollable-container">
+    <v-row class="scrollable-container" justify="center">
       <v-col col="12">
         <v-row>
           <v-col
@@ -264,10 +264,10 @@ onMounted(async () => {
                 <div>
                   <v-btn
                     class=""
+                    density="comfortable"
                     icon="mdi-pencil"
                     size="small"
                     variant="tonal"
-                    density="comfortable"
                     @click="
                       openEditField({
                         selectedFieldIndex: fieldIndex,
@@ -276,10 +276,10 @@ onMounted(async () => {
                   ></v-btn>
                   <v-btn
                     class="ml-1"
+                    density="comfortable"
                     icon="mdi-delete"
                     size="small"
                     variant="tonal"
-                    density="comfortable"
                     @click="
                       deleteField({
                         selectedFieldIndex: fieldIndex,
@@ -293,17 +293,17 @@ onMounted(async () => {
                 <v-chip
                   :class="`bg-green-accent-1 ml-2`"
                   density="comfortable"
-                  size="small"
                   label
+                  size="small"
                   >field
                 </v-chip>
               </v-card-subtitle>
               <v-list>
                 <template
-                  v-if="matchesForSelectedDate[fieldIndex]?.length"
                   v-for="(match, matchIndex) in matchesForSelectedDate[
                     fieldIndex
                   ]"
+                  v-if="matchesForSelectedDate[fieldIndex]?.length"
                 >
                   <v-list-item>
                     <v-list-item-title>
@@ -317,8 +317,8 @@ onMounted(async () => {
                         :class="`ml-2`"
                         :color="calcMatchType(match.type).color"
                         density="comfortable"
-                        size="small"
                         label
+                        size="small"
                         >{{ calcMatchType(match.type).title }}
                       </v-chip>
                     </v-list-item-subtitle>
@@ -379,6 +379,7 @@ onMounted(async () => {
                 <v-select
                   v-model="selectedField"
                   :items="fields"
+                  clearable
                   color="primary"
                   density="compact"
                   hide-details="auto"
@@ -389,7 +390,6 @@ onMounted(async () => {
                   return-object
                   rounded-sm
                   variant="solo-filled"
-                  clearable
                 ></v-select>
               </v-list-item>
 
@@ -404,8 +404,8 @@ onMounted(async () => {
                         :class="`mt-1`"
                         :color="`${calcMatchType(match.type).color}`"
                         density="comfortable"
-                        size="small"
                         label
+                        size="small"
                         >{{ calcMatchType(match.type).title }}
                       </v-chip>
                     </div>

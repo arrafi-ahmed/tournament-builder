@@ -13,7 +13,7 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
 </script>
 
 <template>
-  <v-card :variant="variant" :class="containerClass">
+  <v-card :class="containerClass" :variant="variant">
     <v-card-title v-if="showLgTitle">
       {{ match.name }}
     </v-card-title>
@@ -22,9 +22,9 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
         <v-chip
           v-if="showTime"
           color="primary"
-          variant="tonal"
           label
           size="small"
+          variant="tonal"
           >{{ getTimeOnly(match.startTime) }}
         </v-chip>
 
@@ -35,8 +35,8 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
       <v-chip
         v-if="match.hostName"
         :color="calcMatchType(match.type).color"
-        variant="tonal"
         size="small"
+        variant="tonal"
         >{{ match.hostName }}
       </v-chip>
     </div>
@@ -52,13 +52,14 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
             </td>
             <td class="w-25">
               <v-chip
+                v-if="match.homeTeamScore"
                 :color="
                   match.winnerId === match.homeTeamId ? 'success' : 'error'
                 "
                 class="ml-4"
+                inline
                 label
                 rounded="circle"
-                inline
                 >{{ match.homeTeamScore }}
               </v-chip>
             </td>
@@ -69,13 +70,14 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
             </td>
             <td class="ms-auto">
               <v-chip
+                v-if="match.awayTeamScore"
                 :color="
                   match.winnerId === match.awayTeamId ? 'success' : 'error'
                 "
                 class="ml-4"
+                inline
                 label
                 rounded="circle"
-                inline
                 >{{ match.awayTeamScore }}
               </v-chip>
             </td>

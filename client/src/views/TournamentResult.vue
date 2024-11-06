@@ -1,11 +1,10 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import RemoveEntity from "@/components/RemoveEntity.vue";
 import NoItems from "@/components/NoItems.vue";
-import { calcMatchType, getTeamLogoUrl, getTimeOnly } from "@/others/util";
+import { calcMatchType, getTimeOnly } from "@/others/util";
 
 const router = useRouter();
 const route = useRoute();
@@ -69,7 +68,7 @@ const saveResult = ({ matchIndex }) => {
 };
 const clearResult = ({ matchIndex }) => {
   const targetMatch = matchesForSelectedDate.value[matchIndex];
-  store.dispatch("tournamentResult/clearResult", {
+  const payload = {
     resultId: targetMatch.resultId,
     selectedMatchDate: selectedMatchDate.value,
     match: {
@@ -78,7 +77,14 @@ const clearResult = ({ matchIndex }) => {
       away: { teamId: targetMatch.awayTeamId },
     },
     groupTeamReference: targetMatch.groupTeamReference,
-  });
+  };
+  //if match->type = 'group', update tournament_group->ranking_published
+  if (targetMatch.type === "group") {
+    payload.match.type = targetMatch.type;
+    payload.match.groupId = targetMatch.groupId;
+    payload.match.rankingPublished = targetMatch.rankingPublished;
+  }
+  store.dispatch("tournamentResult/clearResult", payload);
 };
 
 const checkMatchScore = ({ match, matchIndex }) => {
@@ -149,7 +155,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <v-container >
+  <v-container>
     <!--    {{ results }}-->
     <v-row>
       <v-col>
@@ -203,7 +209,7 @@ onMounted(async () => {
     </v-row>
 
     <v-row justify="center">
-      <v-col col="12" md="10" lg="7">
+      <v-col col="12" lg="7" md="10">
         <v-list
           v-if="matchesForSelectedDate.length > 0"
           density="compact"
@@ -217,33 +223,33 @@ onMounted(async () => {
                 class="d-flex align-center justify-space-between"
               >
                 <span>
-                  <v-chip color="primary" variant="flat" label size="large"
+                  <v-chip color="primary" label size="large" variant="flat"
                     >{{ getTimeOnly(item.startTime) }}
                   </v-chip>
                   <span class="ml-3">{{ item?.name }}</span>
                   <v-chip
-                    class="ml-3"
                     :color="calcMatchType(item.type).color"
+                    class="ml-3"
                     density="comfortable"
                     >{{ calcMatchType(item.type).title }}
                   </v-chip>
                 </span>
                 <span>
                   <v-btn
-                    icon="mdi-close"
+                    class="ml-1"
                     color="error"
                     density="comfortable"
+                    icon="mdi-close"
                     variant="outlined"
-                    class="ml-1"
                     @click="clearResult({ matchIndex: index })"
                   ></v-btn>
                   <v-btn
-                    icon="mdi-check"
+                    :disabled="!item.homeTeamId || !item.awayTeamId"
+                    class="ml-2"
                     color="success"
                     density="comfortable"
+                    icon="mdi-check"
                     variant="outlined"
-                    class="ml-2"
-                    :disabled="!item.homeTeamId || !item.awayTeamId"
                     @click="saveResult({ matchIndex: index })"
                   ></v-btn>
                 </span>
@@ -253,33 +259,7 @@ onMounted(async () => {
                 {{ item.fieldName }}
               </v-list-item-subtitle>
 
-              <v-row
-                class="mt-2"
-                v-if="showSelectWinner && currSelectedMatchIndex === index"
-              >
-                <v-col cols="auto">
-                  <v-select
-                    v-model="selectedWinner"
-                    :items="selectWinnerOptions"
-                    color="primary"
-                    density="compact"
-                    hide-details="auto"
-                    item-title="teamName"
-                    item-value="teamId"
-                    label="Select Winner"
-                    prepend-inner-icon="mdi-calendar"
-                    return-object
-                    rounded-sm
-                    variant="solo-filled"
-                    width="200"
-                  ></v-select>
-                </v-col>
-              </v-row>
-
               <v-row class="mt-2">
-<!--                <pre>-->
-<!--                  {{ item }}-->
-<!--                </pre>-->
                 <v-col>
                   <div class="d-flex align-center">
                     <!--                    TODO:fix name-->
@@ -291,22 +271,22 @@ onMounted(async () => {
                         item.winnerId !== null &&
                         item.winnerId === item.homeTeamId
                       "
-                      color="green-darken-1"
-                      variant="flat"
-                      density="compact"
                       class="ml-1"
+                      color="green-darken-1"
+                      density="compact"
+                      variant="flat"
                       >Winner
                     </v-chip>
                   </div>
                   <v-text-field
                     v-model="item.homeTeamScore"
                     :disabled="!item.homeTeamId"
+                    :max-width="60"
                     color="primary"
-                    variant="underlined"
                     hide-details="auto"
                     label="Score"
                     type="number"
-                    :max-width="60"
+                    variant="underlined"
                     @change="
                       checkMatchScore({
                         match: item,
@@ -328,22 +308,22 @@ onMounted(async () => {
                         item.winnerId !== null &&
                         item.winnerId === item.awayTeamId
                       "
-                      color="green-darken-1"
-                      variant="flat"
-                      density="compact"
                       class="ml-1"
+                      color="green-darken-1"
+                      density="compact"
+                      variant="flat"
                       >Winner
                     </v-chip>
                   </div>
                   <v-text-field
                     v-model="item.awayTeamScore"
                     :disabled="!item.awayTeamId"
+                    :max-width="60"
                     color="primary"
-                    variant="underlined"
                     hide-details="auto"
                     label="Score"
                     type="number"
-                    :max-width="60"
+                    variant="underlined"
                     @change="
                       checkMatchScore({
                         match: item,
@@ -351,6 +331,29 @@ onMounted(async () => {
                       })
                     "
                   ></v-text-field>
+                </v-col>
+              </v-row>
+
+              <v-row
+                v-if="showSelectWinner && currSelectedMatchIndex === index"
+                class="mt-2"
+              >
+                <v-col cols="auto">
+                  <v-select
+                    v-model="selectedWinner"
+                    :items="selectWinnerOptions"
+                    color="primary"
+                    density="compact"
+                    hide-details="auto"
+                    item-title="teamName"
+                    item-value="teamId"
+                    label="Select Winner"
+                    prepend-inner-icon="mdi-calendar"
+                    return-object
+                    rounded-sm
+                    variant="solo-filled"
+                    width="200"
+                  ></v-select>
                 </v-col>
               </v-row>
             </v-list-item>

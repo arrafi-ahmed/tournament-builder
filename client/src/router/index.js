@@ -246,7 +246,6 @@ const routes = [
           title: "Tournament Standing",
         },
       },
-
     ],
     beforeEnter(to, from, next) {
       if (to.matched.length > 1) return next(); //parent and child route matched

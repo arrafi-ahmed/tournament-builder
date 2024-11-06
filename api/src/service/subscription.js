@@ -10,7 +10,6 @@ exports.payOnce = async ({
     userId,
     tournamentId,
   });
-  console.log(22, existingSubscription);
   if (existingSubscription)
     throw new CustomError("Already have a subscription!", 409);
 
@@ -109,7 +108,6 @@ exports.getSubscriptionPlans = async () => {
 exports.cancelSubscription = async ({
   subscription: { subscriptionId, stripeSubscriptionId, instantCancel },
 }) => {
-  console.log(44, subscriptionId, stripeSubscriptionId);
   let canceledSubscription;
   let canceledStripeSubscription;
 
@@ -137,8 +135,6 @@ exports.cancelSubscription = async ({
       },
     );
   }
-
-  console.log(45, canceledSubscription, canceledStripeSubscription);
   return {
     ...canceledSubscription,
     stripeSubscriptionId:
@@ -192,7 +188,6 @@ exports.saveSubscriptionUnique = async ({
     userId,
     tournamentId,
   });
-  console.log(22, existingSubscription);
   if (existingSubscription && existingSubscription.pendingCancel === false)
     throw new CustomError("Already have a subscription!", 409);
 

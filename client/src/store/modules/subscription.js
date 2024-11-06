@@ -77,7 +77,6 @@ export const actions = {
           commit("resetSubscription");
           commit("resetStripeSubscription");
           commit("setSubscription", response.data?.payload?.subscription);
-          console.log(17, response.data?.payload?.subscription);
           if (
             response.data?.payload?.subscription?.stripeSubscriptionId !== "0"
           ) {
@@ -231,9 +230,6 @@ export const actions = {
     { tournamentId, userId },
   ) {
     const isSudo = rootGetters["user/isSudo"];
-    console.log(13, getters.isSubscriptionValid(tournamentId));
-    console.log(14, rootState.subscription.subscription);
-    console.log(15, rootState.tournament.participants);
     if (!isSudo && !rootState.subscription.subscription?.id) {
       await dispatch(
         "subscription/fetchPremiumSubscriptionData",
@@ -242,11 +238,6 @@ export const actions = {
           tournamentId,
         },
         { root: true },
-      );
-      console.log(
-        16,
-        "calling fetchPremiumSubscriptionData",
-        rootState.subscription.subscription,
       );
     }
     if (!isSudo && !rootState.tournament.participants?.length) {
@@ -269,7 +260,6 @@ export const actions = {
 
 export const getters = {
   isSubscriptionValid: (state) => (tournamentId) => {
-    console.log(45, tournamentId, state.subscription, state.stripeSubscription);
     return (
       Number(tournamentId) === state.subscription?.tournamentId &&
       state.subscription?.active === true &&
@@ -284,7 +274,6 @@ export const getters = {
     );
   },
   isPremiumSubscriptionActive: (state) => (tournamentId) => {
-    console.log(91, state.subscription)
     return (
       Number(tournamentId) === state.subscription?.tournamentId &&
       state.subscription?.active === true &&

@@ -1,6 +1,6 @@
 const { sql } = require("../db");
 const scheduleService = require("../service/tournament-schedule");
-const matches = require("nodemailer/lib/smtp-connection");
+const formatService = require("../service/tournament-format");
 
 exports.clearResult = async ({ payload: { resultId, match } }) => {
   const [deletedResult] = await sql`
@@ -9,7 +9,6 @@ exports.clearResult = async ({ payload: { resultId, match } }) => {
         where id = ${resultId} returning *`;
 
   // get selected home/away teamId group ranking first
-  console.log(1, match);
   const ids =
     (match &&
       Object.values(match)
@@ -33,7 +32,6 @@ exports.clearResult = async ({ payload: { resultId, match } }) => {
         match.away.teamRanking = item.teamRanking;
       }
     });
-  console.log(2, match);
   // set ref home/away team id to null
   //@formatter:off
   const updatedMatches = await sql`
@@ -103,7 +101,6 @@ exports.clearResult = async ({ payload: { resultId, match } }) => {
   let updatedScores = [];
   if (updatedMatches.length) {
     const ids = updatedMatches.map((item) => item.id);
-    console.log(2, ids);
     updatedScores = await sql`
             update match_results
             set home_team_score = null,
@@ -111,6 +108,15 @@ exports.clearResult = async ({ payload: { resultId, match } }) => {
                 winner_id       = null
             where match_id in ${sql(ids)} returning *;
         `;
+  }
+  //if match->type = 'group', update tournament_group->ranking_published
+  if (match.rankingPublished === true) {
+    const updatedGroup = await formatService.saveGroup({
+      payload: {
+        newGroup: { id: match.groupId, rankingPublished: false },
+        onlyEntitySave: true,
+      },
+    });
   }
   return { deletedResult, updatedMatches, updatedScores };
 };
@@ -247,13 +253,12 @@ exports.updateGroupTeamReferenceForGroupMatches = async ({
         WHERE groups_teams_stats.id = update_data.id:: int
             RETURNING *;
     `;
-
-  let rankingPublished = false;
+  let targetGroup = { rankingPublished: false };
   let matchesWValidResult = matchWResult.filter(
     (item) => item.matchResultId != null,
   );
   if (matchesWValidResult.length > 0) {
-    const [targetGroup] = await sql`
+    [targetGroup] = await sql`
             select *
             from tournament_groups
             where id = ${groupId}`;
@@ -261,10 +266,15 @@ exports.updateGroupTeamReferenceForGroupMatches = async ({
     const { doubleRoundRobin, teamsPerGroup } = targetGroup;
     const matchCount = (teamsPerGroup * (teamsPerGroup - 1)) / 2;
     const totalMatchCount = doubleRoundRobin ? matchCount * 2 : matchCount;
-    rankingPublished = totalMatchCount === matchesWValidResult.length;
+    targetGroup.rankingPublished =
+      totalMatchCount === matchesWValidResult.length;
   }
-  if (!rankingPublished) return;
-  // update groups_teams and matches table
+  if (!targetGroup.rankingPublished) return;
+  // update tournament_groups -> ranking_published
+  const updatedGroup = await formatService.saveGroup({
+    payload: { newGroup: targetGroup, onlyEntitySave: true },
+  });
+
   //sort team stats
   const sortedTeamStats = teamStats.sort((a, b) => {
     // First sort by points in descending order
@@ -282,6 +292,7 @@ exports.updateGroupTeamReferenceForGroupMatches = async ({
     Number(item.groupTeamId),
     index + 1,
   ]);
+  // update groups_teams
   const updatedGroupTeam = await sql`
         update groups_teams
         set team_ranking = update_data.teamRanking::int
@@ -506,7 +517,6 @@ exports.getResults = async ({ tournamentId }) => {
   fetchedGroups.forEach((group) => {
     titles.group[group.id] = group.name;
   });
-  console.log(22, titles)
   // Retrieve matchDays data from scheduleService
   const matchDaysFromService = await scheduleService.getMatchDays({
     tournamentId,

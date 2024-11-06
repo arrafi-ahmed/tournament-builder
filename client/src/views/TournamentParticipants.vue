@@ -30,7 +30,6 @@ const goInvitePage = async () => {
       tournamentId: route.params.tournamentId,
     },
   );
-  console.log(11, canAddParticipant)
   if (canAddParticipant) {
     router.push({
       name: "tournament-invite",
@@ -76,10 +75,10 @@ onMounted(async () => {
               </template>
               <v-list density="compact">
                 <v-list-item
-                  @click="goInvitePage"
                   density="compact"
                   prepend-icon="mdi-plus"
                   title="Invite Team"
+                  @click="goInvitePage"
                 ></v-list-item>
               </v-list>
             </v-menu>

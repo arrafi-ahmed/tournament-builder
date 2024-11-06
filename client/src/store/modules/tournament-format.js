@@ -267,18 +267,31 @@ export const mutations = {
     const targetPhaseId = payload[0].phaseId;
     const targetGroupId = payload[0].groupId;
 
-    payload.forEach((updatedMatch, updatedMatchIndex) => {
-      state.tournamentFormat[targetPhaseId].items[
-        targetGroupId
-      ].matches.forEach((oldMatch, oldMatchIndex) => {
-        if (updatedMatch.id === oldMatch.id) {
-          state.tournamentFormat[targetPhaseId].items[targetGroupId].matches[
-            oldMatchIndex
-          ] = { ...oldMatch, ...updatedMatch };
-        }
-      });
+    const phaseIndex = state.tournamentFormat.findIndex(
+      (phase) => phase.id === targetPhaseId,
+    );
+    if (phaseIndex === -1) return;
+    const groupIndex = state.tournamentFormat[phaseIndex].items.findIndex(
+      (group) => group.id === targetGroupId,
+    );
+    if (groupIndex === -1) return;
+    payload.forEach((updatedMatch) => {
+      const matchIndex = state.tournamentFormat[phaseIndex].items[
+        groupIndex
+      ].matches.findIndex((oldMatch) => oldMatch.id === updatedMatch.id);
+      if (matchIndex !== -1) {
+        state.tournamentFormat[phaseIndex].items[groupIndex].matches[
+          matchIndex
+        ] = {
+          ...state.tournamentFormat[phaseIndex].items[groupIndex].matches[
+            matchIndex
+          ],
+          ...updatedMatch,
+        };
+      }
     });
   },
+
   setEntityLastCount(state, payload) {
     Object.assign(state.entityLastCount, { ...payload });
   },

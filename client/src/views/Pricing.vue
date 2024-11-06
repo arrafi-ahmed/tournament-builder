@@ -16,11 +16,11 @@ const subscription = computed(() => store.state.subscription.subscription);
 const subscriptionPlans = computed(
   () => store.state.subscription.subscriptionPlans,
 );
-const isSubscriptionActive = computed(
-  () => store.getters["subscription/isSubscriptionActive"](route.params.tournamentId),
+const isSubscriptionActive = computed(() =>
+  store.getters["subscription/isSubscriptionActive"](route.params.tournamentId),
 );
-const pendingCancel = computed(
-  () => store.getters["subscription/pendingCancel"](route.params.tournamentId),
+const pendingCancel = computed(() =>
+  store.getters["subscription/pendingCancel"](route.params.tournamentId),
 );
 const isPlanSelected = (planId) => {
   return isSubscriptionActive.value && subscription.value.planId === planId;

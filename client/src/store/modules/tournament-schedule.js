@@ -109,7 +109,6 @@ export const actions = {
       $axios
         .post("/api/tournament-schedule/saveField", request)
         .then((response) => {
-          console.log(11, request.newField.id)
           const actionName = request.newField.id ? "edit" : "add";
           commit(`${actionName}Field`, response.data?.payload);
           resolve(response);

@@ -3,7 +3,7 @@ const { title, subTitle, justify, customClass } = defineProps({
   justify: { type: String, default: "center" },
   text: { type: String, default: "No items found!" },
   variant: { type: String, default: "tonal" },
-  cols: { type: Number, default: 4 },
+  cols: { type: Number, default: 12 },
   customClass: { type: String, default: "text-center" },
 });
 </script>

@@ -1,20 +1,10 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 import { useDisplay } from "vuetify";
-import {
-  calcMatchType,
-  formatDate,
-  getDateOnly,
-  getRoundTitle,
-  getTeamLogoUrl,
-  getTimeOnly,
-} from "@/others/util";
-import * as tournamentStanding from "@/store/modules/tournament-standing";
-import RemoveEntity from "@/components/RemoveEntity.vue";
+import { formatDate, getRoundTitle, getTeamLogoUrl } from "@/others/util";
 import NoItems from "@/components/NoItems.vue";
 import MatchCard from "@/components/MatchCard.vue";
 
@@ -55,30 +45,30 @@ onMounted(async () => {
     <v-row>
       <v-col>
         <page-title
-          :sub-title="`${formatDate(tournament.startDate)} - ${formatDate(tournament.endDate)}`"
-          justify="space-between"
           :show-back="false"
+          :sub-title="`${formatDate(tournament.startDate)} - ${formatDate(tournament.endDate)}`"
           :title="tournament.name"
+          justify="space-between"
         >
-<!--          <v-row align="center">-->
-<!--            <v-menu>-->
-<!--              <template v-slot:activator="{ props }">-->
-<!--                <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">-->
-<!--                </v-btn>-->
-<!--              </template>-->
-<!--              <v-list density="compact">-->
-<!--                <v-list-item-->
-<!--                  :to="{-->
-<!--                    name: 'tournament-invite',-->
-<!--                    params: { tournamentId: tournament.id },-->
-<!--                  }"-->
-<!--                  density="compact"-->
-<!--                  prepend-icon="mdi-plus"-->
-<!--                  title="Invite Team"-->
-<!--                ></v-list-item>-->
-<!--              </v-list>-->
-<!--            </v-menu>-->
-<!--          </v-row>-->
+          <!--          <v-row align="center">-->
+          <!--            <v-menu>-->
+          <!--              <template v-slot:activator="{ props }">-->
+          <!--                <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">-->
+          <!--                </v-btn>-->
+          <!--              </template>-->
+          <!--              <v-list density="compact">-->
+          <!--                <v-list-item-->
+          <!--                  :to="{-->
+          <!--                    name: 'tournament-invite',-->
+          <!--                    params: { tournamentId: tournament.id },-->
+          <!--                  }"-->
+          <!--                  density="compact"-->
+          <!--                  prepend-icon="mdi-plus"-->
+          <!--                  title="Invite Team"-->
+          <!--                ></v-list-item>-->
+          <!--              </v-list>-->
+          <!--            </v-menu>-->
+          <!--          </v-row>-->
         </page-title>
       </v-col>
     </v-row>
@@ -144,7 +134,12 @@ onMounted(async () => {
                 <v-divider></v-divider>
 
                 <v-row class="ma-1">
-                  <v-col v-for="match in matchDay.matches" cols="12" sm="6" md="4">
+                  <v-col
+                    v-for="match in matchDay.matches"
+                    cols="12"
+                    md="4"
+                    sm="6"
+                  >
                     <match-card :match="match"></match-card>
                   </v-col>
                 </v-row>
@@ -156,8 +151,8 @@ onMounted(async () => {
             <v-row justify="center">
               <v-col>
                 <v-tabs
-                  v-model="tab"
                   v-if="standing.length"
+                  v-model="tab"
                   bg-color="transparent"
                   color="secondary"
                   density="compact"
@@ -243,8 +238,8 @@ onMounted(async () => {
                                         >
                                           <match-card
                                             :match="match"
-                                            :show-time="false"
                                             :show-field="false"
+                                            :show-time="false"
                                             container-class="mt-4"
                                           ></match-card>
                                         </template>
@@ -261,9 +256,9 @@ onMounted(async () => {
                           <v-col cols="3">
                             <match-card
                               :match="phaseItem"
-                              :showTime="false"
-                              :showField="false"
                               :show-lg-title="true"
+                              :showField="false"
+                              :showTime="false"
                             ></match-card>
                           </v-col>
                         </v-row>
@@ -284,5 +279,4 @@ onMounted(async () => {
 .public .v-col {
   max-width: 100% !important;
 }
-
 </style>

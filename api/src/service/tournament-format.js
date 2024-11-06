@@ -134,10 +134,11 @@ exports.insertMatches = async ({ payload: { matches } }) => {
 
 exports.updateMatches = async ({ payload: { matches } }) => {
   const updatePromises = matches.map(async (match) => {
-    return sql`
+    const [updatedMatch] = await sql`
             update matches
             set ${sql(match)}
             where id = ${match.id} returning *`;
+    return updatedMatch; // Return only the object, not the array
   });
   return Promise.all(updatePromises);
 };

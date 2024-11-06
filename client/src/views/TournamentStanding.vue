@@ -1,13 +1,12 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 import { useDisplay } from "vuetify";
-import { calcMatchType, getRoundTitle } from "@/others/util";
-import * as tournamentStanding from "@/store/modules/tournament-standing";
+import { getRoundTitle } from "@/others/util";
 import MatchCard from "@/components/MatchCard.vue";
+import NoItems from "@/components/NoItems.vue";
 
 const route = useRoute();
 const store = useStore();
@@ -70,8 +69,8 @@ onMounted(async () => {
     <v-row justify="center">
       <v-col>
         <v-tabs
-          v-model="tab"
           v-if="standing.length"
+          v-model="tab"
           bg-color="transparent"
           color="secondary"
           density="compact"
@@ -80,6 +79,8 @@ onMounted(async () => {
             <v-tab :value="phase.phaseId">{{ phase.phaseName }}</v-tab>
           </template>
         </v-tabs>
+
+        <no-items v-else />
 
         <v-tabs-window v-model="tab">
           <template v-for="(phase, phaseIndex) in standing">
@@ -147,8 +148,8 @@ onMounted(async () => {
                                 >
                                   <match-card
                                     :match="match"
-                                    :show-time="false"
                                     :show-field="false"
+                                    :show-time="false"
                                     container-class="mt-4"
                                   ></match-card>
                                 </template>
@@ -165,9 +166,9 @@ onMounted(async () => {
                   <v-col cols="3">
                     <match-card
                       :match="phaseItem"
-                      :showTime="false"
-                      :showField="false"
                       :show-lg-title="true"
+                      :showField="false"
+                      :showTime="false"
                     ></match-card>
                   </v-col>
                 </v-row>
