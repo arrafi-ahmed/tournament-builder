@@ -79,9 +79,9 @@ exports.save = async ({ payload, files }) => {
   if (team.email) delete team.email;
 
   const [insertedTeam] = await sql`
-        insert into teams ${sql(team)}
-        on conflict (id)
-        do update set ${sql(team)} returning *`;
+        insert into teams ${sql(team)} on conflict (id)
+        do
+        update set ${sql(team)} returning *`;
 
   return insertedTeam;
 };
@@ -90,8 +90,7 @@ exports.removeTeam = async ({ teamId }) => {
   const [deletedTeam] = await sql`
         delete
         from teams
-        where id = ${teamId}
-        returning *;`;
+        where id = ${teamId} returning *;`;
 
   if (deletedTeam.logo) {
     await removeImages([deletedTeam.logo]);
@@ -104,8 +103,7 @@ exports.removeMember = async ({ id, teamId }) => {
         delete
         from team_members
         where id = ${id}
-          and team_id = ${teamId}
-        returning *;`;
+          and team_id = ${teamId} returning *;`;
   return deletedMember;
 };
 
@@ -233,17 +231,16 @@ exports.saveMember = async ({ payload: member }) => {
     delete member.id;
   }
   const [upsertedMember] = await sql`
-        insert into team_members ${sql(member)}
-        on conflict (id)
-        do update set ${sql(member)}
-        returning *`;
+        insert into team_members ${sql(member)} on conflict (id)
+        do
+        update set ${sql(member)}
+            returning *`;
   return upsertedMember;
 };
 
 exports.saveTeamsTournaments = async ({ payload }) => {
   const [insertedTeamsTournaments] = await sql`
-        insert into teams_tournaments ${sql(payload)}
-            returning *`;
+        insert into teams_tournaments ${sql(payload)} returning *`;
   return insertedTeamsTournaments;
 };
 
@@ -253,8 +250,7 @@ exports.updateTeamRequest = async ({ payload }) => {
         set ${sql(payload)}
         where id = ${payload.id}
           and tournament_id = ${payload.tournamentId}
-          and team_id = ${payload.teamId}
-        returning *`;
+          and team_id = ${payload.teamId} returning *`;
   return updatedRequest;
 };
 
@@ -263,6 +259,38 @@ exports.searchTeam = async ({ searchKeyword }) => {
         SELECT t.*, u.*, t.id as t_id, u.id as u_id, t.name as t_name, u.name as u_name
         FROM teams t
                  left join users u on t.manager_id = u.id
-        where t.name ilike concat('%', ${searchKeyword}::text, '%')
+        where t.name ilike concat('%', ${searchKeyword}::text
+            , '%')
            or u.email = ${searchKeyword}`;
+};
+
+exports.getMatchesByTeam = async ({ teamId }) => {
+  const matches = await sql`
+        SELECT m.*,
+               t.name  as tournament_name,
+               md.id   as md_id,
+               md.match_date,
+               f.id    as f_id,
+               f.name  as field_name,
+               t1.name AS home_team_name,
+               t2.name AS away_team_name,
+               mr.home_team_score,
+               mr.away_team_score,
+               mr.winner_id
+        FROM matches m
+                 JOIN tournaments t on m.tournament_id = t.id
+                 LEFT JOIN match_results mr ON m.id = mr.match_id
+                 LEFT JOIN match_days md on m.match_day_id = md.id
+                 LEFT JOIN fields f on m.field_id = f.id
+                 LEFT JOIN teams t1 ON m.home_team_id = t1.id
+                 LEFT JOIN teams t2 ON m.away_team_id = t2.id
+        WHERE home_team_id = ${teamId}
+           OR away_team_id = ${teamId}
+    `;
+
+  const now = new Date();
+  const pastMatches = matches.filter((match) => match.startTime < now);
+  const futureMatches = matches.filter((match) => match.startTime >= now);
+
+  return { pastMatches, futureMatches };
 };

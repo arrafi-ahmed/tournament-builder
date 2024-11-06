@@ -1,12 +1,14 @@
 <script setup>
-import { calcMatchType, getTimeOnly } from "@/others/util";
+import { calcMatchType, getDateOnly, getTimeOnly } from "@/others/util";
 
 const { match, showTime, showLgTitle, showField, variant, containerClass } =
   defineProps({
     match: { type: Object, default: null },
     showTime: { type: Boolean, default: true },
+    showDate: { type: Boolean, default: false },
     showLgTitle: { type: Boolean, default: false },
     showField: { type: Boolean, default: false },
+    showTournament: { type: Boolean, default: false },
     variant: { type: String, default: "elevated" },
     containerClass: { type: String, default: null },
   });
@@ -19,6 +21,15 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
     </v-card-title>
     <div v-else class="d-flex justify-space-between pa-2">
       <span>
+        <v-chip
+          v-if="showDate"
+          color="primary"
+          label
+          size="small"
+          variant="tonal"
+          class="me-1"
+          >{{ getDateOnly(match.startTime) }}
+        </v-chip>
         <v-chip
           v-if="showTime"
           color="primary"
@@ -37,18 +48,20 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
         :color="calcMatchType(match.type).color"
         size="small"
         variant="tonal"
+        class="me-1"
         >{{ match.hostName }}
       </v-chip>
     </div>
-    <v-card-subtitle v-if="showField">
-      {{ match.fieldName }}
+    <v-card-subtitle>
+      <div class="mb-1" v-if="showTournament"><v-icon icon="mdi-trophy" class="mr-1"></v-icon>{{ match.tournamentName }}</div>
+      <div v-if="showField"><v-icon icon="mdi-soccer-field" class="mr-1"></v-icon>{{ match.fieldName }}</div>
     </v-card-subtitle>
     <v-card-text>
       <v-table density="compact">
         <tbody>
           <tr>
             <td>
-              {{ match.homeTeamName || match.homeTeamId }}
+              {{ match.homeTeamName || "Empty Slot" }}
             </td>
             <td class="w-25">
               <v-chip
@@ -66,7 +79,7 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
           </tr>
           <tr>
             <td>
-              {{ match.awayTeamName || match.awayTeamId }}
+              {{ match.awayTeamName || "Empty Slot" }}
             </td>
             <td class="ms-auto">
               <v-chip

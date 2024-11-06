@@ -7,6 +7,7 @@ export const state = {
   team: {},
   members: [],
   teamRequests: [],
+  matches:[], // used in team manager dashboard
 };
 
 export const mutations = {
@@ -69,6 +70,9 @@ export const mutations = {
   resetTeams(state) {
     state.teams = [];
   },
+  setMatches(state, payload){
+    state.matches = payload;
+  }
 };
 
 export const actions = {
@@ -241,6 +245,19 @@ export const actions = {
         })
         .then((response) => {
           commit("setTeams", response.data?.payload);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  setMatches({ commit }) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .get("/api/team/getMatchesByTeam")
+        .then((response) => {
+          commit("setMatches", response.data?.payload);
           resolve(response);
         })
         .catch((err) => {

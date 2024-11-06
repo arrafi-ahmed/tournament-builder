@@ -105,6 +105,15 @@ const routes = [
         },
       },
       {
+        path: "dashboard/manager/match-updates",
+        name: "match-updates",
+        component: () => import("@/views/MatchUpdates.vue"),
+        meta: {
+          requiresAuth: true,
+          title: "Invite Team",
+        },
+      },
+      {
         path: "tournament/:tournamentId/dashboard",
         name: "tournament-dashboard",
         component: () => import("@/views/TournamentDashboard.vue"),
@@ -260,7 +269,7 @@ const routes = [
     component: import("@/layouts/headerless/Headerless.vue"),
     children: [
       {
-        path: "public/tournament/:tournamentId",
+        path: "tournament/:tournamentId",
         name: "public-view",
         component: import("@/views/PublicView.vue"),
       },

@@ -152,6 +152,17 @@ onMounted(() => {
                         handleCancelJoinTournament(item.id, item.tournamentId)
                       "
                     ></remove-entity>
+
+                    <v-list-item
+                      prepend-icon="mdi-eye"
+                      title="View"
+                      @click="
+                        router.push({
+                          name: 'public-view',
+                          params: { tournamentId: item.id },
+                        })
+                      "
+                    ></v-list-item>
                   </v-list>
                 </v-menu>
               </template>

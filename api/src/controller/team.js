@@ -42,6 +42,17 @@ router.get("/getAllTeams", (req, res, next) => {
     .catch((err) => next(err));
 });
 
+router.get("/getMatchesByTeam", auth, (req, res, next) => {
+  const teamId = ifManager(req.currentUser.role)
+    ? req.currentUser.teamId
+    : req.query.teamId;
+
+  teamService
+    .getMatchesByTeam({ teamId })
+    .then((results) => res.status(200).json(new ApiResponse(null, results)))
+    .catch((err) => next(err));
+});
+
 router.get("/getAllTeamsWEmail", (req, res, next) => {
   teamService
     .getAllTeamsWEmail()

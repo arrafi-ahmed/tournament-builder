@@ -133,9 +133,14 @@ export const actions = {
   updateMatch({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios
-        .post("/api/tournament-format/saveMatch", request)
+        .post("/api/tournament-format/saveMatch", {
+          newMatch: request.newMatch,
+        })
         .then((response) => {
-          commit("addMatchToField", response.data?.payload);
+          commit("addMatchToField", {
+            ...response.data?.payload,
+            hostName: request.hostName,
+          });
           resolve(response);
         })
         .catch((err) => {

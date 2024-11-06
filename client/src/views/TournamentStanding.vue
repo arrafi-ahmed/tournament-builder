@@ -86,83 +86,90 @@ onMounted(async () => {
           <template v-for="(phase, phaseIndex) in standing">
             <v-tabs-window-item :value="phase.phaseId" class="ma-1">
               <template v-for="(phaseItem, phaseItemIndex) in phase.items">
-                <div v-if="phaseItem.type === 'group'">
-                  <v-card :title="phaseItem.name" class="my-5">
-                    <v-card-text>
-                      <v-table density="compact">
-                        <thead>
-                          <tr>
-                            <th>Teams</th>
-                            <th>PLD</th>
-                            <th>W</th>
-                            <th>D</th>
-                            <th>L</th>
-                            <th>PTS</th>
-                            <th>GF</th>
-                            <th>GA</th>
-                            <th>GD</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr
-                            v-for="(
-                              teamStat, teamStatIndex
-                            ) in phaseItem.teamStats"
-                          >
-                            <td>
-                              {{ teamStat.teamName || teamStat.teamId }}
-                            </td>
-                            <td>{{ teamStat.played }}</td>
-                            <td>{{ teamStat.won }}</td>
-                            <td>{{ teamStat.draw }}</td>
-                            <td>{{ teamStat.lost }}</td>
-                            <td>{{ teamStat.points }}</td>
-                            <td>{{ teamStat.goalsFor }}</td>
-                            <td>{{ teamStat.goalsAway }}</td>
-                            <td>{{ teamStat.goalDifference }}</td>
-                          </tr>
-                        </tbody>
-                      </v-table>
-                    </v-card-text>
-                  </v-card>
-                </div>
-                <div v-else-if="phaseItem.type === 'bracket'">
-                  <v-card :title="phaseItem.name" class="my-5">
-                    <v-card-text>
-                      <v-row class="scrollable-container">
-                        <v-col
-                          :cols="phaseItem.rounds.length * 3"
-                          class="max-content"
+                <v-card
+                  v-if="phaseItem.type === 'group'"
+                  :title="phaseItem.name"
+                  class="my-2"
+                >
+                  <v-card-text>
+                    <v-table density="compact">
+                      <thead>
+                        <tr>
+                          <th>Teams</th>
+                          <th>PLD</th>
+                          <th>W</th>
+                          <th>D</th>
+                          <th>L</th>
+                          <th>PTS</th>
+                          <th>GF</th>
+                          <th>GA</th>
+                          <th>GD</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr
+                          v-for="(
+                            teamStat, teamStatIndex
+                          ) in phaseItem.teamStats"
                         >
-                          <v-row>
-                            <template
-                              v-for="(round, roundIndex) in phaseItem.rounds"
-                            >
-                              <v-col :cols="12 / phaseItem.rounds.length">
-                                <div class="text-body-1 font-weight-medium">
-                                  {{ getRoundTitle(round.roundType) }}
-                                </div>
+                          <td>
+                            {{ teamStat.teamName || teamStat.teamId }}
+                          </td>
+                          <td>{{ teamStat.played }}</td>
+                          <td>{{ teamStat.won }}</td>
+                          <td>{{ teamStat.draw }}</td>
+                          <td>{{ teamStat.lost }}</td>
+                          <td>{{ teamStat.points }}</td>
+                          <td>{{ teamStat.goalsFor }}</td>
+                          <td>{{ teamStat.goalsAway }}</td>
+                          <td>{{ teamStat.goalDifference }}</td>
+                        </tr>
+                      </tbody>
+                    </v-table>
+                  </v-card-text>
+                </v-card>
+                <v-card
+                  v-else-if="phaseItem.type === 'bracket'"
+                  :title="phaseItem.name"
+                  class="my-2"
+                >
+                  <v-card-text>
+                    <v-row class="scrollable-container">
+                      <v-col
+                        :cols="phaseItem.rounds.length * 3"
+                        class="max-content"
+                      >
+                        <v-row>
+                          <template
+                            v-for="(round, roundIndex) in phaseItem.rounds"
+                          >
+                            <v-col :cols="12 / phaseItem.rounds.length">
+                              <div class="text-body-1 font-weight-medium">
+                                {{ getRoundTitle(round.roundType) }}
+                              </div>
 
-                                <template
-                                  v-for="(match, matchIndex) in round.matches"
-                                >
-                                  <match-card
-                                    :match="match"
-                                    :show-field="false"
-                                    :show-time="false"
-                                    container-class="mt-4"
-                                  ></match-card>
-                                </template>
-                              </v-col>
-                            </template>
-                          </v-row>
-                        </v-col>
-                      </v-row>
-                    </v-card-text>
-                  </v-card>
-                </div>
+                              <template
+                                v-for="(match, matchIndex) in round.matches"
+                              >
+                                <match-card
+                                  :match="match"
+                                  :show-field="false"
+                                  :show-time="false"
+                                  container-class="mt-4"
+                                ></match-card>
+                              </template>
+                            </v-col>
+                          </template>
+                        </v-row>
+                      </v-col>
+                    </v-row>
+                  </v-card-text>
+                </v-card>
 
-                <v-row v-else-if="phaseItem.type === 'single_match'">
+                <v-row
+                  v-else-if="phaseItem.type === 'single_match'"
+                  class="my-2"
+                >
                   <v-col cols="3">
                     <match-card
                       :match="phaseItem"

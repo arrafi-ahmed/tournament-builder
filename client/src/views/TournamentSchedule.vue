@@ -7,6 +7,7 @@ import NoItems from "@/components/NoItems.vue";
 import { calcMatchType, getTimeOnly } from "@/others/util";
 import { useDisplay } from "vuetify";
 import TimePicker from "@/components/TimePicker.vue";
+import { toast } from "vue-sonner";
 
 const router = useRouter();
 const route = useRoute();
@@ -62,9 +63,7 @@ const addField = () => {
 
 const addMatchToField = ({ match }) => {
   if (!schedule.value || !selectedField.value || !selectedMatchDate.value) {
-    console.error(
-      "Missing schedule, selected field, or match date information",
-    );
+    toast.error("Missing schedule, selected field, or match date information");
     return;
   }
   const targetMatches =
@@ -87,14 +86,15 @@ const addMatchToField = ({ match }) => {
   const newMatchStartTime = new Date(startTimeString);
   newMatchStartTime.setMinutes(newMatchStartTime.getMinutes() + minsToAdd);
 
+  const { hostName, ...rest } = match;
   const newMatch = {
-    ...match,
+    ...rest,
     startTime: newMatchStartTime,
     matchDayId: selectedMatchDate.value.id,
     fieldId: selectedField.value.id,
   };
 
-  store.dispatch("tournamentSchedule/updateMatch", { newMatch });
+  store.dispatch("tournamentSchedule/updateMatch", { newMatch, hostName });
 };
 
 const deleteMatchFromField = ({ selectedFieldIndex, selectedMatchIndex }) => {
@@ -319,7 +319,7 @@ onMounted(async () => {
                         density="comfortable"
                         label
                         size="small"
-                        >{{ calcMatchType(match.type).title }}
+                        >{{ match.hostName }}
                       </v-chip>
                     </v-list-item-subtitle>
 
@@ -406,7 +406,7 @@ onMounted(async () => {
                         density="comfortable"
                         label
                         size="small"
-                        >{{ calcMatchType(match.type).title }}
+                        >{{ match.hostName }}
                       </v-chip>
                     </div>
 

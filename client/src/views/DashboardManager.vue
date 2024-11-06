@@ -52,7 +52,7 @@ onMounted(() => {
     </v-row>
 
     <v-row justify="center">
-      <v-col>
+      <v-col sm="6" lg="3">
         <v-card
           :height="200"
           class="d-flex align-center"
@@ -65,7 +65,7 @@ onMounted(() => {
           <v-card-text class="text-center"><h2>Team</h2></v-card-text>
         </v-card>
       </v-col>
-      <v-col>
+      <v-col sm="6" lg="3">
         <v-card
           :height="200"
           class="d-flex align-center"
@@ -78,7 +78,7 @@ onMounted(() => {
           <v-card-text class="text-center"><h2>Add Member</h2></v-card-text>
         </v-card>
       </v-col>
-      <v-col>
+      <v-col sm="6" lg="3">
         <v-card
           :height="200"
           class="d-flex align-center"
@@ -90,6 +90,21 @@ onMounted(() => {
         >
           <v-card-text class="text-center"
             ><h2>Join Tournament</h2></v-card-text
+          >
+        </v-card>
+      </v-col>
+      <v-col sm="6" lg="3">
+        <v-card
+          :height="200"
+          class="d-flex align-center"
+          @click="
+            router.push({
+              name: 'match-updates',
+            })
+          "
+        >
+          <v-card-text class="text-center"
+            ><h2>Matches</h2></v-card-text
           >
         </v-card>
       </v-col>

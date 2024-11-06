@@ -96,32 +96,10 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
 
     // replace home/away team name with ref if teamId null
     if (!homeTeamId) {
-      const {
-        home: { id, type, position },
-      } = futureTeamReference;
-
-      if (type === "match") {
-        const foundRow = rawData.find((row) => row.matchId === id);
-        homeTeamName =
-          (position === 1 ? "Winner" : "Loser") + `, ${foundRow.matchName}`;
-      } else if (type === "group") {
-        const foundRow = rawData.find((row) => row.groupId === id);
-        homeTeamName = `${foundRow.groupName}, Ranking ${position}`;
-      }
+      homeTeamName = exports.getTeamName(futureTeamReference?.home, rawData);
     }
     if (!awayTeamId) {
-      const {
-        away: { id, type, position },
-      } = futureTeamReference;
-
-      if (type === "match") {
-        const foundRow = rawData.find((row) => row.matchId === id);
-        awayTeamName =
-          (position === 1 ? "Winner" : "Loser") + `, ${foundRow.matchName}`;
-      } else if (type === "group") {
-        const foundRow = rawData.find((row) => row.groupId === id);
-        awayTeamName = `${foundRow.groupName}, ` + `, Ranking ${position}`;
-      }
+      awayTeamName = exports.getTeamName(futureTeamReference?.away, rawData);
     }
 
     // 1. Schedule data grouped by match day
@@ -259,9 +237,14 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
       });
     }
   });
-
-  // Sort groups by groupId and teams by teamRanking within each group
   standing.forEach((phase) => {
+    // Sort rounds within each bracket in descending order
+    phase.items.forEach((item) => {
+      if (item.type === "bracket") {
+        item.rounds.sort((a, b) => b.roundType - a.roundType);
+      }
+    });
+    // Sort groups by groupId and teams by teamRanking within each group
     phase.items.sort((a, b) => {
       if (a.type === "group" && b.type === "group") {
         return a.groupId - b.groupId;
@@ -271,4 +254,22 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
   });
 
   return { standing, schedule };
+};
+
+exports.getTeamName = (reference, rawData) => {
+  if (!reference) return "Empty Slot";
+
+  const { id, type, position } = reference;
+  if (type === "match") {
+    const foundRow = rawData.find((row) => row.matchId === id);
+    return foundRow
+      ? `${position === 1 ? "Winner" : "Loser"}, ${foundRow.matchName}`
+      : "Empty Slot";
+  } else if (type === "group") {
+    const foundRow = rawData.find((row) => row.groupId === id);
+    return foundRow
+      ? `${foundRow.groupName}, Ranking ${position}`
+      : "Empty Slot";
+  }
+  return "Empty Slot";
 };

@@ -81,25 +81,31 @@ exports.deleteMatch = async ({
 
 exports.getSchedule = async ({ tournamentId }) => {
   const rows = await sql`
-        SELECT m.id          AS match_id,
-               m.name        AS match_name,
-               m.type        AS match_type,
-               m.start_time  AS match_start_time,
+        SELECT m.id                                                         AS match_id,
+               m.name                                                       AS match_name,
+               m.type                                                       AS match_type,
+               m.start_time                                                 AS match_start_time,
                m.home_team_id,
                m.away_team_id,
-               f.id          AS field_id,
-               f.name        AS field_name,
-               f.field_order AS field_order,
-               f.start_time  AS field_start_time,
-               md.id         AS match_day_id,
+               CASE WHEN m.type = 'group' THEN m.group_id ELSE NULL END     AS group_id,
+               CASE WHEN m.type = 'group' THEN tg.name ELSE NULL END        AS group_name,
+               CASE WHEN m.type = 'bracket' THEN m.bracket_id ELSE NULL END AS bracket_id,
+               CASE WHEN m.type = 'bracket' THEN tb.name ELSE NULL END      AS bracket_name,
+               f.id                                                         AS field_id,
+               f.name                                                       AS field_name,
+               f.field_order                                                AS field_order,
+               f.start_time                                                 AS field_start_time,
+               md.id                                                        AS match_day_id,
                md.match_date,
                CASE
                    WHEN m.field_id IS NULL OR m.match_day_id IS NULL THEN 'unplanned'
                    ELSE 'planned'
-                   END       AS match_status
+                   END                                                      AS match_status
         FROM matches m
                  LEFT JOIN fields f ON m.field_id = f.id
                  LEFT JOIN match_days md ON m.match_day_id = md.id
+                 LEFT JOIN tournament_groups tg ON tg.id = m.group_id AND m.type = 'group'
+                 LEFT JOIN tournament_brackets tb ON tb.id = m.bracket_id AND m.type = 'bracket'
         WHERE m.tournament_id = ${tournamentId}
         ORDER BY m.start_time;
     `;
@@ -150,6 +156,12 @@ const processScheduleData = async (matchRows) => {
         id: row.matchId,
         name: row.matchName,
         type: row.matchType,
+        hostName:
+          row.matchType === "group"
+            ? row.groupName
+            : row.matchType === "bracket"
+              ? row.bracketName
+              : row.matchName,
         homeTeamId: row.homeTeamId,
         awayTeamId: row.awayTeamId,
         startTime: row.matchStartTime,
@@ -171,6 +183,12 @@ const processScheduleData = async (matchRows) => {
         id: row.matchId,
         name: row.matchName,
         type: row.matchType,
+        hostName:
+          row.matchType === "group"
+            ? row.groupName
+            : row.matchType === "bracket"
+              ? row.bracketName
+              : row.matchName,
         homeTeamId: row.homeTeamId,
         awayTeamId: row.awayTeamId,
         startTime: row.matchStartTime,

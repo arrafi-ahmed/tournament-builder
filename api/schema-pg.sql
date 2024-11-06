@@ -142,14 +142,14 @@ CREATE TABLE matches
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     home_team_id          INT REFERENCES teams (id) ON DELETE CASCADE,
     away_team_id          INT REFERENCES teams (id) ON DELETE CASCADE,
-    phase_id              INT REFERENCES tournament_phases (id) ON DELETE CASCADE,                                                              -- used in match
-    group_id              INT REFERENCES tournament_groups (id) ON DELETE CASCADE,                                                              -- used in groups
-    bracket_id            INT REFERENCES tournament_brackets (id) ON DELETE CASCADE,                                                            -- used in brackets
+    phase_id              INT REFERENCES tournament_phases (id) ON DELETE CASCADE,   -- used in match
+    group_id              INT REFERENCES tournament_groups (id) ON DELETE CASCADE,   -- used in groups
+    bracket_id            INT REFERENCES tournament_brackets (id) ON DELETE CASCADE, -- used in brackets
     future_team_reference JSONB,
     group_team_reference  JSONB,
-    match_day_id          INT                                                                    REFERENCES match_days (id) ON DELETE SET NULL, -- added
-    field_id              INT                                                                    REFERENCES fields (id) ON DELETE SET NULL,     -- added
-    tournament_id         INT REFERENCES tournaments (id),                                                                                      -- added
+    match_day_id          INT                                                                    REFERENCES match_days (id) ON DELETE SET NULL,
+    field_id              INT                                                                    REFERENCES fields (id) ON DELETE SET NULL,
+    tournament_id         INT REFERENCES tournaments (id),
 );
 
 CREATE TABLE match_results
