@@ -80,6 +80,10 @@ export const mutations = {
     );
     state.unplannedMatches.splice(foundMatchIndex, 1);
   },
+  updateMatches(state, payload) {
+    const { fieldIndex, matchDayIndex, matches } = payload;
+    state.schedule[fieldIndex].matchDays[matchDayIndex].matches = matches;
+  },
 };
 
 export const actions = {
@@ -140,6 +144,27 @@ export const actions = {
           commit("addMatchToField", {
             ...response.data?.payload,
             hostName: request.hostName,
+          });
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  updateMatches({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/tournament-format/updateMatches", {
+          matches: request.matches.map(({ hostName, ...rest }) => ({
+            ...rest,
+          })),
+        })
+        .then((response) => {
+          commit("updateMatches", {
+            fieldIndex: request.fieldIndex,
+            matchDayIndex: request.matchDayIndex,
+            matches: request.matches,
           });
           resolve(response);
         })

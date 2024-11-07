@@ -578,6 +578,11 @@ sass@*, sass@^1.78.0:
     immutable "^4.0.0"
     source-map-js ">=0.6.2 <2.0.0"
 
+sortablejs@^1.14.0:
+  version "1.15.3"
+  resolved "https://registry.npmjs.org/sortablejs/-/sortablejs-1.15.3.tgz"
+  integrity sha512-zdK3/kwwAK1cJgy1rwl1YtNTbRmc8qW/+vgXf75A7NHag5of4pyI6uK86ktmQETyWRH7IGaE73uZOOBcGxgqZg==
+
 source-map-js@^1.2.0, "source-map-js@>=0.6.2 <2.0.0":
   version "1.2.1"
   resolved "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz"
@@ -657,6 +662,11 @@ vite-plugin-vuetify@^2.0.4, vite-plugin-vuetify@>=1.0.0:
   optionalDependencies:
     fsevents "~2.3.3"
 
+vue-draggable-next@^2.2.1:
+  version "2.2.1"
+  resolved "https://registry.npmjs.org/vue-draggable-next/-/vue-draggable-next-2.2.1.tgz"
+  integrity sha512-EAMS1IRHF0kZO0o5PMOinsQsXIqsrKT1hKmbICxG3UEtn7zLFkLxlAtajcCcUTisNvQ6TtCB5COjD9a1raNADw==
+
 vue-router@^4.4.3:
   version "4.4.3"
   resolved "https://registry.npmjs.org/vue-router/-/vue-router-4.4.3.tgz"
@@ -669,7 +679,7 @@ vue-sonner@^1.1.5:
   resolved "https://registry.npmjs.org/vue-sonner/-/vue-sonner-1.1.5.tgz"
   integrity sha512-uwtZgRs1pcqZuPJFOrNdutphZ5UVVjM4zbXMM7E2LAXTGnYIOgPmUZdWDrEeI+IGXCDsY8aRuk5bh3u4rp20Sg==
 
-vue@^3.0.0, vue@^3.2.0, vue@^3.2.25, vue@^3.3.0, vue@^3.4.27, "vue@2 || 3", vue@3.5.3:
+vue@^3.0.0, vue@^3.2.0, vue@^3.2.2, vue@^3.2.25, vue@^3.3.0, vue@^3.4.27, "vue@2 || 3", vue@3.5.3:
   version "3.5.3"
   resolved "https://registry.npmjs.org/vue/-/vue-3.5.3.tgz"
   integrity sha512-xvRbd0HpuLovYbOHXRHlSBsSvmUJbo0pzbkKTApWnQGf3/cu5Z39mQeA5cZdLRVIoNf3zI6MSoOgHUT5i2jO+Q==

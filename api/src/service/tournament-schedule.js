@@ -136,7 +136,7 @@ exports.getSchedule = async ({ tournamentId }) => {
     };
   });
   return {
-    schedule,
+    schedule: schedule.sort((a, b) => a.fieldOrder - b.fieldOrder),
     fields,
     matchDays,
     unplannedMatches: processedData.unplannedMatches,

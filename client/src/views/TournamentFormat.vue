@@ -6,6 +6,7 @@ import PageTitle from "@/components/PageTitle.vue";
 import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 import { useDisplay } from "vuetify";
 import { calcMatchType, getRoundTitle } from "@/others/util";
+import { VueDraggableNext } from "vue-draggable-next";
 
 const route = useRoute();
 const store = useStore();
@@ -225,16 +226,6 @@ const updateTeamOptionsMenu = ({ id, isMenuOpen }) => {
   }
 };
 
-const fetchData = async () => {
-  return Promise.all([
-    store.dispatch("tournament/setTournamentWEmailOptionalById", {
-      tournamentId: route.params.tournamentId,
-    }),
-    store.dispatch("tournamentFormat/setTournamentFormat", {
-      tournamentId: route.params.tournamentId,
-    }),
-  ]);
-};
 const newPhaseInit = {
   name: null,
   order: null,
@@ -482,9 +473,52 @@ const updateMatch = ({ match }) => {
     onlyEntitySave: true,
   });
 };
+const fetchData = async () => {
+  return Promise.all([
+    store.dispatch("tournament/setTournamentWEmailOptionalById", {
+      tournamentId: route.params.tournamentId,
+    }),
+    store.dispatch("tournamentFormat/setTournamentFormat", {
+      tournamentId: route.params.tournamentId,
+    }),
+  ]);
+};
 onMounted(async () => {
   fetchData();
 });
+const handlePhaseItemOrderChanged = (phaseIndex, eventData) => {
+  console.log(32, tournamentFormat.value[phaseIndex]);
+  const updatedItems = tournamentFormat.value[phaseIndex].items.map(
+    (item, index) => ({
+      ...item,
+      order: index + 1,
+    }),
+  );
+  console.log(33, updatedItems);
+  const groups = updatedItems
+    .filter((item) => item.type === "group")
+    .map((item) => ({
+      id: item.id,
+      order: item.order,
+    }));
+  const brackets = updatedItems
+    .filter((item) => item.type === "bracket")
+    .map((item) => ({
+      id: item.id,
+      order: item.order,
+    }));
+  const matches = updatedItems
+    .filter((item) => item.type === "single_match")
+    .map((item) => ({
+      id: item.id,
+      order: item.order,
+    }));
+  store.dispatch("tournamentFormat/updatePhaseItems", {
+    groups,
+    brackets,
+    matches,
+  });
+};
 </script>
 
 <template>
@@ -551,52 +585,287 @@ onMounted(async () => {
                   size="small"
                   tile
                   variant="tonal"
+                  color="error"
                   @click="removePhase({ phase })"
                 ></v-btn>
               </div>
 
               <template v-if="phase.items.length > 0">
-                <v-row v-for="(phaseItem, itemIndex) in phase.items">
-                  <v-col>
-                    <!--                if group-->
-                    <template v-if="phaseItem.type === 'group'">
-                      <v-row>
-                        <v-col :cols="calcPhaseCol(phaseIndex)" draggable>
-                          <v-card density="compact">
-                            <v-card-title
-                              :class="`${calcMatchType(phaseItem.type).bgColor} d-flex justify-space-around align-center`"
-                            >
-                              <v-text-field
-                                v-model="phaseItem.name"
-                                center-affix
-                                density="compact"
-                                hide-details="auto"
-                                variant="plain"
-                                @blur="updateGroup({ group: phaseItem })"
-                              ></v-text-field>
-                              <div>
-                                <v-btn
-                                  class="rounded"
-                                  density="comfortable"
-                                  icon="mdi-delete-outline"
-                                  size="small"
-                                  tile
-                                  variant="tonal"
-                                  @click="removeGroup({ group: phaseItem })"
-                                ></v-btn>
-                              </div>
-                            </v-card-title>
-                            <v-card-text>
-                              <template
-                                v-for="iterationCount in phaseItem.teamsPerGroup"
+                <vue-draggable-next
+                  :list="phase.items"
+                  @change="handlePhaseItemOrderChanged(phaseIndex, $event)"
+                >
+                  <v-row
+                    v-for="(phaseItem, itemIndex) in phase.items"
+                    :key="phaseItem?.id"
+                  >
+                    <v-col>
+                      <!--                if group-->
+                      <template v-if="phaseItem.type === 'group'">
+                        <v-row>
+                          <v-col :cols="calcPhaseCol(phaseIndex)">
+                            <v-card density="compact">
+                              <v-card-title
+                                :class="`${calcMatchType(phaseItem.type).bgColor} d-flex justify-space-around align-center`"
                               >
+                                <v-text-field
+                                  v-model="phaseItem.name"
+                                  center-affix
+                                  density="compact"
+                                  hide-details="auto"
+                                  variant="plain"
+                                  @blur="updateGroup({ group: phaseItem })"
+                                ></v-text-field>
+                                <div>
+                                  <v-btn
+                                    class="rounded mr-1 cursor-move"
+                                    density="comfortable"
+                                    icon="mdi-cursor-move"
+                                    size="small"
+                                    tile
+                                    variant="tonal"
+                                  ></v-btn>
+                                  <v-btn
+                                    class="rounded"
+                                    density="comfortable"
+                                    icon="mdi-delete-outline"
+                                    size="small"
+                                    tile
+                                    variant="tonal"
+                                    color="error"
+                                    @click="removeGroup({ group: phaseItem })"
+                                  ></v-btn>
+                                </div>
+                              </v-card-title>
+                              <v-card-text>
+                                <template
+                                  v-for="iterationCount in phaseItem.teamsPerGroup"
+                                >
+                                  <v-select
+                                    :disabled="phaseItem?.rankingPublished"
+                                    :items="visibleTeamOptions"
+                                    :model-value="
+                                      selectedTeamOptions[
+                                        `g-${phaseItem.id}-${iterationCount}`
+                                      ]
+                                    "
+                                    center-affix
+                                    density="compact"
+                                    hide-details="auto"
+                                    item-title="name"
+                                    item-value="id"
+                                    return-object
+                                    variant="plain"
+                                    @update:menu="
+                                      updateTeamOptionsMenu({
+                                        id: `g-${phaseItem.id}-${iterationCount}`,
+                                        isMenuOpen: $event,
+                                      })
+                                    "
+                                    @update:model-value="
+                                      updateSelectedTeamOption({
+                                        newSelection: $event,
+                                        host: {
+                                          type: 'group',
+                                          id: phaseItem.id,
+                                          position: iterationCount,
+                                          groupMatches: phaseItem.matches,
+                                        },
+                                      })
+                                    "
+                                  ></v-select>
+                                </template>
+                              </v-card-text>
+                            </v-card>
+                          </v-col>
+                        </v-row>
+                      </template>
+
+                      <!--                if bracket-->
+                      <template v-if="phaseItem.type === 'bracket'">
+                        <v-card density="compact">
+                          <v-card-title
+                            :class="`${calcMatchType(phaseItem.type).bgColor}  d-flex justify-space-around align-center`"
+                          >
+                            <v-text-field
+                              v-model="phaseItem.name"
+                              center-affix
+                              density="compact"
+                              hide-details="auto"
+                              variant="plain"
+                              @blur="updateBracket({ bracket: phaseItem })"
+                            ></v-text-field>
+                            <div>
+                              <v-btn
+                                class="rounded mr-1 cursor-move"
+                                density="comfortable"
+                                icon="mdi-cursor-move"
+                                size="small"
+                                tile
+                                variant="tonal"
+                              ></v-btn>
+                              <v-btn
+                                class="rounded"
+                                density="comfortable"
+                                icon="mdi-delete-outline"
+                                size="small"
+                                tile
+                                variant="tonal"
+                                color="error"
+                                @click="removeBracket({ bracket: phaseItem })"
+                              ></v-btn>
+                            </div>
+                          </v-card-title>
+                          <v-row class="pb-3" no-gutters>
+                            <v-col
+                              v-for="(round, roundIndex) in phaseItem.rounds"
+                              :cols="calcPhaseCol(phaseIndex)"
+                            >
+                              <h4 class="py-2 pl-4 font-weight-medium">
+                                {{ getRoundTitle(round.type) }}
+                              </h4>
+
+                              <v-row
+                                v-for="(match, matchIndex) in round.matches"
+                              >
+                                <v-col :cols="11" class="mx-auto">
+                                  <v-card density="compact">
+                                    <v-card-title class="bg-tertiary">
+                                      <v-text-field
+                                        v-model="match.name"
+                                        center-affix
+                                        density="compact"
+                                        hide-details="auto"
+                                        variant="plain"
+                                        @blur="updateMatch({ match })"
+                                      ></v-text-field>
+                                    </v-card-title>
+                                    <v-card-text>
+                                      <v-select
+                                        :disabled="
+                                          roundIndex > 0 ||
+                                          match?.rankingPublished
+                                        "
+                                        :items="visibleTeamOptions"
+                                        :model-value="
+                                          selectedTeamOptions[`m-${match.id}-1`]
+                                        "
+                                        center-affix
+                                        density="compact"
+                                        hide-details="auto"
+                                        item-title="name"
+                                        item-value="id"
+                                        return-object
+                                        variant="plain"
+                                        @update:menu="
+                                          updateTeamOptionsMenu({
+                                            id: `m-${match.id}-1`,
+                                            isMenuOpen: $event,
+                                          })
+                                        "
+                                        @update:model-value="
+                                          updateSelectedTeamOption({
+                                            newSelection: $event,
+                                            prevKey: `m-${match.id}-1`,
+                                            host: {
+                                              type: 'match',
+                                              id: match.id,
+                                              position: 1,
+                                              futureTeamReference:
+                                                match.futureTeamReference,
+                                            },
+                                          })
+                                        "
+                                      ></v-select>
+
+                                      <v-select
+                                        :disabled="
+                                          roundIndex > 0 ||
+                                          match?.rankingPublished
+                                        "
+                                        :items="visibleTeamOptions"
+                                        :model-value="
+                                          selectedTeamOptions[`m-${match.id}-2`]
+                                        "
+                                        center-affix
+                                        density="compact"
+                                        hide-details="auto"
+                                        item-title="name"
+                                        item-value="id"
+                                        return-object
+                                        variant="plain"
+                                        @update:menu="
+                                          updateTeamOptionsMenu({
+                                            id: `m-${match.id}-2`,
+                                            isMenuOpen: $event,
+                                          })
+                                        "
+                                        @update:model-value="
+                                          updateSelectedTeamOption({
+                                            newSelection: $event,
+                                            prevKey: `m-${match.id}-2`,
+                                            host: {
+                                              type: 'match',
+                                              id: match.id,
+                                              position: 2,
+                                              futureTeamReference:
+                                                match.futureTeamReference,
+                                            },
+                                          })
+                                        "
+                                      ></v-select>
+                                    </v-card-text>
+                                  </v-card>
+                                </v-col>
+                              </v-row>
+                            </v-col>
+                          </v-row>
+                        </v-card>
+                      </template>
+
+                      <!--                if single_match-->
+                      <template v-if="phaseItem.type === 'single_match'">
+                        <v-row>
+                          <v-col :cols="calcPhaseCol(phaseIndex)">
+                            <v-card density="compact">
+                              <v-card-title
+                                :class="`${calcMatchType(phaseItem.type).bgColor}  d-flex justify-space-around align-center`"
+                              >
+                                <v-text-field
+                                  v-model="phaseItem.name"
+                                  center-affix
+                                  density="compact"
+                                  hide-details="auto"
+                                  variant="plain"
+                                  @blur="updateMatch({ match: phaseItem })"
+                                ></v-text-field>
+                                <div>
+                                  <v-btn
+                                    class="rounded mr-1 cursor-move"
+                                    density="comfortable"
+                                    icon="mdi-cursor-move"
+                                    size="small"
+                                    tile
+                                    variant="tonal"
+                                  ></v-btn>
+                                  <v-btn
+                                    class="rounded"
+                                    density="comfortable"
+                                    icon="mdi-delete-outline"
+                                    size="small"
+                                    tile
+                                    variant="tonal"
+                                    color="error"
+                                    @click="removeMatch({ match: phaseItem })"
+                                  ></v-btn>
+                                </div>
+                              </v-card-title>
+                              <v-card-text>
                                 <v-select
-                                  :disabled="phaseItem?.rankingPublished"
+                                  :disabled="phaseItem.rankingPublished"
                                   :items="visibleTeamOptions"
                                   :model-value="
-                                    selectedTeamOptions[
-                                      `g-${phaseItem.id}-${iterationCount}`
-                                    ]
+                                    selectedTeamOptions[`m-${phaseItem.id}-1`]
                                   "
                                   center-affix
                                   density="compact"
@@ -607,262 +876,65 @@ onMounted(async () => {
                                   variant="plain"
                                   @update:menu="
                                     updateTeamOptionsMenu({
-                                      id: `g-${phaseItem.id}-${iterationCount}`,
+                                      id: `m-${phaseItem.id}-1`,
                                       isMenuOpen: $event,
                                     })
                                   "
                                   @update:model-value="
                                     updateSelectedTeamOption({
                                       newSelection: $event,
+                                      prevKey: `m-${phaseItem.id}-1`,
                                       host: {
-                                        type: 'group',
+                                        type: 'match',
                                         id: phaseItem.id,
-                                        position: iterationCount,
-                                        groupMatches: phaseItem.matches,
+                                        position: 1,
+                                        futureTeamReference:
+                                          phaseItem.futureTeamReference,
                                       },
                                     })
                                   "
                                 ></v-select>
-                              </template>
-                            </v-card-text>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </template>
-
-                    <!--                if bracket-->
-                    <template v-if="phaseItem.type === 'bracket'">
-                      <v-card density="compact">
-                        <v-card-title
-                          :class="`${calcMatchType(phaseItem.type).bgColor}  d-flex justify-space-around align-center`"
-                        >
-                          <v-text-field
-                            v-model="phaseItem.name"
-                            center-affix
-                            density="compact"
-                            hide-details="auto"
-                            variant="plain"
-                            @blur="updateBracket({ bracket: phaseItem })"
-                          ></v-text-field>
-                          <div>
-                            <v-btn
-                              class="rounded"
-                              density="comfortable"
-                              icon="mdi-delete-outline"
-                              size="small"
-                              tile
-                              variant="tonal"
-                              @click="removeBracket({ bracket: phaseItem })"
-                            ></v-btn>
-                          </div>
-                        </v-card-title>
-                        <v-row class="pb-3" no-gutters>
-                          <v-col
-                            v-for="(round, roundIndex) in phaseItem.rounds"
-                            :cols="calcPhaseCol(phaseIndex)"
-                          >
-                            <h4 class="py-2 pl-4 font-weight-medium">
-                              {{ getRoundTitle(round.type) }}
-                            </h4>
-
-                            <v-row v-for="(match, matchIndex) in round.matches">
-                              <v-col :cols="11" class="mx-auto">
-                                <v-card density="compact">
-                                  <v-card-title class="bg-tertiary">
-                                    <v-text-field
-                                      v-model="match.name"
-                                      center-affix
-                                      density="compact"
-                                      hide-details="auto"
-                                      variant="plain"
-                                      @blur="updateMatch({ match })"
-                                    ></v-text-field>
-                                  </v-card-title>
-                                  <v-card-text>
-                                    <v-select
-                                      :disabled="
-                                        roundIndex > 0 ||
-                                        match?.rankingPublished
-                                      "
-                                      :items="visibleTeamOptions"
-                                      :model-value="
-                                        selectedTeamOptions[`m-${match.id}-1`]
-                                      "
-                                      center-affix
-                                      density="compact"
-                                      hide-details="auto"
-                                      item-title="name"
-                                      item-value="id"
-                                      return-object
-                                      variant="plain"
-                                      @update:menu="
-                                        updateTeamOptionsMenu({
-                                          id: `m-${match.id}-1`,
-                                          isMenuOpen: $event,
-                                        })
-                                      "
-                                      @update:model-value="
-                                        updateSelectedTeamOption({
-                                          newSelection: $event,
-                                          prevKey: `m-${match.id}-1`,
-                                          host: {
-                                            type: 'match',
-                                            id: match.id,
-                                            position: 1,
-                                            futureTeamReference:
-                                              match.futureTeamReference,
-                                          },
-                                        })
-                                      "
-                                    ></v-select>
-
-                                    <v-select
-                                      :disabled="
-                                        roundIndex > 0 ||
-                                        match?.rankingPublished
-                                      "
-                                      :items="visibleTeamOptions"
-                                      :model-value="
-                                        selectedTeamOptions[`m-${match.id}-2`]
-                                      "
-                                      center-affix
-                                      density="compact"
-                                      hide-details="auto"
-                                      item-title="name"
-                                      item-value="id"
-                                      return-object
-                                      variant="plain"
-                                      @update:menu="
-                                        updateTeamOptionsMenu({
-                                          id: `m-${match.id}-2`,
-                                          isMenuOpen: $event,
-                                        })
-                                      "
-                                      @update:model-value="
-                                        updateSelectedTeamOption({
-                                          newSelection: $event,
-                                          prevKey: `m-${match.id}-2`,
-                                          host: {
-                                            type: 'match',
-                                            id: match.id,
-                                            position: 2,
-                                            futureTeamReference:
-                                              match.futureTeamReference,
-                                          },
-                                        })
-                                      "
-                                    ></v-select>
-                                  </v-card-text>
-                                </v-card>
-                              </v-col>
-                            </v-row>
+                                <v-select
+                                  :disabled="phaseItem.rankingPublished"
+                                  :items="visibleTeamOptions"
+                                  :model-value="
+                                    selectedTeamOptions[`m-${phaseItem.id}-2`]
+                                  "
+                                  center-affix
+                                  density="compact"
+                                  hide-details="auto"
+                                  item-title="name"
+                                  item-value="id"
+                                  return-object
+                                  variant="plain"
+                                  @update:menu="
+                                    updateTeamOptionsMenu({
+                                      id: `m-${phaseItem.id}-2`,
+                                      isMenuOpen: $event,
+                                    })
+                                  "
+                                  @update:model-value="
+                                    updateSelectedTeamOption({
+                                      newSelection: $event,
+                                      prevKey: `m-${phaseItem.id}-2`,
+                                      host: {
+                                        type: 'match',
+                                        id: phaseItem.id,
+                                        position: 2,
+                                        futureTeamReference:
+                                          phaseItem.futureTeamReference,
+                                      },
+                                    })
+                                  "
+                                ></v-select>
+                              </v-card-text>
+                            </v-card>
                           </v-col>
                         </v-row>
-                      </v-card>
-                    </template>
-
-                    <!--                if single_match-->
-                    <template v-if="phaseItem.type === 'single_match'">
-                      <v-row>
-                        <v-col :cols="calcPhaseCol(phaseIndex)">
-                          <v-card density="compact">
-                            <v-card-title
-                              :class="`${calcMatchType(phaseItem.type).bgColor}  d-flex justify-space-around align-center`"
-                            >
-                              <v-text-field
-                                v-model="phaseItem.name"
-                                center-affix
-                                density="compact"
-                                hide-details="auto"
-                                variant="plain"
-                                @blur="updateMatch({ match: phaseItem })"
-                              ></v-text-field>
-                              <div>
-                                <v-btn
-                                  class="rounded"
-                                  density="comfortable"
-                                  icon="mdi-delete-outline"
-                                  size="small"
-                                  tile
-                                  variant="tonal"
-                                  @click="removeMatch({ match: phaseItem })"
-                                ></v-btn>
-                              </div>
-                            </v-card-title>
-                            <v-card-text>
-                              <v-select
-                                :disabled="phaseItem.rankingPublished"
-                                :items="visibleTeamOptions"
-                                :model-value="
-                                  selectedTeamOptions[`m-${phaseItem.id}-1`]
-                                "
-                                center-affix
-                                density="compact"
-                                hide-details="auto"
-                                item-title="name"
-                                item-value="id"
-                                return-object
-                                variant="plain"
-                                @update:menu="
-                                  updateTeamOptionsMenu({
-                                    id: `m-${phaseItem.id}-1`,
-                                    isMenuOpen: $event,
-                                  })
-                                "
-                                @update:model-value="
-                                  updateSelectedTeamOption({
-                                    newSelection: $event,
-                                    prevKey: `m-${phaseItem.id}-1`,
-                                    host: {
-                                      type: 'match',
-                                      id: phaseItem.id,
-                                      position: 1,
-                                      futureTeamReference:
-                                        phaseItem.futureTeamReference,
-                                    },
-                                  })
-                                "
-                              ></v-select>
-                              <v-select
-                                :disabled="phaseItem.rankingPublished"
-                                :items="visibleTeamOptions"
-                                :model-value="
-                                  selectedTeamOptions[`m-${phaseItem.id}-2`]
-                                "
-                                center-affix
-                                density="compact"
-                                hide-details="auto"
-                                item-title="name"
-                                item-value="id"
-                                return-object
-                                variant="plain"
-                                @update:menu="
-                                  updateTeamOptionsMenu({
-                                    id: `m-${phaseItem.id}-2`,
-                                    isMenuOpen: $event,
-                                  })
-                                "
-                                @update:model-value="
-                                  updateSelectedTeamOption({
-                                    newSelection: $event,
-                                    prevKey: `m-${phaseItem.id}-2`,
-                                    host: {
-                                      type: 'match',
-                                      id: phaseItem.id,
-                                      position: 2,
-                                      futureTeamReference:
-                                        phaseItem.futureTeamReference,
-                                    },
-                                  })
-                                "
-                              ></v-select>
-                            </v-card-text>
-                          </v-card>
-                        </v-col>
-                      </v-row>
-                    </template>
-                  </v-col>
-                </v-row>
+                      </template>
+                    </v-col>
+                  </v-row>
+                </vue-draggable-next>
               </template>
 
               <div class="d-flex pt-4">

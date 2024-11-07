@@ -127,9 +127,26 @@ exports.saveGroup = async ({
   };
 };
 
-exports.insertMatches = async ({ payload: { matches } }) => {
-  return sql`
-        insert into matches ${sql(matches)} returning *`;
+exports.updateGroups = async ({ payload: { groups } }) => {
+  const updatePromises = groups.map(async (group) => {
+    const [updateGroup] = await sql`
+            update tournament_groups
+            set ${sql(group)}
+            where id = ${group.id} returning *`;
+    return updateGroup; // Return only the object, not the array
+  });
+  return Promise.all(updatePromises);
+};
+
+exports.updateBrackets = async ({ payload: { brackets } }) => {
+  const updatePromises = brackets.map(async (bracket) => {
+    const [updateBracket] = await sql`
+            update tournament_brackets
+            set ${sql(bracket)}
+            where id = ${bracket.id} returning *`;
+    return updateBracket; // Return only the object, not the array
+  });
+  return Promise.all(updatePromises);
 };
 
 exports.updateMatches = async ({ payload: { matches } }) => {
@@ -141,6 +158,11 @@ exports.updateMatches = async ({ payload: { matches } }) => {
     return updatedMatch; // Return only the object, not the array
   });
   return Promise.all(updatePromises);
+};
+
+exports.insertMatches = async ({ payload: { matches } }) => {
+  return sql`
+        insert into matches ${sql(matches)} returning *`;
 };
 
 exports.saveGroupTeam = async ({ payload: { updateGroupTeam } }) => {
@@ -575,6 +597,26 @@ exports.createKnockoutPhase = async ({
     selectedTeamOptions,
     entityLastCount,
   };
+};
+
+exports.updatePhaseItems = async ({
+  payload: { groups, brackets, matches },
+  organizerId,
+}) => {
+  let updatedGroups = [];
+  let updatedBrackets = [];
+  let updatedMatches = [];
+
+  if (groups.length > 0) {
+    updatedGroups = await exports.updateGroups({ payload: { groups } });
+  }
+  if (brackets.length > 0) {
+    updatedBrackets = await exports.updateBrackets({ payload: { brackets } });
+  }
+  if (matches.length > 0) {
+    updatedMatches = await exports.updateMatches({ payload: { matches } });
+  }
+  return { updatedGroups, updatedBrackets, updatedMatches };
 };
 
 exports.getTournamentFormat = async ({ tournamentId, organizerId }) => {

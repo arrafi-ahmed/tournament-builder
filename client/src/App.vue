@@ -22,6 +22,7 @@ watch(route, (to) => {
     richColors
     theme="dark"
   />
+
   <router-view />
 </template>
 <style>

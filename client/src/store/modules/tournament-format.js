@@ -579,6 +579,19 @@ export const actions = {
         });
     });
   },
+  updatePhaseItems({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/tournament-format/updatePhaseItems", request)
+        .then((response) => {
+          // commit("updateGroupMatches", response.data?.payload);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
 };
 
 export const getters = {

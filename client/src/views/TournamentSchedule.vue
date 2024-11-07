@@ -8,6 +8,7 @@ import { calcMatchType, getTimeOnly } from "@/others/util";
 import { useDisplay } from "vuetify";
 import TimePicker from "@/components/TimePicker.vue";
 import { toast } from "vue-sonner";
+import { VueDraggableNext } from "vue-draggable-next";
 
 const router = useRouter();
 const route = useRoute();
@@ -51,6 +52,7 @@ const newFieldInit = {
 const newField = reactive({ ...newFieldInit });
 
 const addField = () => {
+  console.log(21, schedule.value.length + 1)
   store
     .dispatch("tournamentSchedule/saveField", {
       newField: { ...newField, fieldOrder: schedule.value.length + 1 },
@@ -59,6 +61,24 @@ const addField = () => {
       addFieldDialog.value = false;
       Object.assign(newField, { ...newFieldInit });
     });
+};
+
+const getMatchStartTime = ({ matches }) => {
+  let lastMatchStartTimeString = "";
+  let minsToAdd = 0;
+
+  if (matches.length) {
+    lastMatchStartTimeString = matches[matches.length - 1].startTime;
+    minsToAdd =
+      tournament.value.matchDuration + tournament.value.matchIntervalTime;
+  } else {
+    lastMatchStartTimeString = `${selectedMatchDate.value.matchDate}T${selectedField.value.startTime}`;
+  }
+  const lastMatchStartTime = new Date(lastMatchStartTimeString);
+  const newMatchStartTime = lastMatchStartTime.setMinutes(
+    lastMatchStartTime.getMinutes() + minsToAdd,
+  );
+  return newMatchStartTime;
 };
 
 const addMatchToField = ({ match }) => {
@@ -73,18 +93,7 @@ const addMatchToField = ({ match }) => {
         (matchDay) => matchDay.id === selectedMatchDate.value.id,
       )?.matches || [];
 
-  let startTimeString = "";
-  let minsToAdd = 0;
-
-  if (targetMatches.length) {
-    startTimeString = targetMatches[targetMatches.length - 1].startTime;
-    minsToAdd =
-      tournament.value.matchDuration + tournament.value.matchIntervalTime;
-  } else {
-    startTimeString = `${selectedMatchDate.value.matchDate}T${selectedField.value.startTime}`;
-  }
-  const newMatchStartTime = new Date(startTimeString);
-  newMatchStartTime.setMinutes(newMatchStartTime.getMinutes() + minsToAdd);
+  const newMatchStartTime = getMatchStartTime({ matches: targetMatches });
 
   const { hostName, ...rest } = match;
   const newMatch = {
@@ -130,6 +139,9 @@ const deleteMatchFromField = ({ selectedFieldIndex, selectedMatchIndex }) => {
       i
     ].startTime = calcStartTime;
   }
+  //remove hostname for backend, but keep it in frontend
+  const preservedHostName = selectedMatch.hostName;
+  delete selectedMatch.hostName;
 
   store
     .dispatch("tournamentSchedule/deleteMatch", {
@@ -145,6 +157,7 @@ const deleteMatchFromField = ({ selectedFieldIndex, selectedMatchIndex }) => {
       store.commit("tournamentSchedule/addUnplannedMatches", {
         ...deletedMatches[0],
         startTime: null,
+        hostName: preservedHostName,
       });
     });
 };
@@ -206,6 +219,48 @@ onMounted(async () => {
   selectedMatchDate.value = matchDays.value[0];
   selectedField.value = fields.value[0];
 });
+const handleFieldMatchChanged = (fieldIndex, eventData) => {
+  const {
+    moved: { element, oldIndex, newIndex },
+  } = eventData;
+  if (!element) return;
+
+  const schedule = store.state.tournamentSchedule.schedule;
+  const field = schedule[fieldIndex];
+
+  console.log(11, fieldIndex, field)
+
+  if (field && field.matchDays) {
+    const matchDayIndex = field.matchDays.findIndex(
+      (matchDay) => matchDay.id === selectedMatchDate.value.id,
+    );
+    if (matchDayIndex !== -1) {
+      const matches = field.matchDays[matchDayIndex].matches;
+      const startTimeString = `${selectedMatchDate.value.matchDate}T${field.startTime}`;
+
+      const matchesWUpdatedStartTime = matches.map((item, index) => {
+        let startTime = new Date(startTimeString);
+        const minsToAdd =
+          (tournament.value.matchDuration +
+            tournament.value.matchIntervalTime) *
+          index;
+        startTime =
+          index === 0
+            ? startTime
+            : startTime.setMinutes(startTime.getMinutes() + minsToAdd);
+        return {
+          ...item,
+          startTime,
+        };
+      });
+      store.dispatch("tournamentSchedule/updateMatches", {
+        fieldIndex,
+        matchDayIndex,
+        matches: matchesWUpdatedStartTime,
+      });
+    }
+  }
+};
 </script>
 
 <template>
@@ -298,14 +353,18 @@ onMounted(async () => {
                   >field
                 </v-chip>
               </v-card-subtitle>
-              <v-list>
-                <template
-                  v-for="(match, matchIndex) in matchesForSelectedDate[
-                    fieldIndex
-                  ]"
-                  v-if="matchesForSelectedDate[fieldIndex]?.length"
+              <v-list v-if="matchesForSelectedDate[fieldIndex]?.length">
+                <vue-draggable-next
+                  :list="matchesForSelectedDate[fieldIndex]"
+                  @change="handleFieldMatchChanged(fieldIndex, $event)"
                 >
-                  <v-list-item>
+                  <v-list-item
+                    v-for="(match, matchIndex) in matchesForSelectedDate[
+                      fieldIndex
+                    ]"
+                    :key="match?.id"
+                    class="cursor-move"
+                  >
                     <v-list-item-title>
                       {{ match.name }}
                     </v-list-item-title>
@@ -337,21 +396,20 @@ onMounted(async () => {
                         "
                       ></v-btn>
                     </template>
+                    <v-divider
+                      v-if="
+                        matchIndex !==
+                        matchesForSelectedDate[fieldIndex].length - 1
+                      "
+                      class="mb-1 mt-2"
+                    ></v-divider>
                   </v-list-item>
-
-                  <v-divider
-                    v-if="
-                      matchIndex !==
-                      matchesForSelectedDate[fieldIndex].length - 1
-                    "
-                    class="mb-1 mt-2"
-                  ></v-divider>
-                </template>
-
-                <no-items v-else cols="12" text="No items!"></no-items>
+                </vue-draggable-next>
               </v-list>
+              <no-items v-else cols="12" text="No items!"></no-items>
             </v-card>
           </v-col>
+
           <v-col>
             <v-btn
               prepend-icon="mdi-plus"

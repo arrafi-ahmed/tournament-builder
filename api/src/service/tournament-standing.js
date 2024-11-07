@@ -96,10 +96,16 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
 
     // replace home/away team name with ref if teamId null
     if (!homeTeamId) {
-      homeTeamName = exports.getTeamName(futureTeamReference?.home, rawData);
+      homeTeamName = exports.getTeamNameFromRef(
+        futureTeamReference?.home,
+        rawData,
+      );
     }
     if (!awayTeamId) {
-      awayTeamName = exports.getTeamName(futureTeamReference?.away, rawData);
+      awayTeamName = exports.getTeamNameFromRef(
+        futureTeamReference?.away,
+        rawData,
+      );
     }
 
     // 1. Schedule data grouped by match day
@@ -256,7 +262,7 @@ exports.getTournamentStanding = async ({ tournamentId }) => {
   return { standing, schedule };
 };
 
-exports.getTeamName = (reference, rawData) => {
+exports.getTeamNameFromRef = (reference, rawData) => {
   if (!reference) return "Empty Slot";
 
   const { id, type, position } = reference;
