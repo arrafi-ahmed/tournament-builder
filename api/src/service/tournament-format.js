@@ -622,60 +622,31 @@ exports.updatePhaseItems = async ({
 exports.getTournamentFormat = async ({ tournamentId, organizerId }) => {
   const tournament = await tournamentService.getTournament({ tournamentId });
 
+  //@formatter:off
   let result = await sql`
-        SELECT DISTINCT tp.id                   AS phase_id,
-                        tp.name                 AS phase_name,
-                        tp.order                AS phase_order,
-                        CASE
-                            WHEN m.type = 'group' THEN tg.id
-                            END                 AS group_id,
-                        CASE
-                            WHEN m.type = 'group' THEN tg.name
-                            END                 AS group_name,
-                        CASE
-                            WHEN m.type = 'group' THEN tg.ranking_published
-                            END                 AS ranking_published,
-                        CASE
-                            WHEN m.type = 'group' THEN tg.order
-                            END                 AS group_order,
-                        CASE
-                            WHEN m.type = 'group' THEN tg.double_round_robin
-                            END                 AS double_round_robin,
-                        CASE
-                            WHEN m.type = 'group' THEN tg.teams_per_group
-                            END                 AS teams_per_group,
-                        CASE
-                            WHEN m.type = 'group' THEN gt.id
-                            END                 AS group_team_id,
-                        CASE
-                            WHEN m.type = 'group' THEN gt.team_id
-                            END                 AS team_id,
-                        CASE
-                            WHEN m.type = 'group' THEN gt.team_ranking
-                            END                 AS team_ranking,
-                        CASE
-                            WHEN m.type = 'group' THEN t1.name
-                            END                 AS group_team_name,
-                        CASE
-                            WHEN m.type = 'group' THEN m.group_team_reference
-                            END                 AS match_group_team_reference,
-                        CASE
-                            WHEN m.type = 'bracket' THEN tb.id
-                            END                 AS bracket_id,
-                        CASE
-                            WHEN m.type = 'bracket' THEN tb.name
-                            END                 AS bracket_name,
-                        CASE
-                            WHEN m.type = 'bracket' THEN tb.order
-                            END                 AS bracket_order,
-                        CASE
-                            WHEN m.type = 'bracket' THEN tb.teams_count
-                            END                 AS teams_count,
-                        m.id                    AS match_id,
-                        m.name                  AS match_name,
-                        m.type                  AS match_type,
-                        m.order                 AS match_order,
-                        m.future_team_reference AS match_future_team_reference,
+        SELECT DISTINCT tp.id                                                      AS phase_id,
+                        tp.name                                                    AS phase_name,
+                        tp.order                                                   AS phase_order,
+                        CASE WHEN m.type = 'group' THEN tg.id END                  AS group_id,
+                        CASE WHEN m.type = 'group' THEN tg.name END                AS group_name,
+                        CASE WHEN m.type = 'group' THEN tg.ranking_published END   AS ranking_published,
+                        CASE WHEN m.type = 'group' THEN tg.order END               AS group_order,
+                        CASE WHEN m.type = 'group' THEN tg.double_round_robin END  AS double_round_robin,
+                        CASE WHEN m.type = 'group' THEN tg.teams_per_group END     AS teams_per_group,
+                        CASE WHEN m.type = 'group' THEN gt.id END                  AS group_team_id,
+                        CASE WHEN m.type = 'group' THEN gt.team_id END             AS team_id,
+                        CASE WHEN m.type = 'group' THEN gt.team_ranking END        AS team_ranking,
+                        CASE WHEN m.type = 'group' THEN t1.name END                AS group_team_name,
+                        CASE WHEN m.type = 'group' THEN m.group_team_reference END AS match_group_team_reference,
+                        CASE WHEN m.type = 'bracket' THEN tb.id END                AS bracket_id,
+                        CASE WHEN m.type = 'bracket' THEN tb.name END              AS bracket_name,
+                        CASE WHEN m.type = 'bracket' THEN tb.order END             AS bracket_order,
+                        CASE WHEN m.type = 'bracket' THEN tb.teams_count END       AS teams_count,
+                        m.id                                                       AS match_id,
+                        m.name                                                     AS match_name,
+                        m.type                                                     AS match_type,
+                        m.order                                                    AS match_order,
+                        m.future_team_reference                                    AS match_future_team_reference,
                         m.round_type,
                         m.start_time,
                         m.home_team_id,
@@ -686,18 +657,26 @@ exports.getTournamentFormat = async ({ tournamentId, organizerId }) => {
         FROM tournament_phases tp
                  LEFT JOIN tournament_groups tg
                            ON tg.tournament_phase_id = tp.id
-                 LEFT JOIN groups_teams gt ON gt.tournament_group_id = tg.id
-                 LEFT JOIN teams t1 ON t1.id = gt.team_id -- Join for group team name
-                 LEFT JOIN tournament_brackets tb ON tb.tournament_phase_id = tp.id
+                 LEFT JOIN groups_teams gt
+                           ON gt.tournament_group_id = tg.id
+                 LEFT JOIN teams t1
+                           ON t1.id = gt.team_id
+                 LEFT JOIN tournament_brackets tb
+                           ON tb.tournament_phase_id = tp.id
                  LEFT JOIN matches m
-                           ON (CASE
-                                   WHEN m.type = 'group' THEN m.group_id = tg.id
-                                   WHEN m.type = 'bracket' THEN m.bracket_id = tb.id
-                                   WHEN m.type = 'single_match' THEN m.phase_id = tp.id
-                               END)
-                 LEFT JOIN match_results mr ON mr.match_id = m.id
+                           ON (
+                               (m.type = 'group' AND m.group_id = tg.id AND
+                                (gt.team_id = m.home_team_id OR gt.team_id = m.away_team_id) OR
+                                (gt.id = (m.group_team_reference -> 'home' ->> 'groupTeamId')::INTEGER OR
+                         gt.id = (m.group_team_reference -> 'away' ->> 'groupTeamId')::INTEGER))
+                                   OR (m.type = 'bracket' AND m.bracket_id = tb.id)
+                                   OR (m.type = 'single_match' AND m.phase_id = tp.id)
+                               )
+                 LEFT JOIN match_results mr
+                           ON mr.match_id = m.id
         WHERE tp.tournament_id = ${tournamentId};
     `;
+  //@formatter:on
 
   return processTournamentData({
     rawData: result,
@@ -767,7 +746,8 @@ const processTournamentData = async ({
             teamId: row.teamId,
             name: row.groupTeamName,
             teamRanking: row.teamRanking,
-            futureTeamReference: row.matchFutureTeamReference,
+            futureTeamReference: row.matchFutureTeamReference, // TODO: change to groupTeam
+            groupTeamReference: row.matchGroupTeamReference,
           });
         }
       }
@@ -1074,21 +1054,31 @@ const populateSelectedNTeamOptions = ({
   }
 
   function populateGroupSelectedOption({ teams, keyId, keyPosition }) {
+    //keyId = phaseItem.id
     const team = Object.values(teams).find(
       (item) => item.teamRanking === keyPosition,
     );
-    const { id, futureTeamReference: reference } = team || {};
+    const { id, futureTeamReference, groupTeamReference } = team || {};
+
+    // map groupRef & futureTeamRef with gt.id to get reference
+    const reference =
+      team.id === team.groupTeamReference?.home?.groupTeamId
+        ? team.futureTeamReference?.home
+        : team.id === team.groupTeamReference?.away?.groupTeamId
+          ? team.futureTeamReference?.away
+          : null;
 
     //hostTeam gt.id
-    const hostGroupTeamId = groups[keyId]?.teams.find(
-      (t) => t.teamRanking === keyPosition,
-    )?.id;
+    // const hostGroupTeamId = groups[keyId]?.teams.find(
+    //   (t) => t.teamRanking === keyPosition,
+    // )?.id;
 
     // direct team assigned -> if teamId != null && futureTeamReference == null
     if (team?.teamId && !reference?.id) {
       selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
         ...teamOptions[`t-${team.teamId}`],
-        groupTeamId: hostGroupTeamId,
+        // groupTeamId: hostGroupTeamId,
+        groupTeamId: team.id,
       };
       (teamOptions[`t-${team.teamId}`] ??= {}).used = true;
       return;
@@ -1097,7 +1087,8 @@ const populateSelectedNTeamOptions = ({
     if (!reference?.id) {
       return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
         ...teamOptions["empty"],
-        groupTeamId: hostGroupTeamId,
+        // groupTeamId: hostGroupTeamId,
+        groupTeamId: team.id,
       });
     }
 
@@ -1115,19 +1106,22 @@ const populateSelectedNTeamOptions = ({
         (teamOptions[`g-${keyId}-${keyPosition}`] ??= {}).used = true;
         return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
           ...teamOptions[`t-${foundTeam.teamId}`],
-          groupTeamId: hostGroupTeamId,
+          // groupTeamId: hostGroupTeamId,
+          groupTeamId: team.id,
         });
       } else if (foundGroup?.rankingPublished === false) {
         (teamOptions[`g-${foundGroup.id}-${position}`] ??= {}).used = true;
         return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
           ...teamOptions[`g-${foundGroup.id}-${position}`],
-          groupTeamId: hostGroupTeamId,
+          // groupTeamId: hostGroupTeamId,
+          groupTeamId: team.id,
         });
       } else {
         // if ref group deleted & not found, return teamOptions["empty"]
         return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
           ...teamOptions["empty"],
-          groupTeamId: hostGroupTeamId,
+          // groupTeamId: hostGroupTeamId,
+          groupTeamId: team.id,
         });
       }
     } else if (type === "match") {
@@ -1158,20 +1152,23 @@ const populateSelectedNTeamOptions = ({
 
         return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
           ...teamOptions[`t-${foundTeamId}`],
-          groupTeamId: hostGroupTeamId,
+          // groupTeamId: hostGroupTeamId,
+          groupTeamId: team.id,
         });
       } else if (foundMatch?.rankingPublished === false) {
         (teamOptions[`m-${refId}-${position}`] ??= {}).used = true;
 
         return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
           ...teamOptions[`m-${refId}-${position}`],
-          groupTeamId: hostGroupTeamId,
+          // groupTeamId: hostGroupTeamId,
+          groupTeamId: team.id,
         });
       } else {
         // if ref match deleted & not found, return teamOptions["empty"]
         return (selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {
           ...teamOptions["empty"],
-          groupTeamId: hostGroupTeamId,
+          // groupTeamId: hostGroupTeamId,
+          groupTeamId: team.id,
         });
       }
     }
@@ -1203,6 +1200,8 @@ const populateSelectedNTeamOptions = ({
         : presentTeamPosition === 2
           ? futureTeamReference?.away
           : {};
+    // console.log(40, presentTeamPosition, match);
+    console.log(41, match);
 
     if (!reference?.id) {
       return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
@@ -1212,6 +1211,7 @@ const populateSelectedNTeamOptions = ({
     const { type, id: refId, position } = reference;
 
     if (type === "group") {
+      console.log(42, refId, groups);
       const foundGroup = groups[refId];
       const foundTeam = foundGroup?.teams.find(
         (t) => t.teamRanking === position,
@@ -1225,6 +1225,7 @@ const populateSelectedNTeamOptions = ({
         (teamOptions[`g-${foundGroup.id}-${position}`] ??= {}).used = true;
         val = teamOptions[`g-${foundGroup.id}-${position}`];
       } else {
+        console.log(43, foundGroup)
         // if ref group deleted & not found, return teamOptions["empty"]
         return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
           teamOptions["empty"]);

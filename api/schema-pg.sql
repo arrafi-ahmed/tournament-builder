@@ -136,7 +136,7 @@ CREATE TABLE matches
     id                    SERIAL PRIMARY KEY,
     name                  VARCHAR(255),
     order                 INT,
-    match_type            VARCHAR(50) CHECK (match_type IN ('group', 'bracket', 'single_match')) NOT NULL,
+    type                  VARCHAR(50) CHECK (match_type IN ('group', 'bracket', 'single_match')) NOT NULL,
     round_type            INT,
     start_time            TIMESTAMP,
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

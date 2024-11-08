@@ -100,7 +100,10 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
             updateMatches.push({
               id: match.id,
               homeTeamId: newSelection.itemId,
-              futureTeamReference: null,
+              futureTeamReference: {
+                ...match.futureTeamReference,
+                home: null,
+              },
             });
           } else if (
             newSelection.type === "group" ||
@@ -128,7 +131,10 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
             updateMatches.push({
               id: match.id,
               awayTeamId: newSelection.itemId,
-              futureTeamReference: null,
+              futureTeamReference: {
+                ...match.futureTeamReference,
+                away: null,
+              },
             });
           } else if (
             newSelection.type === "group" ||
@@ -177,6 +183,8 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
       }
     } else {
       if (host.position === 1) {
+        console.log(31, newSelection);
+        console.log(32, host);
         updateMatch.futureTeamReference =
           newSelection.type === "group" || newSelection.type === "match"
             ? {
@@ -193,6 +201,8 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
               };
         updateMatch.homeTeamId = updateMatch.awayTeamId = null;
       } else if (host.position === 2) {
+        console.log(33, newSelection);
+        console.log(34, host);
         updateMatch.futureTeamReference =
           newSelection.type === "group" || newSelection.type === "match"
             ? {
@@ -253,6 +263,7 @@ const newGroupInit = {
   doubleRoundRobin: false,
   order: null,
   tournamentPhaseId: null,
+  rankingPublished: false,
 };
 const newGroup = reactive({ ...newGroupInit });
 const openAddGroup = ({ order, phaseId }) => {
@@ -585,7 +596,6 @@ const handlePhaseItemOrderChanged = (phaseIndex, eventData) => {
                   size="small"
                   tile
                   variant="tonal"
-                  color="error"
                   @click="removePhase({ phase })"
                 ></v-btn>
               </div>
@@ -632,7 +642,6 @@ const handlePhaseItemOrderChanged = (phaseIndex, eventData) => {
                                     size="small"
                                     tile
                                     variant="tonal"
-                                    color="error"
                                     @click="removeGroup({ group: phaseItem })"
                                   ></v-btn>
                                 </div>
@@ -711,7 +720,6 @@ const handlePhaseItemOrderChanged = (phaseIndex, eventData) => {
                                 size="small"
                                 tile
                                 variant="tonal"
-                                color="error"
                                 @click="removeBracket({ bracket: phaseItem })"
                               ></v-btn>
                             </div>
@@ -855,7 +863,6 @@ const handlePhaseItemOrderChanged = (phaseIndex, eventData) => {
                                     size="small"
                                     tile
                                     variant="tonal"
-                                    color="error"
                                     @click="removeMatch({ match: phaseItem })"
                                   ></v-btn>
                                 </div>

@@ -618,6 +618,19 @@ export const actions = {
         });
     });
   },
+  updateGroupMatches({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/tournament-format/updateMatches", request)
+        .then((response) => {
+          commit("updateGroupMatches", response.data?.payload);
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
   updatePhase({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios
@@ -663,19 +676,6 @@ export const actions = {
         .post("/api/tournament-format/saveMatch", request)
         .then((response) => {
           commit("updateMatch", response.data?.payload);
-          resolve(response);
-        })
-        .catch((err) => {
-          reject(err);
-        });
-    });
-  },
-  updateGroupMatches({ commit }, request) {
-    return new Promise((resolve, reject) => {
-      $axios
-        .post("/api/tournament-format/updateMatches", request)
-        .then((response) => {
-          commit("updateGroupMatches", response.data?.payload);
           resolve(response);
         })
         .catch((err) => {
