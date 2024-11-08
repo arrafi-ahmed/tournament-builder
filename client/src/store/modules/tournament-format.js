@@ -214,6 +214,78 @@ export const mutations = {
     delete state.selectedTeamOptions[`m-${payload.id}-1`];
     delete state.selectedTeamOptions[`m-${payload.id}-2`];
   },
+  updatePhase(state, payload) {
+    const savedPhase = payload;
+    const foundPhaseIndex = state.tournamentFormat.findIndex(
+      (phase) => phase.id == savedPhase.id,
+    );
+    const targetPhase = state.tournamentFormat[foundPhaseIndex];
+
+    state.tournamentFormat[foundPhaseIndex] = {
+      ...targetPhase,
+      ...savedPhase,
+    };
+  },
+  updateGroup(state, payload) {
+    const savedGroup = payload;
+    const foundPhaseIndex = state.tournamentFormat.findIndex(
+      (phase) => phase.id == savedGroup.tournamentPhaseId,
+    );
+    const foundItemIndex = state.tournamentFormat[
+      foundPhaseIndex
+    ].items.findIndex(
+      (item) => item.type === "group" && item.id === savedGroup.id,
+    );
+    const targetItem =
+      state.tournamentFormat[foundPhaseIndex].items[foundItemIndex];
+
+    state.tournamentFormat[foundPhaseIndex].items[foundItemIndex] = {
+      ...targetItem,
+      ...savedGroup,
+    };
+    // update teamOptions
+    const ids = [];
+    for (let position = 1; position <= savedGroup.teamsPerGroup; position++) {
+      const id = `g-${savedGroup.id}-${position}`;
+      const foundTeamOption = state.teamOptions[id];
+      state.teamOptions[id] = {
+        ...foundTeamOption,
+        name: `${savedGroup.name}, Ranking ${position}`,
+      };
+      ids.push(id);
+    }
+    // update selectedTeamOptions
+    for (const [key, childObj] of Object.entries(state.selectedTeamOptions)) {
+      for (const targetId of ids) {
+        if (childObj.id === targetId) {
+          const foundSelectedTeamOption = state.selectedTeamOptions[key];
+          const calcPosition = key.split("-")[2];
+          state.selectedTeamOptions[key] = {
+            ...foundSelectedTeamOption,
+            name: `${savedGroup.name}, Ranking ${calcPosition}`,
+          };
+        }
+      }
+    }
+  },
+  updateBracket(state, payload) {
+    const savedBracket = payload;
+    const foundPhaseIndex = state.tournamentFormat.findIndex(
+      (phase) => phase.id == savedBracket.tournamentPhaseId,
+    );
+    const foundItemIndex = state.tournamentFormat[
+      foundPhaseIndex
+    ].items.findIndex(
+      (item) => item.type === "group" && item.id === savedBracket.id,
+    );
+    const targetItem =
+      state.tournamentFormat[foundPhaseIndex].items[foundItemIndex];
+
+    state.tournamentFormat[foundPhaseIndex].items[foundItemIndex] = {
+      ...targetItem,
+      ...savedBracket,
+    };
+  },
   updateMatch(state, payload) {
     const savedMatch = payload;
     const foundPhaseIndex = state.tournamentFormat.findIndex(
@@ -230,6 +302,39 @@ export const mutations = {
     // if item.type = 'single_match'
     const targetItem =
       state.tournamentFormat[foundPhaseIndex].items[foundItemIndex];
+
+    console.log(70, savedMatch);
+    console.log(71, state.teamOptions);
+    console.log(72, state.selectedTeamOptions);
+
+    // update teamOptions
+    const ids = [`m-${savedMatch.id}-1`, `m-${savedMatch.id}-2`];
+
+    for (let i = 0; i < ids.length; i++) {
+      const id = ids[i];
+      const foundTeamOption = state.teamOptions[id];
+      state.teamOptions[id] = {
+        ...foundTeamOption,
+        name: `${i === 0 ? "Winner" : "Loser"}, ${savedMatch.name}`,
+      };
+      // ids.push(id);
+    }
+    // update selectedTeamOptions
+    // let foundKeys = [];
+    for (const [key, childObj] of Object.entries(state.selectedTeamOptions)) {
+      for (const targetId of ids) {
+        if (childObj.id === targetId) {
+          // foundKeys.push(key); // Return the key if the child object contains the given ID
+          const foundSelectedTeamOption = state.selectedTeamOptions[key];
+          const calcPosition = key.split("-")[2];
+          console.log(81, calcPosition);
+          state.selectedTeamOptions[key] = {
+            ...foundSelectedTeamOption,
+            name: `${Number(calcPosition) === 1 ? "Winner" : "Loser"}, ${savedMatch.name}`,
+          };
+        }
+      }
+    }
 
     if (targetItem.type === "single_match") {
       state.tournamentFormat[foundPhaseIndex].items[foundItemIndex] = {
@@ -291,7 +396,6 @@ export const mutations = {
       }
     });
   },
-
   setEntityLastCount(state, payload) {
     Object.assign(state.entityLastCount, { ...payload });
   },
