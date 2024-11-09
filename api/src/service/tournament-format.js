@@ -1068,11 +1068,6 @@ const populateSelectedNTeamOptions = ({
           ? team.futureTeamReference?.away
           : null;
 
-    //hostTeam gt.id
-    // const hostGroupTeamId = groups[keyId]?.teams.find(
-    //   (t) => t.teamRanking === keyPosition,
-    // )?.id;
-
     // direct team assigned -> if teamId != null && futureTeamReference == null
     if (team?.teamId && !reference?.id) {
       selectedTeamOptions[`g-${keyId}-${keyPosition}`] = {

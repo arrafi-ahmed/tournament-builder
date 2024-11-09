@@ -27,23 +27,6 @@ export const mutations = {
     state.tournamentFormat.push(newPhase);
     state.entityLastCount.phase++;
   },
-  removePhase(state, payload) {
-    const foundPhaseIndex = state.tournamentFormat.findIndex(
-      (phase) => phase.id === payload.id,
-    );
-    state.tournamentFormat.splice(foundPhaseIndex, 1);
-
-    Object.values(state.selectedTeamOptions).forEach((item) => {
-      if (item.phase === payload.id) {
-        delete state.selectedTeamOptions[item.id];
-      }
-    });
-    Object.values(state.teamOptions).forEach((item) => {
-      if (item.phase === payload.id) {
-        delete state.teamOptions[item.id];
-      }
-    });
-  },
   addGroup(state, payload) {
     const foundPhaseIndex = state.tournamentFormat.findIndex(
       (phase) => phase.id === payload.tournamentPhaseId,
@@ -79,21 +62,6 @@ export const mutations = {
         ...state.teamOptions["empty"],
         groupTeamId: newGroup.teams[position - 1].id,
       };
-    }
-  },
-  removeGroup(state, payload) {
-    const foundPhaseIndex = state.tournamentFormat.findIndex(
-      (phase) => phase.id === payload.tournamentPhaseId,
-    );
-    const foundGroupIndex = state.tournamentFormat[
-      foundPhaseIndex
-    ].items.findIndex((item) => item.id === payload.id);
-    state.tournamentFormat[foundPhaseIndex].items.splice(foundGroupIndex, 1);
-
-    for (let position = 1; position <= payload.teamsPerGroup; position++) {
-      const key = `g-${payload.id}-${position}`;
-      delete state.teamOptions[key];
-      delete state.selectedTeamOptions[key];
     }
   },
   addBracket(state, payload) {
@@ -135,32 +103,6 @@ export const mutations = {
       });
     });
   },
-  removeBracket(state, payload) {
-    const foundPhaseIndex = state.tournamentFormat.findIndex(
-      (phase) => phase.id === payload.tournamentPhaseId,
-    );
-    const foundBracketIndex = state.tournamentFormat[
-      foundPhaseIndex
-    ].items.findIndex((item) => item.id === payload.id);
-
-    const foundBracket =
-      state.tournamentFormat[foundPhaseIndex].items[foundBracketIndex];
-
-    // remove matches
-    foundBracket.rounds.forEach((round, roundIndex) => {
-      round.matches.forEach((match, matchIndex) => {
-        const positions = [1, 2];
-        //populate teamOptions
-        positions.forEach((position) => {
-          const key = `m-${match.id}-${position}`;
-          delete state.teamOptions[key];
-          delete state.selectedTeamOptions[key];
-        });
-      });
-    });
-    // remove bracket
-    state.tournamentFormat[foundPhaseIndex].items.splice(foundBracketIndex, 1);
-  },
   addMatch(state, payload) {
     const newMatch = {
       id: payload.id,
@@ -200,6 +142,104 @@ export const mutations = {
       state.selectedTeamOptions[key] = state.teamOptions["empty"];
     });
   },
+  removePhase(state, payload) {
+    const foundPhaseIndex = state.tournamentFormat.findIndex(
+      (phase) => phase.id === payload.id,
+    );
+    // console.log(2, state.selectedTeamOptions);
+
+    const keys = [];
+    //populate keys
+    state.tournamentFormat[foundPhaseIndex].items.forEach((item) => {
+      console.log(2 , item.type)
+      if (item.type === "bracket") {
+        item.rounds.forEach((round) => {
+          round.matches.forEach((match) => {
+            keys.push(`m-${match.id}-1`);
+            keys.push(`m-${match.id}-2`);
+          });
+        });
+      } else if (item.type === "group") {
+        for (let position = 1; position <= item.teamsPerGroup; position++) {
+          const key = `g-${item.id}-${position}`;
+          keys.push(key);
+        }
+      } else if (item.type === "single_match") {
+        keys.push(`m-${item.id}-1`);
+        keys.push(`m-${item.id}-2`);
+      }
+    });
+    // remove teamOptions
+    Object.values(state.selectedTeamOptions).forEach((item) => {
+      if (item.phase === payload.id) {
+        delete state.selectedTeamOptions[item.id];
+      }
+    });
+    // remove selectedTeamOptions
+    Object.keys(state.selectedTeamOptions).forEach((key) => {
+      if (keys.includes(state.selectedTeamOptions[key].id)) {
+        state.selectedTeamOptions[key] = state.teamOptions["empty"];
+      }
+    });
+
+    state.tournamentFormat.splice(foundPhaseIndex, 1);
+  },
+  removeGroup(state, payload) {
+    const foundPhaseIndex = state.tournamentFormat.findIndex(
+      (phase) => phase.id === payload.tournamentPhaseId,
+    );
+    const foundGroupIndex = state.tournamentFormat[
+      foundPhaseIndex
+    ].items.findIndex((item) => item.id === payload.id);
+    state.tournamentFormat[foundPhaseIndex].items.splice(foundGroupIndex, 1);
+
+    // remove teamOptions
+    const keys = [];
+    for (let position = 1; position <= payload.teamsPerGroup; position++) {
+      const key = `g-${payload.id}-${position}`;
+      delete state.teamOptions[key];
+      keys.push(key);
+    }
+    // remove selectedTeamOptions
+    Object.keys(state.selectedTeamOptions).forEach((key) => {
+      if (keys.includes(state.selectedTeamOptions[key].id)) {
+        state.selectedTeamOptions[key] = state.teamOptions["empty"];
+      }
+    });
+  },
+  removeBracket(state, payload) {
+    const foundPhaseIndex = state.tournamentFormat.findIndex(
+      (phase) => phase.id === payload.tournamentPhaseId,
+    );
+    const foundBracketIndex = state.tournamentFormat[
+      foundPhaseIndex
+    ].items.findIndex((item) => item.id === payload.id);
+
+    const foundBracket =
+      state.tournamentFormat[foundPhaseIndex].items[foundBracketIndex];
+
+    // remove teamOptions
+    const keys = [];
+    foundBracket.rounds.forEach((round, roundIndex) => {
+      round.matches.forEach((match, matchIndex) => {
+        const positions = [1, 2];
+        //populate teamOptions
+        positions.forEach((position) => {
+          const key = `m-${match.id}-${position}`;
+          delete state.teamOptions[key];
+          keys.push(key);
+        });
+      });
+    });
+    // remove selectedTeamOptions
+    Object.keys(state.selectedTeamOptions).forEach((key) => {
+      if (keys.includes(state.selectedTeamOptions[key].id)) {
+        state.selectedTeamOptions[key] = state.teamOptions["empty"];
+      }
+    });
+    // remove bracket
+    state.tournamentFormat[foundPhaseIndex].items.splice(foundBracketIndex, 1);
+  },
   removeMatch(state, payload) {
     const foundPhaseIndex = state.tournamentFormat.findIndex(
       (phase) => phase.id === payload.phaseId,
@@ -209,10 +249,17 @@ export const mutations = {
     ].items.findIndex((item) => item.id === payload.id);
     state.tournamentFormat[foundPhaseIndex].items.splice(foundMatchIndex, 1);
 
-    delete state.teamOptions[`m-${payload.id}-1`];
-    delete state.teamOptions[`m-${payload.id}-2`];
-    delete state.selectedTeamOptions[`m-${payload.id}-1`];
-    delete state.selectedTeamOptions[`m-${payload.id}-2`];
+    // remove teamOptions
+    const ids = [`m-${payload.id}-1`, `m-${payload.id}-2`];
+    ids.forEach((id) => {
+      delete state.teamOptions[id];
+    });
+    // remove selectedTeamOptions
+    Object.keys(state.selectedTeamOptions).forEach((key) => {
+      if (ids.includes(state.selectedTeamOptions[key].id)) {
+        state.selectedTeamOptions[key] = state.teamOptions["empty"];
+      }
+    });
   },
   updatePhase(state, payload) {
     const savedPhase = payload;
@@ -254,19 +301,16 @@ export const mutations = {
       };
       ids.push(id);
     }
-    // update selectedTeamOptions
-    for (const [key, childObj] of Object.entries(state.selectedTeamOptions)) {
-      for (const targetId of ids) {
-        if (childObj.id === targetId) {
-          const foundSelectedTeamOption = state.selectedTeamOptions[key];
-          const calcPosition = key.split("-")[2];
-          state.selectedTeamOptions[key] = {
-            ...foundSelectedTeamOption,
-            name: `${savedGroup.name}, Ranking ${calcPosition}`,
-          };
-        }
+    Object.keys(state.selectedTeamOptions).forEach((key, iteration) => {
+      const currOption = state.selectedTeamOptions[key];
+      if (ids.includes(currOption.id)) {
+        const idPos = Number(currOption.id.split("-")[2]);
+        state.selectedTeamOptions[key] = {
+          ...currOption,
+          name: `${savedGroup.name}, Ranking ${idPos}`,
+        };
       }
-    }
+    });
   },
   updateBracket(state, payload) {
     const savedBracket = payload;
@@ -303,38 +347,26 @@ export const mutations = {
     const targetItem =
       state.tournamentFormat[foundPhaseIndex].items[foundItemIndex];
 
-    console.log(70, savedMatch);
-    console.log(71, state.teamOptions);
-    console.log(72, state.selectedTeamOptions);
-
     // update teamOptions
     const ids = [`m-${savedMatch.id}-1`, `m-${savedMatch.id}-2`];
 
-    for (let i = 0; i < ids.length; i++) {
-      const id = ids[i];
-      const foundTeamOption = state.teamOptions[id];
+    ids.forEach((id, index) => {
       state.teamOptions[id] = {
-        ...foundTeamOption,
-        name: `${i === 0 ? "Winner" : "Loser"}, ${savedMatch.name}`,
+        ...state.teamOptions[id],
+        name: `${index === 0 ? "Winner" : "Loser"}, ${savedMatch.name}`,
       };
-      // ids.push(id);
-    }
+    });
     // update selectedTeamOptions
-    // let foundKeys = [];
-    for (const [key, childObj] of Object.entries(state.selectedTeamOptions)) {
-      for (const targetId of ids) {
-        if (childObj.id === targetId) {
-          // foundKeys.push(key); // Return the key if the child object contains the given ID
-          const foundSelectedTeamOption = state.selectedTeamOptions[key];
-          const calcPosition = key.split("-")[2];
-          console.log(81, calcPosition);
-          state.selectedTeamOptions[key] = {
-            ...foundSelectedTeamOption,
-            name: `${Number(calcPosition) === 1 ? "Winner" : "Loser"}, ${savedMatch.name}`,
-          };
-        }
+    Object.keys(state.selectedTeamOptions).forEach((key, iteration) => {
+      const currOption = state.selectedTeamOptions[key];
+      if (ids.includes(currOption.id)) {
+        const idPos = Number(currOption.id.split("-")[2]);
+        state.selectedTeamOptions[key] = {
+          ...currOption,
+          name: `${idPos === 1 ? "Winner" : "Loser"}, ${savedMatch.name}`,
+        };
       }
-    }
+    });
 
     if (targetItem.type === "single_match") {
       state.tournamentFormat[foundPhaseIndex].items[foundItemIndex] = {
@@ -369,8 +401,8 @@ export const mutations = {
     ].matches[foundMatchIndex] = { ...targetMatch, ...savedMatch };
   },
   updateGroupMatches(state, payload) {
-    const targetPhaseId = payload[0].phaseId;
-    const targetGroupId = payload[0].groupId;
+    const targetPhaseId = payload[0]?.phaseId;
+    const targetGroupId = payload[0]?.groupId;
 
     const phaseIndex = state.tournamentFormat.findIndex(
       (phase) => phase.id === targetPhaseId,

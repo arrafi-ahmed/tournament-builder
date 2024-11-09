@@ -183,8 +183,6 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
       }
     } else {
       if (host.position === 1) {
-        console.log(31, newSelection);
-        console.log(32, host);
         updateMatch.futureTeamReference =
           newSelection.type === "group" || newSelection.type === "match"
             ? {
@@ -201,8 +199,6 @@ const updateSelectedTeamOption = ({ newSelection, host }) => {
               };
         updateMatch.homeTeamId = updateMatch.awayTeamId = null;
       } else if (host.position === 2) {
-        console.log(33, newSelection);
-        console.log(34, host);
         updateMatch.futureTeamReference =
           newSelection.type === "group" || newSelection.type === "match"
             ? {
@@ -357,14 +353,14 @@ const form = ref(null);
 const isFormValid = ref(true);
 
 const removePhase = ({ phase }) => {
-  modifyPhaseTeamOption({ phase });
+  modifyPhaseTeamOptionIfUsed({ phase });
   store.dispatch("tournamentFormat/removePhase", {
     phaseId: phase.id,
     tournamentId: route.params.tournamentId,
   });
 };
 const removeGroup = ({ group }) => {
-  modifyGroupTeamOption({ group });
+  modifyGroupTeamOptionIfUsed({ group });
   store.dispatch("tournamentFormat/removeGroup", {
     groupId: group.id,
     tournamentId: route.params.tournamentId,
@@ -372,14 +368,14 @@ const removeGroup = ({ group }) => {
 };
 
 const removeBracket = ({ bracket }) => {
-  modifyBracketTeamOption({ bracket });
+  modifyBracketTeamOptionIfUsed({ bracket });
   store.dispatch("tournamentFormat/removeBracket", {
     bracketId: bracket.id,
     tournamentId: route.params.tournamentId,
   });
 };
 const removeMatch = ({ match }) => {
-  modifyMatchTeamOption({ match });
+  modifyMatchTeamOptionIfUsed({ match });
   store.dispatch("tournamentFormat/removeMatch", {
     matchId: match.id,
     tournamentId: route.params.tournamentId,
@@ -390,18 +386,18 @@ const tournamentBaseFormat = reactive({
   groupMemberCount: null,
   knockoutMemberCount: null,
 });
-const modifyPhaseTeamOption = ({ phase }) => {
+const modifyPhaseTeamOptionIfUsed = ({ phase }) => {
   phase.items.forEach((item) => {
     if (item.type === "group") {
-      modifyGroupTeamOption({ group: item });
+      modifyGroupTeamOptionIfUsed({ group: item });
     } else if (item.type === "bracket") {
-      modifyBracketTeamOption({ bracket: item });
+      modifyBracketTeamOptionIfUsed({ bracket: item });
     } else if (item.type === "single_match") {
-      modifyMatchTeamOption({ match: item });
+      modifyMatchTeamOptionIfUsed({ match: item });
     }
   });
 };
-const modifyGroupTeamOption = ({ group }) => {
+const modifyGroupTeamOptionIfUsed = ({ group }) => {
   const targetIds = group.teams
     .map((_, i) => selectedTeamOptions.value[`g-${group.id}-${i + 1}`]?.id)
     .filter((id) => id !== "empty");
@@ -412,11 +408,11 @@ const modifyGroupTeamOption = ({ group }) => {
     }
   });
 };
-const modifyBracketTeamOption = ({ bracket }) => {
+const modifyBracketTeamOptionIfUsed = ({ bracket }) => {
   const matches = bracket.rounds.flatMap((round) => round.matches);
-  matches.forEach((match) => modifyMatchTeamOption({ match }));
+  matches.forEach((match) => modifyMatchTeamOptionIfUsed({ match }));
 };
-const modifyMatchTeamOption = ({ match }) => {
+const modifyMatchTeamOptionIfUsed = ({ match }) => {
   const targetIds = [
     selectedTeamOptions.value[`m-${match.id}-1`]?.id,
     selectedTeamOptions.value[`m-${match.id}-2`]?.id,
@@ -498,14 +494,12 @@ onMounted(async () => {
   fetchData();
 });
 const handlePhaseItemOrderChanged = (phaseIndex, eventData) => {
-  console.log(32, tournamentFormat.value[phaseIndex]);
   const updatedItems = tournamentFormat.value[phaseIndex].items.map(
     (item, index) => ({
       ...item,
       order: index + 1,
     }),
   );
-  console.log(33, updatedItems);
   const groups = updatedItems
     .filter((item) => item.type === "group")
     .map((item) => ({
