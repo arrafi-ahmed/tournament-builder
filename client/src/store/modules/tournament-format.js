@@ -25,7 +25,7 @@ export const mutations = {
   addPhase(state, payload) {
     const newPhase = { ...payload, items: [] };
     state.tournamentFormat.push(newPhase);
-    state.entityLastCount.phase++;
+    state.entityLastCount.phase = Number(state.entityLastCount.phase + 1);
   },
   addGroup(state, payload) {
     const foundPhaseIndex = state.tournamentFormat.findIndex(
@@ -44,8 +44,10 @@ export const mutations = {
       matches: payload.matches,
     };
     state.tournamentFormat[foundPhaseIndex].items.push(newGroup);
-    state.entityLastCount.group++;
-    state.entityLastCount.match += payload.matches.length; // prepare next match title in advance
+    state.entityLastCount.group = Number(state.entityLastCount.group) + 1;
+    state.entityLastCount.match =
+      Number(state.entityLastCount.match) + payload.matches.length; // prepare next
+    // match title in advance
 
     for (let position = 1; position <= newGroup.teamsPerGroup; position++) {
       const key = `g-${newGroup.id}-${position}`;
@@ -69,13 +71,14 @@ export const mutations = {
       (phase) => phase.id === payload.tournamentPhaseId,
     );
     state.tournamentFormat[foundPhaseIndex].items.push(payload);
-    state.entityLastCount.bracket++;
+    state.entityLastCount.bracket = Number(state.entityLastCount.bracket) + 1;
 
     // const finalMatch = payload.rounds[payload.rounds.length - 1].matches[0];
     payload.rounds.forEach((round, roundIndex) => {
       let targetMatchIndex = 0; //for selectedTeamOptions
       round.matches.forEach((match, matchIndex) => {
-        state.entityLastCount.match++;
+        state.entityLastCount.match = Number(state.entityLastCount.match) + 1;
+
         const positions = [1, 2];
         //populate teamOptions
         positions.forEach((position) => {
@@ -123,7 +126,7 @@ export const mutations = {
         (phase) => phase.id === payload.phaseId,
       );
       state.tournamentFormat[foundPhaseIndex].items.push(newMatch);
-      state.entityLastCount.match++;
+      state.entityLastCount.match = Number(state.entityLastCount.match) + 1;
     }
 
     const positions = [1, 2];
@@ -151,7 +154,7 @@ export const mutations = {
     const keys = [];
     //populate keys
     state.tournamentFormat[foundPhaseIndex].items.forEach((item) => {
-      console.log(2 , item.type)
+      console.log(2, item.type);
       if (item.type === "bracket") {
         item.rounds.forEach((round) => {
           round.matches.forEach((match) => {

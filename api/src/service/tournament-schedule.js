@@ -1,5 +1,8 @@
 const { sql } = require("../db");
 const tournamentFormatService = require("../service/tournament-format");
+const teamService = require("../service/team");
+const mailService = require("../service/sendMail");
+const { generateNewScheduleEmailContent } = require("../others/util");
 
 exports.saveField = async ({ payload: { newField } }) => {
   if (!newField?.id) {
@@ -72,11 +75,31 @@ exports.deleteMatch = async ({
   payload: { selectedMatch, updatingMatches },
 }) => {
   return Promise.all([
-    tournamentFormatService.saveMatch({
-      payload: { newMatch: selectedMatch, onlyEntitySave: true },
+    tournamentFormatService.updateMatch({
+      payload: { newMatch: selectedMatch },
     }),
     exports.updateMatchesStartTime({ matches: updatingMatches }),
   ]);
+};
+
+exports.newScheduleEmail = async ({
+  payload: { emailContent, tournamentName },
+}) => {
+  //send email
+  const teams = await teamService.getTeamsWEmailOptionalById({
+    teamIds: emailContent.recipients,
+  });
+  return Promise.all(
+    teams.map((team) => {
+      const html = generateNewScheduleEmailContent({
+        emailContent,
+        tournamentName,
+      });
+      const subject = `New Match Schedule Added for Your Team`;
+      // send email to team manager with credential
+      mailService.sendMail(team.email, subject, html);
+    }),
+  );
 };
 
 exports.getSchedule = async ({ tournamentId }) => {
@@ -87,6 +110,8 @@ exports.getSchedule = async ({ tournamentId }) => {
                m.start_time                                                 AS match_start_time,
                m.home_team_id,
                m.away_team_id,
+               home_team.name                                               AS home_team_name,
+               away_team.name                                               AS away_team_name,
                CASE WHEN m.type = 'group' THEN m.group_id ELSE NULL END     AS group_id,
                CASE WHEN m.type = 'group' THEN tg.name ELSE NULL END        AS group_name,
                CASE WHEN m.type = 'bracket' THEN m.bracket_id ELSE NULL END AS bracket_id,
@@ -106,6 +131,8 @@ exports.getSchedule = async ({ tournamentId }) => {
                  LEFT JOIN match_days md ON m.match_day_id = md.id
                  LEFT JOIN tournament_groups tg ON tg.id = m.group_id AND m.type = 'group'
                  LEFT JOIN tournament_brackets tb ON tb.id = m.bracket_id AND m.type = 'bracket'
+                 LEFT JOIN teams home_team ON m.home_team_id = home_team.id
+                 LEFT JOIN teams away_team ON m.away_team_id = away_team.id
         WHERE m.tournament_id = ${tournamentId}
         ORDER BY m.start_time;
     `;
@@ -164,6 +191,8 @@ const processScheduleData = async (matchRows) => {
               : row.matchName,
         homeTeamId: row.homeTeamId,
         awayTeamId: row.awayTeamId,
+        homeTeamName: row.homeTeamName,
+        awayTeamName: row.awayTeamName,
         startTime: row.matchStartTime,
       });
     } else {
@@ -191,6 +220,8 @@ const processScheduleData = async (matchRows) => {
               : row.matchName,
         homeTeamId: row.homeTeamId,
         awayTeamId: row.awayTeamId,
+        homeTeamName: row.homeTeamName,
+        awayTeamName: row.awayTeamName,
         startTime: row.matchStartTime,
       });
     }

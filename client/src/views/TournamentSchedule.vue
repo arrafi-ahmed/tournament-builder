@@ -52,7 +52,7 @@ const newFieldInit = {
 const newField = reactive({ ...newFieldInit });
 
 const addField = () => {
-  console.log(21, schedule.value.length + 1)
+  console.log(21, schedule.value.length + 1);
   store
     .dispatch("tournamentSchedule/saveField", {
       newField: { ...newField, fieldOrder: schedule.value.length + 1 },
@@ -78,6 +78,9 @@ const getMatchStartTime = ({ matches }) => {
   const newMatchStartTime = lastMatchStartTime.setMinutes(
     lastMatchStartTime.getMinutes() + minsToAdd,
   );
+  console.log(1, lastMatchStartTimeString);
+  console.log(2, newMatchStartTime);
+
   return newMatchStartTime;
 };
 
@@ -95,15 +98,34 @@ const addMatchToField = ({ match }) => {
 
   const newMatchStartTime = getMatchStartTime({ matches: targetMatches });
 
-  const { hostName, ...rest } = match;
+  // const { hostName, ...rest } = match;
   const newMatch = {
-    ...rest,
-    startTime: newMatchStartTime,
+    ...match,
+    startTime: new Date(newMatchStartTime),
     matchDayId: selectedMatchDate.value.id,
     fieldId: selectedField.value.id,
   };
+  const recipients = [];
+  if (match.homeTeamId) recipients.push(match.homeTeamId);
+  if (match.awayTeamId) recipients.push(match.awayTeamId);
 
-  store.dispatch("tournamentSchedule/updateMatch", { newMatch, hostName });
+  console.log(5, newMatch);
+
+  if (recipients.length) {
+    const emailContent = {
+      recipients,
+      fieldName: selectedField.value.name,
+      tournamentName: tournament.value.name,
+      ...newMatch,
+    };
+    store.dispatch("tournamentSchedule/newScheduleEmail", {
+      emailContent,
+    });
+  }
+  store.dispatch("tournamentSchedule/updateMatch", {
+    newMatch,
+    hostName: match.hostName,
+  });
 };
 
 const deleteMatchFromField = ({ selectedFieldIndex, selectedMatchIndex }) => {
@@ -140,8 +162,8 @@ const deleteMatchFromField = ({ selectedFieldIndex, selectedMatchIndex }) => {
     ].startTime = calcStartTime;
   }
   //remove hostname for backend, but keep it in frontend
-  const preservedHostName = selectedMatch.hostName;
-  delete selectedMatch.hostName;
+  // const preservedHostName = selectedMatch.hostName;
+  // delete selectedMatch.hostName;
 
   store
     .dispatch("tournamentSchedule/deleteMatch", {
@@ -156,8 +178,8 @@ const deleteMatchFromField = ({ selectedFieldIndex, selectedMatchIndex }) => {
 
       store.commit("tournamentSchedule/addUnplannedMatches", {
         ...deletedMatches[0],
+        // hostName: preservedHostName,
         startTime: null,
-        hostName: preservedHostName,
       });
     });
 };
@@ -228,7 +250,7 @@ const handleFieldMatchChanged = (fieldIndex, eventData) => {
   const schedule = store.state.tournamentSchedule.schedule;
   const field = schedule[fieldIndex];
 
-  console.log(11, fieldIndex, field)
+  console.log(11, element, oldIndex, newIndex);
 
   if (field && field.matchDays) {
     const matchDayIndex = field.matchDays.findIndex(
@@ -238,7 +260,7 @@ const handleFieldMatchChanged = (fieldIndex, eventData) => {
       const matches = field.matchDays[matchDayIndex].matches;
       const startTimeString = `${selectedMatchDate.value.matchDate}T${field.startTime}`;
 
-      const matchesWUpdatedStartTime = matches.map((item, index) => {
+      const formattedMatches = matches.map((item, index) => {
         let startTime = new Date(startTimeString);
         const minsToAdd =
           (tournament.value.matchDuration +
@@ -256,7 +278,12 @@ const handleFieldMatchChanged = (fieldIndex, eventData) => {
       store.dispatch("tournamentSchedule/updateMatches", {
         fieldIndex,
         matchDayIndex,
-        matches: matchesWUpdatedStartTime,
+        matches: formattedMatches,
+        emailContent: {
+          // used to send email to teamIds about updated schedule
+          fields: fields.value.map(({ id, name }) => ({ id, name })),
+          updatedMatchesIndex: [oldIndex, newIndex].sort((a, b) => a - b),
+        },
       });
     }
   }

@@ -1,5 +1,6 @@
 const { sql } = require("../db");
 const tournamentService = require("../service/tournament");
+const teamService = require("./team");
 
 exports.savePhase = async ({
   payload: { newPhase, tournamentId, onlyEntitySave = false },
@@ -149,7 +150,35 @@ exports.updateBrackets = async ({ payload: { brackets } }) => {
   return Promise.all(updatePromises);
 };
 
-exports.updateMatches = async ({ payload: { matches } }) => {
+exports.updateMatch = async ({ payload: { newMatch } }) => {
+  //@formatter:off
+  const [updatedMatch] = await sql`
+    UPDATE matches
+    SET
+      ${newMatch.name !== undefined ? sql`name = ${newMatch.name},` : sql``}
+      ${newMatch.order !== undefined ? sql`"order" = ${newMatch.order},` : sql``}
+      ${newMatch.type !== undefined ? sql`type = ${newMatch.type},` : sql``}
+      ${newMatch.roundType !== undefined ? sql`round_type = ${newMatch.roundType},` : sql``}
+      ${newMatch.startTime !== undefined ? sql`start_time = ${newMatch.startTime},` : sql``}
+      ${newMatch.homeTeamId !== undefined ? sql`home_team_id = ${newMatch.homeTeamId},` : sql``}
+      ${newMatch.awayTeamId !== undefined ? sql`away_team_id = ${newMatch.awayTeamId},` : sql``}
+      ${newMatch.phaseId !== undefined ? sql`phase_id = ${newMatch.phaseId},` : sql``}
+      ${newMatch.groupId !== undefined ? sql`group_id = ${newMatch.groupId},` : sql``}
+      ${newMatch.bracketId !== undefined ? sql`bracket_id = ${newMatch.bracketId},` : sql``}
+      ${newMatch.futureTeamReference !== undefined ? sql`future_team_reference = ${newMatch.futureTeamReference},` : sql``}
+      ${newMatch.groupTeamReference !== undefined ? sql`group_team_reference = ${newMatch.groupTeamReference},` : sql``}
+      ${newMatch.matchDayId !== undefined ? sql`match_day_id = ${newMatch.matchDayId},` : sql``}
+      ${newMatch.fieldId !== undefined ? sql`field_id = ${newMatch.fieldId},` : sql``}
+      ${newMatch.tournamentId !== undefined ? sql`tournament_id = ${newMatch.tournamentId},` : sql``}
+      ${newMatch.id !== undefined ? sql`id = ${newMatch.id}` : sql``} -- added intentionally for safety to have , free last col
+    WHERE id = ${newMatch.id}
+    RETURNING *;
+  `;
+  //@formatter:on
+  return updatedMatch;
+};
+
+exports.updateMatches = async ({ payload: { matches, emailContent } }) => {
   const updatePromises = matches.map(async (match) => {
     const [updatedMatch] = await sql`
             update matches
@@ -157,6 +186,35 @@ exports.updateMatches = async ({ payload: { matches } }) => {
             where id = ${match.id} returning *`;
     return updatedMatch; // Return only the object, not the array
   });
+  //send email to teamIds if matchTime changes
+  // if (emailContent?.updatedMatchesIndex.length) {
+  //   const { updatedMatchesIndex, fields } = emailContent;
+  //
+  //   const matchesWTimeChanged = matches.slice(
+  //     updatedMatchesIndex[0],
+  //     updatedMatchesIndex[1] + 1, // end index not inclusive in slice arr
+  //   );
+  //   //make sure teamIds are unique as matches teamId can be repetitive
+  //   const teamIds = [
+  //     ...new Set(
+  //       matchesWTimeChanged
+  //         .flatMap((match) => [match.homeTeamId, match.awayTeamId])
+  //         .filter((id) => id !== null),
+  //     ),
+  //   ];
+  //   const teams = await teamService.getTeamsWEmailOptionalById({
+  //     teamIds,
+  //   });
+  //   //make map for matches, fields to easily find
+  //   const teamsMap = {};
+  //   teams.forEach((team) => (teamsMap[team.id] = team));
+  //   const fieldsMap = {};
+  //   fields.forEach((field) => (fieldsMap[field.id] = field));
+  //
+  //   matches.forEach((match) => {
+  //     // TODO:send mail to teams id for each match
+  //   });
+  // }
   return Promise.all(updatePromises);
 };
 
@@ -187,11 +245,12 @@ exports.saveMatch = async ({
 
   // only apply when adding succeed
   if (!newMatch.id && savedMatch.id) {
-    await sql`UPDATE tournaments
-                  SET entity_last_count = entity_last_count || jsonb_object(
-                          ARRAY['match'],
-                          ARRAY[((entity_last_count ->> 'match')::int + 1)::text])
-                  WHERE id = ${tournamentId};`;
+    await sql`
+            UPDATE tournaments
+            SET entity_last_count = entity_last_count || jsonb_object(
+                    ARRAY['match'],
+                    ARRAY[((entity_last_count ->> 'match')::int + 1)::text])
+            WHERE id = ${tournamentId};`;
   }
   return savedMatch;
 };
@@ -227,7 +286,6 @@ exports.saveBracket = async ({
   // matchCount -> teamsCount/2 -> 8/2 = 4
 
   match.count = Number(match.count);
-  let totalMatchCount = 0;
   let maxTeamCount = savedBracket.teamsCount;
   let maxRoundCount = Math.round(Math.log2(maxTeamCount));
   let targetRoundIndex = -1; //one round behind
@@ -282,8 +340,6 @@ exports.saveBracket = async ({
         updateCount: false,
       });
 
-      if (savedMatch.id) totalMatchCount++;
-
       newRound.matches.push({
         id: savedMatch.id,
         name: savedMatch.name,
@@ -313,10 +369,9 @@ exports.saveBracket = async ({
             SET entity_last_count = entity_last_count || jsonb_object(
                     ARRAY['bracket', 'match'],
                     ARRAY[((entity_last_count ->> 'bracket')::int + 1)::text, 
-                                 ((entity_last_count ->> 'match')::int + ${totalMatchCount})::text])
+                                 ${match.count}::text])
             WHERE id = ${tournamentId};`;
   }
-
   return returnedBracket;
 };
 
@@ -1220,7 +1275,7 @@ const populateSelectedNTeamOptions = ({
         (teamOptions[`g-${foundGroup.id}-${position}`] ??= {}).used = true;
         val = teamOptions[`g-${foundGroup.id}-${position}`];
       } else {
-        console.log(43, foundGroup)
+        console.log(43, foundGroup);
         // if ref group deleted & not found, return teamOptions["empty"]
         return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
           teamOptions["empty"]);

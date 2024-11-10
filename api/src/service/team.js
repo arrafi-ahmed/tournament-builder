@@ -4,6 +4,7 @@ const {
   removeImages,
   generateManagerCredentialContent,
   appInfo,
+  generateTournamentInvitationContent,
 } = require("../others/util");
 const userService = require("../service/user");
 const mailService = require("../service/sendMail");
@@ -138,6 +139,15 @@ exports.getTeamWEmailOptionalById = async ({ teamId }) => {
   return team;
 };
 
+exports.getTeamsWEmailOptionalById = async ({ teamIds }) => {
+  return sql`
+        SELECT t.*, t.id as t_id, u.id as u_id, u.email
+        FROM teams t
+                 left join users u
+                           on t.manager_id = u.id and u.role = 'team_manager'
+        WHERE t.id in ${sql(teamIds)}`;
+};
+
 exports.getTeamWSquad = async ({ teamId }) => {
   const teamMembers = await sql`SELECT *
                                   FROM team_members
@@ -238,9 +248,32 @@ exports.saveMember = async ({ payload: member }) => {
   return upsertedMember;
 };
 
-exports.saveTeamsTournaments = async ({ payload }) => {
-  const [insertedTeamsTournaments] = await sql`
-        insert into teams_tournaments ${sql(payload)} returning *`;
+exports.saveTeamsTournaments = async ({
+  payload,
+  tournamentName,
+  managerEmail,
+  sendEmail = false,
+}) => {
+  // constraint_name:
+  let insertedTeamsTournaments;
+  try {
+    [insertedTeamsTournaments] = await sql`
+            insert into teams_tournaments ${sql(payload)} returning *`;
+  } catch (error) {
+    if (error.code === "23505")
+      throw new CustomError("Team already added to Tournament!", 409);
+  }
+
+  if (sendEmail === true) {
+    //send email
+    const html = generateTournamentInvitationContent({
+      tournamentName,
+    });
+    const subject = `Team added on ${appInfo.name}`;
+    // send email to team manager with credential
+    mailService.sendMail(managerEmail, subject, html);
+  }
+
   return insertedTeamsTournaments;
 };
 
@@ -251,6 +284,7 @@ exports.updateTeamRequest = async ({ payload }) => {
         where id = ${payload.id}
           and tournament_id = ${payload.tournamentId}
           and team_id = ${payload.teamId} returning *`;
+
   return updatedRequest;
 };
 

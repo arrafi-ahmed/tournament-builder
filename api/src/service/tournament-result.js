@@ -463,8 +463,8 @@ exports.getResults = async ({ tournamentId }) => {
       startTime: row.startTime,
       homeTeamId: row.homeTeamId,
       awayTeamId: row.awayTeamId,
-      homeTeamName: row.homeTeamName, //TODO: if teamId not available, send teamOptions
-      awayTeamName: row.awayTeamName, //TODO: if teamId not available, send teamOptions
+      homeTeamName: row.homeTeamName,
+      awayTeamName: row.awayTeamName,
       homeTeamScore: row.homeTeamScore,
       awayTeamScore: row.awayTeamScore,
       winnerId: row.winnerId,

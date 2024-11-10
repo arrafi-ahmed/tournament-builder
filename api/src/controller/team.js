@@ -141,20 +141,33 @@ router.post("/updateTeamRequest", auth, (req, res, next) => {
   let results = null;
   teamService
     .updateTeamRequest({ payload: req.body })
-    .then((results1) => {
+    .then(async (results1) => {
       results = results1;
-      if (req.body.requestStatus == 1)
+      if (req.body.requestStatus == 1) {
+        const { teamId, tournamentId } = req.body;
+        const [{ email }, { name }] = await Promise.all([
+          teamService.getTeamWEmailOptionalById({
+            teamId,
+          }),
+          tournamentService.getTournament({
+            tournamentId,
+          }),
+        ]);
         return teamService.saveTeamsTournaments({
           payload: {
-            teamId: req.body.teamId,
-            tournamentId: req.body.tournamentId,
+            teamId,
+            tournamentId,
           },
+          tournamentName: name,
+          managerEmail: email,
+          sendEmail: true,
         });
-      else res.status(200).json(new ApiResponse("Request rejected!", results));
+      } else
+        res.status(200).json(new ApiResponse("Request rejected!", results));
     })
-    .then((results2) =>
-      res.status(200).json(new ApiResponse("Request approved!", results)),
-    )
+    .then((results2) => {
+      res.status(200).json(new ApiResponse("Request approved!", results));
+    })
     .catch((err) => next(err));
 });
 

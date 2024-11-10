@@ -137,8 +137,9 @@ export const actions = {
   updateMatch({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios
-        .post("/api/tournament-format/saveMatch", {
+        .post("/api/tournament-format/updateMatch", {
           newMatch: request.newMatch,
+          emailContent: request.emailContent,
         })
         .then((response) => {
           commit("addMatchToField", {
@@ -156,9 +157,12 @@ export const actions = {
     return new Promise((resolve, reject) => {
       $axios
         .post("/api/tournament-format/updateMatches", {
-          matches: request.matches.map(({ hostName, ...rest }) => ({
-            ...rest,
-          })),
+          matches: request.matches.map(
+            ({ hostName, homeTeamName, awayTeamName, ...rest }) => ({
+              ...rest,
+            }),
+          ),
+          emailContent: request.emailContent,
         })
         .then((response) => {
           commit("updateMatches", {
@@ -177,6 +181,18 @@ export const actions = {
     return new Promise((resolve, reject) => {
       $axios
         .post("/api/tournament-schedule/deleteMatch", request)
+        .then((response) => {
+          resolve(response);
+        })
+        .catch((err) => {
+          reject(err);
+        });
+    });
+  },
+  newScheduleEmail({ commit }, request) {
+    return new Promise((resolve, reject) => {
+      $axios
+        .post("/api/tournament-schedule/newScheduleEmail", request)
         .then((response) => {
           resolve(response);
         })

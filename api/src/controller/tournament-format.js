@@ -55,6 +55,17 @@ router.post("/saveMatch", auth, (req, res, next) => {
     .catch((err) => next(err));
 });
 
+router.post("/updateMatch", auth, (req, res, next) => {
+  tournamentFormatService
+    .updateMatch({
+      payload: req.body,
+    })
+    .then((results) => {
+      res.status(200).json(new ApiResponse(null, results));
+    })
+    .catch((err) => next(err));
+});
+
 router.post("/updateMatches", auth, (req, res, next) => {
   tournamentFormatService
     .updateMatches({

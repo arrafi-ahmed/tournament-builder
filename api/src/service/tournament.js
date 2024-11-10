@@ -132,6 +132,17 @@ exports.getTournamentWEmailOptionalById = async ({ tournamentId }) => {
   return tournament;
 };
 
+exports.getTournamentWEmailOptionalById = async ({ tournamentId }) => {
+  const [tournament] = await sql`
+        SELECT t.*, t.id as t_id, u.id as u_id, u.email
+        FROM tournaments t
+                 left join users u
+                           on t.organizer_id = u.id and u.role = 'organizer'
+        WHERE t.id = ${tournamentId}`;
+
+  return tournament;
+};
+
 exports.getParticipants = async ({ tournamentId, organizerId }) => {
   const teams = await sql`
         SELECT tt.*,
@@ -187,7 +198,7 @@ exports.addParticipant = async ({
   const html = generateTournamentInvitationContent({
     tournamentName,
   });
-  const subject = `Team added to tournament on ${appInfo.name}`;
+  const subject = `Team added on ${appInfo.name}`;
   // send email to team manager with credential
   mailService.sendMail(managerEmail, subject, html);
 

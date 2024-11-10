@@ -17,8 +17,10 @@ const deleteTeam = (teamId) => {
   store.dispatch("team/removeTeam", { teamId });
 };
 const fetchData = async () => {
-  store.dispatch("team/setTeamRequestsByOrganizerId");
-  store.dispatch("tournament/setTournamentsByOrganizerId");
+  return Promise.all([
+    store.dispatch("team/setTeamRequestsByOrganizerId"),
+    store.dispatch("tournament/setTournamentsByOrganizerId"),
+  ]);
 };
 onMounted(async () => {
   fetchData();
