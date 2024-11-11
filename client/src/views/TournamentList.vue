@@ -3,7 +3,7 @@ import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import RemoveEntity from "@/components/RemoveEntity.vue";
+import RemoveEntity from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
 import { formatDate, toLocalISOString } from "@/others/util";
 // import { getTournamentLogoUrl } from "@/others/util";

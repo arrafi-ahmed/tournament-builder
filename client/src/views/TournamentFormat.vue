@@ -7,6 +7,7 @@ import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 import { useDisplay } from "vuetify";
 import { calcMatchType, getRoundTitle } from "@/others/util";
 import { VueDraggableNext } from "vue-draggable-next";
+import RemoveEntity from "@/components/ConfirmationDialog.vue";
 
 const route = useRoute();
 const store = useStore();
@@ -352,14 +353,14 @@ const addBracketDialog = ref(false);
 const form = ref(null);
 const isFormValid = ref(true);
 
-const removePhase = ({ phase }) => {
+const removePhase = (phase) => {
   modifyPhaseTeamOptionIfUsed({ phase });
   store.dispatch("tournamentFormat/removePhase", {
     phaseId: phase.id,
     tournamentId: route.params.tournamentId,
   });
 };
-const removeGroup = ({ group }) => {
+const removeGroup = (group) => {
   modifyGroupTeamOptionIfUsed({ group });
   store.dispatch("tournamentFormat/removeGroup", {
     groupId: group.id,
@@ -367,14 +368,14 @@ const removeGroup = ({ group }) => {
   });
 };
 
-const removeBracket = ({ bracket }) => {
+const removeBracket = (bracket) => {
   modifyBracketTeamOptionIfUsed({ bracket });
   store.dispatch("tournamentFormat/removeBracket", {
     bracketId: bracket.id,
     tournamentId: route.params.tournamentId,
   });
 };
-const removeMatch = ({ match }) => {
+const removeMatch = (match) => {
   modifyMatchTeamOptionIfUsed({ match });
   store.dispatch("tournamentFormat/removeMatch", {
     matchId: match.id,
@@ -583,15 +584,19 @@ onMounted(async () => {
                   variant="plain"
                   @blur="updatePhase({ phase })"
                 ></v-text-field>
-                <v-btn
-                  class="rounded"
-                  density="comfortable"
-                  icon="mdi-delete-outline"
-                  size="small"
-                  tile
-                  variant="tonal"
-                  @click="removePhase({ phase })"
-                ></v-btn>
+                <ConfirmationDialog @confirm="removePhase(phase)">
+                  <template #activator="{ onClick }">
+                    <v-btn
+                      class="rounded"
+                      density="comfortable"
+                      icon="mdi-delete-outline"
+                      size="small"
+                      tile
+                      variant="tonal"
+                      @click="onClick"
+                    ></v-btn>
+                  </template>
+                </ConfirmationDialog>
               </div>
 
               <template v-if="phase.items.length > 0">
@@ -629,15 +634,21 @@ onMounted(async () => {
                                     tile
                                     variant="tonal"
                                   ></v-btn>
-                                  <v-btn
-                                    class="rounded"
-                                    density="comfortable"
-                                    icon="mdi-delete-outline"
-                                    size="small"
-                                    tile
-                                    variant="tonal"
-                                    @click="removeGroup({ group: phaseItem })"
-                                  ></v-btn>
+                                  <ConfirmationDialog
+                                    @confirm="removeGroup(phaseItem)"
+                                  >
+                                    <template #activator="{ onClick }">
+                                      <v-btn
+                                        class="rounded"
+                                        density="comfortable"
+                                        icon="mdi-delete-outline"
+                                        size="small"
+                                        tile
+                                        variant="tonal"
+                                        @click="onClick"
+                                      ></v-btn>
+                                    </template>
+                                  </ConfirmationDialog>
                                 </div>
                               </v-card-title>
                               <v-card-text>
@@ -707,15 +718,21 @@ onMounted(async () => {
                                 tile
                                 variant="tonal"
                               ></v-btn>
-                              <v-btn
-                                class="rounded"
-                                density="comfortable"
-                                icon="mdi-delete-outline"
-                                size="small"
-                                tile
-                                variant="tonal"
-                                @click="removeBracket({ bracket: phaseItem })"
-                              ></v-btn>
+                              <ConfirmationDialog
+                                @confirm="removeBracket(phaseItem)"
+                              >
+                                <template #activator="{ onClick }">
+                                  <v-btn
+                                    class="rounded"
+                                    density="comfortable"
+                                    icon="mdi-delete-outline"
+                                    size="small"
+                                    tile
+                                    variant="tonal"
+                                    @click="onClick"
+                                  ></v-btn>
+                                </template>
+                              </ConfirmationDialog>
                             </div>
                           </v-card-title>
                           <v-row class="pb-3" no-gutters>
@@ -850,15 +867,21 @@ onMounted(async () => {
                                     tile
                                     variant="tonal"
                                   ></v-btn>
-                                  <v-btn
-                                    class="rounded"
-                                    density="comfortable"
-                                    icon="mdi-delete-outline"
-                                    size="small"
-                                    tile
-                                    variant="tonal"
-                                    @click="removeMatch({ match: phaseItem })"
-                                  ></v-btn>
+                                  <ConfirmationDialog
+                                    @confirm="removeMatch(phaseItem)"
+                                  >
+                                    <template #activator="{ onClick }">
+                                      <v-btn
+                                        class="rounded"
+                                        density="comfortable"
+                                        icon="mdi-delete-outline"
+                                        size="small"
+                                        tile
+                                        variant="tonal"
+                                        @click="onClick"
+                                      ></v-btn>
+                                    </template>
+                                  </ConfirmationDialog>
                                 </div>
                               </v-card-title>
                               <v-card-text>

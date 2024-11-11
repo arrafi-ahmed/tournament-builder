@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import RemoveEntity from "@/components/RemoveEntity.vue";
+import RemoveEntity from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
 import { getClientPublicImgUrl } from "@/others/util";
 

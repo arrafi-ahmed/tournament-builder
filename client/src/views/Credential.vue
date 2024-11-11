@@ -4,7 +4,7 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import { toast } from "vue-sonner";
-import RemoveEntity from "@/components/RemoveEntity.vue";
+import RemoveEntity from "@/components/ConfirmationDialog.vue";
 
 const store = useStore();
 const route = useRoute();
