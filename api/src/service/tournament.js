@@ -155,7 +155,7 @@ exports.getParticipants = async ({ tournamentId, organizerId }) => {
   return teams;
 };
 
-exports.getParticipantsWTournament = async ({ tournamentId, organizerId }) => {
+exports.getParticipantsWTournament = async ({ tournamentId }) => {
   const teams = await sql`
         SELECT tu.*,
                tt.*,
@@ -168,12 +168,7 @@ exports.getParticipantsWTournament = async ({ tournamentId, organizerId }) => {
                  left join teams_tournaments tt
                            on tt.tournament_id = tu.id
                  left join teams tm on tt.team_id = tm.id
-        WHERE tu.id = ${tournamentId} ${
-          organizerId
-            ? sql` and tu.organizer_id =
-                        ${organizerId}`
-            : sql``
-        }`;
+        WHERE tu.id = ${tournamentId}`;
 
   return teams;
 };

@@ -2,7 +2,11 @@ const { sql } = require("../db");
 const tournamentFormatService = require("../service/tournament-format");
 const teamService = require("../service/team");
 const mailService = require("../service/sendMail");
-const { generateNewScheduleEmailContent } = require("../others/util");
+const {
+  generateNewScheduleEmailContent,
+  generateScheduleCreatedEmailContent,
+  generateBroadcastEmailContent,
+} = require("../others/util");
 
 exports.saveField = async ({ payload: { newField } }) => {
   if (!newField?.id) {
@@ -82,22 +86,20 @@ exports.deleteMatch = async ({
   ]);
 };
 
-exports.newScheduleEmail = async ({
-  payload: { emailContent, tournamentName },
+exports.broadcastUpdate = async ({
+  payload: { receiverIds, broadcastType, tournament },
 }) => {
   //send email
   const teams = await teamService.getTeamsWEmailOptionalById({
-    teamIds: emailContent.recipients,
+    teamIds: receiverIds,
   });
   return Promise.all(
     teams.map((team) => {
-      const html = generateNewScheduleEmailContent({
-        emailContent,
-        tournamentName,
+      const { bodyHtml, subject } = generateBroadcastEmailContent({
+        tournament,
+        broadcastType,
       });
-      const subject = `New Match Schedule Added for Your Team`;
-      // send email to team manager with credential
-      mailService.sendMail(team.email, subject, html);
+      return mailService.sendMail(team.email, subject, bodyHtml);
     }),
   );
 };

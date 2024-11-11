@@ -97,17 +97,10 @@ router.get("/getTournamentWEmailOptionalById", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-router.get("/getParticipantsWTournament", auth, (req, res, next) => {
-  const organizerId = ifSudo(req.currentUser.role)
-    ? req.query.organizerId
-    : ifOrganizer(req.currentUser.role)
-      ? req.currentUser.id
-      : null;
-
+router.get("/getParticipantsWTournament", (req, res, next) => {
   tournamentService
     .getParticipantsWTournament({
       tournamentId: req.query.tournamentId,
-      organizerId,
     })
     .then((results) => res.status(200).json(new ApiResponse(null, results)))
     .catch((err) => next(err));

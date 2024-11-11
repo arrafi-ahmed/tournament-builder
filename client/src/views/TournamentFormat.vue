@@ -480,19 +480,6 @@ const updateMatch = ({ match }) => {
     onlyEntitySave: true,
   });
 };
-const fetchData = async () => {
-  return Promise.all([
-    store.dispatch("tournament/setTournamentWEmailOptionalById", {
-      tournamentId: route.params.tournamentId,
-    }),
-    store.dispatch("tournamentFormat/setTournamentFormat", {
-      tournamentId: route.params.tournamentId,
-    }),
-  ]);
-};
-onMounted(async () => {
-  fetchData();
-});
 const handlePhaseItemOrderChanged = (phaseIndex, eventData) => {
   const updatedItems = tournamentFormat.value[phaseIndex].items.map(
     (item, index) => ({
@@ -524,6 +511,19 @@ const handlePhaseItemOrderChanged = (phaseIndex, eventData) => {
     matches,
   });
 };
+const fetchData = async () => {
+  return Promise.all([
+    store.dispatch("tournament/setTournamentWEmailOptionalById", {
+      tournamentId: route.params.tournamentId,
+    }),
+    store.dispatch("tournamentFormat/setTournamentFormat", {
+      tournamentId: route.params.tournamentId,
+    }),
+  ]);
+};
+onMounted(async () => {
+  fetchData();
+});
 </script>
 
 <template>

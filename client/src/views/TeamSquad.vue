@@ -49,7 +49,7 @@ const openAddMemberDialog = () => {
 
 const handleSaveMember = async () => {
   await form.value.validate();
-  if (!isFormValid.value) return;
+  if (!isFormValid.value || !isAuthorized) return;
 
   newMember.teamId = route.params.teamId;
 
@@ -63,6 +63,7 @@ const handleSaveMember = async () => {
   });
 };
 const removeMember = async (id) => {
+  if (!isAuthorized) return;
   await store.dispatch("team/removeMember", {
     id,
     teamId: route.params.teamId,
@@ -72,6 +73,12 @@ const removeMember = async (id) => {
 const fetchData = () => {
   store.dispatch("team/setTeamWSquad", { teamId: route.params.teamId });
 };
+const currentUser = store.getters["user/getCurrentUser"];
+const isAuthorized = computed(
+  () =>
+    currentUser.role === "team_manager" &&
+    Number(currentUser.teamId) === Number(route.params.teamId),
+);
 onMounted(() => {
   fetchData();
 });
@@ -87,7 +94,7 @@ onMounted(() => {
           sub-title="Team"
           title="Squad"
         >
-          <v-row align="center">
+          <v-row align="center" v-if="isAuthorized">
             <v-menu>
               <template v-slot:activator="{ props }">
                 <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">

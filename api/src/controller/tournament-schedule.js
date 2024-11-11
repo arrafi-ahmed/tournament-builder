@@ -52,10 +52,10 @@ router.post("/deleteMatch", (req, res, next) => {
     .catch((err) => next(err));
 });
 
-router.post("/newScheduleEmail", (req, res, next) => {
+router.post("/broadcastUpdate", (req, res, next) => {
   tournamentScheduleService
-    .newScheduleEmail({ payload: req.body })
-    .then((results) => res.status(200).json(new ApiResponse(null, results)))
+    .broadcastUpdate({ payload: req.body })
+    .then((results) => res.status(200).json(new ApiResponse("Update has been broadcast!", results)))
     .catch((err) => next(err));
 });
 

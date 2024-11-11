@@ -4,7 +4,12 @@ import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import { useDisplay } from "vuetify";
-import { formatDate, getRoundTitle, getTeamLogoUrl } from "@/others/util";
+import {
+  formatDate,
+  getQueryParam,
+  getRoundTitle,
+  getTeamLogoUrl,
+} from "@/others/util";
 import NoItems from "@/components/NoItems.vue";
 import MatchCard from "@/components/MatchCard.vue";
 
@@ -37,6 +42,13 @@ const fetchData = async () => {
 onMounted(async () => {
   await fetchData();
   document.title = tournament.value.name;
+
+  const referred = getQueryParam("ref");
+  const validTabs = ["schedule", "standing", "participants", "rules"];
+
+  if (validTabs.includes(referred)) {
+    parentTab.value = referred;
+  }
 });
 </script>
 
@@ -83,7 +95,7 @@ onMounted(async () => {
                     router.push({
                       name: 'team-squad',
                       params: {
-                        teamId: item.id,
+                        teamId: item.teamId,
                       },
                     })
                   "

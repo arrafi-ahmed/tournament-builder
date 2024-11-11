@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
@@ -52,7 +52,6 @@ const newFieldInit = {
 const newField = reactive({ ...newFieldInit });
 
 const addField = () => {
-  console.log(21, schedule.value.length + 1);
   store
     .dispatch("tournamentSchedule/saveField", {
       newField: { ...newField, fieldOrder: schedule.value.length + 1 },
@@ -78,9 +77,6 @@ const getMatchStartTime = ({ matches }) => {
   const newMatchStartTime = lastMatchStartTime.setMinutes(
     lastMatchStartTime.getMinutes() + minsToAdd,
   );
-  console.log(1, lastMatchStartTimeString);
-  console.log(2, newMatchStartTime);
-
   return newMatchStartTime;
 };
 
@@ -105,23 +101,21 @@ const addMatchToField = ({ match }) => {
     matchDayId: selectedMatchDate.value.id,
     fieldId: selectedField.value.id,
   };
-  const recipients = [];
-  if (match.homeTeamId) recipients.push(match.homeTeamId);
-  if (match.awayTeamId) recipients.push(match.awayTeamId);
-
-  console.log(5, newMatch);
-
-  if (recipients.length) {
-    const emailContent = {
-      recipients,
-      fieldName: selectedField.value.name,
-      tournamentName: tournament.value.name,
-      ...newMatch,
-    };
-    store.dispatch("tournamentSchedule/newScheduleEmail", {
-      emailContent,
-    });
-  }
+  // const recipients = [];
+  // if (match.homeTeamId) recipients.push(match.homeTeamId);
+  // if (match.awayTeamId) recipients.push(match.awayTeamId);
+  //
+  // if (recipients.length) {
+  //   const emailContent = {
+  //     recipients,
+  //     fieldName: selectedField.value.name,
+  //     tournamentName: tournament.value.name,
+  //     ...newMatch,
+  //   };
+  //   store.dispatch("tournamentSchedule/newScheduleEmail", {
+  //     emailContent,
+  //   });
+  // }
   store.dispatch("tournamentSchedule/updateMatch", {
     newMatch,
     hostName: match.hostName,
@@ -234,6 +228,9 @@ const fetchData = async () => {
     store.dispatch("tournamentSchedule/setSchedule", {
       tournamentId: route.params.tournamentId,
     }),
+    store.dispatch("tournament/setParticipants", {
+      tournamentId: route.params.tournamentId,
+    }),
   ]);
 };
 onMounted(async () => {
@@ -249,8 +246,6 @@ const handleFieldMatchChanged = (fieldIndex, eventData) => {
 
   const schedule = store.state.tournamentSchedule.schedule;
   const field = schedule[fieldIndex];
-
-  console.log(11, element, oldIndex, newIndex);
 
   if (field && field.matchDays) {
     const matchDayIndex = field.matchDays.findIndex(
@@ -279,15 +274,58 @@ const handleFieldMatchChanged = (fieldIndex, eventData) => {
         fieldIndex,
         matchDayIndex,
         matches: formattedMatches,
-        emailContent: {
-          // used to send email to teamIds about updated schedule
-          fields: fields.value.map(({ id, name }) => ({ id, name })),
-          updatedMatchesIndex: [oldIndex, newIndex].sort((a, b) => a - b),
-        },
+        // emailContent: {
+        //   // used to send email to teamIds about updated schedule
+        //   fields: fields.value.map(({ id, name }) => ({ id, name })),
+        //   updatedMatchesIndex: [oldIndex, newIndex].sort((a, b) => a - b),
+        // },
       });
     }
   }
 };
+const broadcastUpdateForm = ref(null);
+const participants = computed(() => store.state.tournament.participants);
+
+const selectedParticipants = ref([]);
+const isAllParticipantsSelected = ref(false);
+
+const selectedBroadcastType = ref([]);
+const broadcastTypes = ref([
+  { id: "schedule_created", name: "Schedule Created" },
+  { id: "schedule_updated", name: "Schedule Updated" },
+  { id: "schedule_deleted", name: "Schedule Deleted" },
+  { id: "result_published", name: "Result Published" },
+]);
+
+const showBroadcastUpdateDialog = ref(false);
+const openBroadcastUpdateDialog = () => {
+  showBroadcastUpdateDialog.value = !showBroadcastUpdateDialog.value;
+};
+const broadcastUpdate = () => {
+  if (selectedParticipants.value.length) {
+    store
+      .dispatch("tournamentSchedule/broadcastUpdate", {
+        receiverIds: selectedParticipants.value,
+        broadcastType: selectedBroadcastType.value,
+        tournament: { id: tournament.value.id, name: tournament.value.name },
+      })
+      .finally(
+        () =>
+          (showBroadcastUpdateDialog.value = !showBroadcastUpdateDialog.value),
+      );
+  }
+};
+
+watch(
+  () => isAllParticipantsSelected.value,
+  (newVal) => {
+    if (newVal) {
+      selectedParticipants.value = participants.value.map((item) => item.id);
+    } else {
+      selectedParticipants.value = [];
+    }
+  },
+);
 </script>
 
 <template>
@@ -300,6 +338,22 @@ const handleFieldMatchChanged = (fieldIndex, eventData) => {
           show-back
           title="Schedule"
         >
+          <v-row align="center">
+            <v-menu>
+              <template v-slot:activator="{ props }">
+                <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">
+                </v-btn>
+              </template>
+              <v-list density="compact">
+                <v-list-item
+                  @click="openBroadcastUpdateDialog"
+                  density="compact"
+                  prepend-icon="mdi-share"
+                  title="Broadcast Update"
+                ></v-list-item>
+              </v-list>
+            </v-menu>
+          </v-row>
         </page-title>
       </v-col>
     </v-row>
@@ -598,6 +652,74 @@ const handleFieldMatchChanged = (fieldIndex, eventData) => {
               color="primary"
               type="submit"
               >Edit
+            </v-btn>
+          </v-card-actions>
+        </v-form>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="showBroadcastUpdateDialog" :width="xs ? 400 : 600">
+    <v-card>
+      <v-card-title>
+        <div class="d-flex justify-space-between">
+          <span>Broadcast Tournament Update</span>
+        </div>
+      </v-card-title>
+      <v-card-text>
+        <v-form
+          ref="broadcastUpdateForm"
+          v-model="isFormValid"
+          fast-fail
+          @submit.prevent="broadcastUpdate"
+        >
+          <v-checkbox
+            v-model="isAllParticipantsSelected"
+            label="Select All Participants"
+            hide-details="auto"
+          ></v-checkbox>
+          <v-select
+            v-model="selectedParticipants"
+            :items="participants"
+            label="Select Teams"
+            multiple
+            item-value="id"
+            item-title="name"
+            hide-details="auto"
+          >
+            <template v-slot:selection="data">
+              <v-chip
+                :key="JSON.stringify(data.item)"
+                v-bind="data.attrs"
+                :disabled="data.disabled"
+                :model-value="data.selected"
+                @click:close="data.parent.selectItem(data.item)"
+              >
+                <template v-slot:prepend>
+                  <v-avatar class="bg-accent text-uppercase" start
+                    >{{ data.item.title.slice(0, 1) }}
+                  </v-avatar>
+                </template>
+                {{ data.item.title }}
+              </v-chip>
+            </template>
+          </v-select>
+          <v-select
+            v-model="selectedBroadcastType"
+            :items="broadcastTypes"
+            label="Select Broadcast Type"
+            hide-details="auto"
+            item-value="id"
+            item-title="name"
+            class="mt-2 mt-md-4"
+          ></v-select>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              :density="xs ? 'comfortable' : 'default'"
+              color="primary"
+              type="submit"
+              >Broadcast
             </v-btn>
           </v-card-actions>
         </v-form>

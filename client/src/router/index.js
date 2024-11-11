@@ -163,7 +163,6 @@ const routes = [
         name: "team-squad",
         component: () => import("@/views/TeamSquad.vue"),
         meta: {
-          requiresAuth: true,
           title: "Team Squad",
         },
       },

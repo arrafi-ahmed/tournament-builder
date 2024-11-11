@@ -3,6 +3,8 @@ const fsSync = require("fs");
 const path = require("path");
 const { API_BASE_URL, VUE_BASE_URL, ANDROID_BASE_URL } = process.env;
 
+const appInfo = { name: "TotaLiga", version: 1.0 };
+
 const formatDate = (inputDate) => {
   const date = new Date(inputDate);
   const day = `0${date.getDate()}`.slice(-2);
@@ -23,6 +25,10 @@ const removeOtherParams = (obj, allowedKeys) => {
   });
   return obj;
 };
+const emailFooter = `   
+    <br>
+    <p>Best wishes,<br>
+    The <strong>${appInfo.name}</strong> Team</p>`;
 
 const generatePassResetContent = (token) => {
   return `
@@ -36,8 +42,7 @@ const generatePassResetContent = (token) => {
 
     <p>If you did not request a password reset, please ignore this email. Your password will remain unchanged.</p>
 
-    <p>Best wishes,</p>
-    <p>The <strong>${appInfo.name}</strong> Team</p>
+    ${emailFooter}
   `;
 };
 
@@ -55,8 +60,7 @@ const generateManagerCredentialContent = ({ teamName, credential }) => {
 
     <p>If you have any questions or need assistance, feel free to reach out. We wish you all the best as you manage your team!</p>
 
-    <p>Best wishes,<br>
-    <p>The <strong>${appInfo.name}</strong> Team</p>
+    ${emailFooter}
   `;
 };
 
@@ -71,52 +75,56 @@ const generateTournamentInvitationContent = ({
 
     <p>We look forward to your team's participation and wish you the best of luck!</p>
 
-    <p>Best wishes,</p>
-    <p>The <strong>${appInfo.name}</strong> Team</p>
+    ${emailFooter}
   `;
 };
 
-const generateNewScheduleEmailContent = ({ emailContent }) => {
-  return `
+const generateBroadcastEmailContent = ({ tournament, broadcastType }) => {
+  let mainContent = "";
+  let subject = "";
+  if (broadcastType === "schedule_created") {
+    mainContent = `
+        <p>
+          We’re pleased to inform you that your team has been added to new match schedule for the tournament "${tournament.name}".
+        </p>
+        <p>To view the latest schedule of the tournament:</p>`;
+    subject = `New Match Schedule Added for Tournament '${tournament.name}'`;
+  } else if (broadcastType === "schedule_updated") {
+    mainContent = `
+        <p>
+          We’re pleased to inform you that your team's match schedule updated for the tournament "${tournament.name}".
+        </p>
+        <p>To view the latest schedule of the tournament:</p>`;
+    subject = `Match Schedule Updated for Tournament '${tournament.name}'`;
+  } else if (broadcastType === "schedule_deleted") {
+    mainContent = `
+        <p>
+          Your team's match schedule deleted for the tournament "${tournament.name}".
+        </p>
+        <p>To view the latest schedule of the tournament:</p>`;
+    subject = `Match Schedule Deleted for Tournament '${tournament.name}'`;
+  } else if (broadcastType === "result_published") {
+    mainContent = `
+        <p>
+          We’re excited to inform you that new result has been published for the tournament "${tournament.name}".
+        </p>
+        <p>To view the latest standing of the tournament:</p>`;
+    subject = `New Result Published for Tournament '${tournament.name}'`;
+  }
+  const bodyHtml = `
     <p>Greetings!</p>
     
-    <p>We’re pleased to inform you that your team has been added to a new match schedule. Here are the details:</p>
+    ${mainContent}
     
-    <p><strong>Tournament:</strong> ${emailContent.tournamentName}<br>
-    <strong>Phase:</strong> ${emailContent.hostName}</p>
-    
-    <p><strong>Match Details:</strong></p>
-    <ul>     
-      <li><strong>${emailContent.name}:</strong> ${emailContent.homeTeamName} <b>vs</b> ${emailContent.awayTeamName}</li>
-      <li><strong>Date:</strong> ${new Date(emailContent.startTime).toLocaleString() || "To Be Determined"}</li>
-      <li><strong>Field:</strong> ${emailContent.fieldName}</li>
-    </ul> 
-
-    <p>Please mark your calendar, and feel free to reach out if you have any questions or need further assistance. We wish your team the best of luck and look forward to an exciting match!</p>
-    
-    <p>Best wishes,</p>
-    <p>The <strong>${appInfo.name}</strong> Team</p>
-  `;
-};
-
-const generateTournamentUpdateContent = ({ emailContent }) => {
-  return `
-    <p>Greetings!</p>
-    
-    <p>We’re excited to inform you that a new result has been published for the tournament "<strong>${emailContent.tournamentName}</strong>".</p>
-
-    <p>To view the latest updates and details:</p>
-    <a href="${VUE_BASE_URL}/tournament/${emailContent.tournamentId}" style="text-decoration: none;">
+    <a href="${VUE_BASE_URL}/tournament/${tournament.id}?ref=${broadcastType === "result_published" ? "standing" : "schedule"}" style="text-decoration: none;">
       <button style="background-color: #2460ad; color: white; border: none; padding: 10px; border-radius: 5px; font-size: 16px; cursor: pointer;">
-        View Tournament Details
+        View Tournament
       </button>
     </a>
-
-    <br><br>
-
-    <p>Best wishes,</p>
-    <p>The <strong>${appInfo.name}</strong> Team</p>
+    
+    ${emailFooter}
   `;
+  return { bodyHtml, subject };
 };
 
 const moveImage = (sourcePath, destinationPath) => {
@@ -174,8 +182,6 @@ const getCurrencySymbol = (currencyCode, type) => {
   return currencyMap[currencyCodeLower][type];
 };
 
-const appInfo = { name: "TournaPro", version: 1.0 };
-
 // const generateQrCode = async (data) => await qr.toDataURL(data);
 // const logoSvgString = fsSync.readFileSync(
 //   path.join(__dirname, "./logo.svg"),
@@ -192,8 +198,7 @@ module.exports = {
   generatePassResetContent,
   generateTournamentInvitationContent,
   generateManagerCredentialContent,
-  generateNewScheduleEmailContent,
-  generateTournamentUpdateContent,
+  generateBroadcastEmailContent,
   moveImage,
   getPrefix,
   getDirPath,

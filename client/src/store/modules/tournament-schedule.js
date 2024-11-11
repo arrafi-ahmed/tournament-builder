@@ -189,10 +189,10 @@ export const actions = {
         });
     });
   },
-  newScheduleEmail({ commit }, request) {
+  broadcastUpdate({ commit }, request) {
     return new Promise((resolve, reject) => {
       $axios
-        .post("/api/tournament-schedule/newScheduleEmail", request)
+        .post("/api/tournament-schedule/broadcastUpdate", request)
         .then((response) => {
           resolve(response);
         })
