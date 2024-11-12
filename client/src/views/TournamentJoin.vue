@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import RemoveEntity from "@/components/ConfirmationDialog.vue";
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
 import { formatDate, getRequestBg, toLocalISOString } from "../others/util";
 // import { getTournamentLogoUrl } from "@/others/util";
@@ -71,7 +71,7 @@ onMounted(() => {
         <page-title
           :title="generateTitle"
           justify="space-between"
-          show-back
+          :back-route="{ name: 'dashboard' }"
           sub-title="Tournament Join"
         >
           <v-row align="center">
@@ -142,16 +142,22 @@ onMounted(() => {
                       @click="handleJoinTournament(item.tournamentId)"
                     ></v-list-item>
 
-                    <remove-entity
+                    <confirmation-dialog
                       v-else
-                      custom-class="text-error"
-                      label="Cancel"
-                      prepend-icon="mdi-close"
-                      variant="list"
-                      @remove-entity="
+                      @confirm="
                         handleCancelJoinTournament(item.id, item.tournamentId)
                       "
-                    ></remove-entity>
+                    >
+                      <template #activator="{ onClick }">
+                        <v-list-item
+                          class="text-error"
+                          popup-title="Cancel"
+                          prepend-icon="mdi-delete"
+                          title="Cancel"
+                          @click.stop="onClick"
+                        ></v-list-item>
+                      </template>
+                    </confirmation-dialog>
 
                     <v-list-item
                       prepend-icon="mdi-eye"

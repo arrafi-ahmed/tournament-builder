@@ -3,7 +3,7 @@ import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import RemoveEntity from "@/components/ConfirmationDialog.vue";
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
 import { formatDate, toLocalISOString } from "@/others/util";
 // import { getTournamentLogoUrl } from "@/others/util";
@@ -12,12 +12,26 @@ const router = useRouter();
 const store = useStore();
 
 const tournaments = computed(() => store.state.tournament.tournaments);
+const isOrganizer = computed(() => store.getters["user/isOrganizer"]);
 
 const deleteTournament = (tournamentId) => {
   store.dispatch("tournament/removeTournament", { tournamentId });
 };
 const fetchData = () => {
   store.dispatch("tournament/setTournaments");
+};
+const goTournamentDashboard = ({ tournament }) => {
+  if (isOrganizer.value) {
+    router.push({
+      name: "tournament-dashboard",
+      params: { tournamentId: tournament.id },
+    });
+  } else {
+    router.push({
+      name: "public-view",
+      params: { tournamentId: tournament.id },
+    });
+  }
 };
 onMounted(() => {
   fetchData();
@@ -30,7 +44,7 @@ onMounted(() => {
       <v-col>
         <page-title
           justify="space-between"
-          show-back
+          :back-route="{ name: 'dashboard' }"
           sub-title="Tournament"
           title="List"
         >
@@ -47,7 +61,7 @@ onMounted(() => {
                   }"
                   density="compact"
                   prepend-icon="mdi-plus"
-                  title="Add Tournament"
+                  title="Add"
                 ></v-list-item>
               </v-list>
             </v-menu>
@@ -71,12 +85,7 @@ onMounted(() => {
               :key="index"
               :title="item?.name"
               link
-              @click="
-                router.push({
-                  name: 'tournament-dashboard',
-                  params: { tournamentId: item.id },
-                })
-              "
+              @click="goTournamentDashboard({ tournament: item })"
             >
               <template v-slot:append>
                 <v-menu>
@@ -103,13 +112,16 @@ onMounted(() => {
 
                     <v-divider></v-divider>
 
-                    <remove-entity
-                      custom-class="text-error"
-                      label="Delete"
-                      prepend-icon="mdi-delete"
-                      variant="list"
-                      @remove-entity="deleteTournament(item.id)"
-                    ></remove-entity>
+                    <confirmation-dialog @confirm="deleteTournament(item.id)">
+                      <template #activator="{ onClick }">
+                        <v-list-item
+                          class="text-error"
+                          prepend-icon="mdi-delete"
+                          title="Delete"
+                          @click.stop="onClick"
+                        ></v-list-item>
+                      </template>
+                    </confirmation-dialog>
                   </v-list>
                 </v-menu>
               </template>

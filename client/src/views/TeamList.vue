@@ -3,7 +3,7 @@ import { computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import RemoveEntity from "@/components/ConfirmationDialog.vue";
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
 import { getTeamLogoUrl } from "@/others/util";
 
@@ -120,13 +120,16 @@ onMounted(() => {
 
                     <v-divider></v-divider>
 
-                    <remove-entity
-                      custom-class="text-error"
-                      label="Delete"
-                      prepend-icon="mdi-delete"
-                      variant="list"
-                      @remove-entity="deleteTeam(item.id)"
-                    ></remove-entity>
+                    <confirmation-dialog @confirm="deleteTeam(item.id)">
+                      <template #activator="{ onClick }">
+                        <v-list-item
+                          class="text-error"
+                          prepend-icon="mdi-delete"
+                          title="Delete"
+                          @click.stop="onClick"
+                        ></v-list-item>
+                      </template>
+                    </confirmation-dialog>
                   </v-list>
                 </v-menu>
               </template>

@@ -145,13 +145,8 @@ export const actions = {
         });
     });
   },
-  setTournamentWEmailOptionalById({ commit, getters }, request) {
-    const prefetchedTournament = getters["getTournamentById"](
-      request.tournamentId,
-    );
-
+  setTournamentWEmailOptionalById({ commit, getters, rootGetters }, request) {
     return new Promise((resolve, reject) => {
-      if (prefetchedTournament) resolve(prefetchedTournament);
       $axios
         .get("/api/tournament/getTournamentWEmailOptionalById", {
           params: { tournamentId: request.tournamentId },

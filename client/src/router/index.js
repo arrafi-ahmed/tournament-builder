@@ -39,7 +39,7 @@ const routes = [
         component: () => import("@/views/DashboardSudo.vue"),
         meta: {
           requiresSudo: true,
-          title: "Dashboard Sudo",
+          title: "Dashboard",
         },
       },
       {
@@ -48,7 +48,7 @@ const routes = [
         component: () => import("@/views/DashboardOrganizer.vue"),
         meta: {
           requiresOrganizer: true,
-          title: "Dashboard Organizer",
+          title: "Dashboard",
         },
       },
       {
@@ -57,7 +57,7 @@ const routes = [
         component: () => import("@/views/DashboardManager.vue"),
         meta: {
           requiresManager: true,
-          title: "Dashboard Manager",
+          title: "Dashboard",
         },
       },
       {
@@ -110,7 +110,7 @@ const routes = [
         component: () => import("@/views/MatchUpdates.vue"),
         meta: {
           requiresAuth: true,
-          title: "Invite Team",
+          title: "Match Updates",
         },
       },
       {
@@ -146,7 +146,7 @@ const routes = [
         component: () => import("@/views/TournamentJoin.vue"),
         meta: {
           requiresAuth: true,
-          title: "Tournament Join",
+          title: "Join Tournament",
         },
       },
       {
@@ -172,7 +172,7 @@ const routes = [
         component: () => import("@/views/TeamRequests.vue"),
         meta: {
           requiresAuth: true,
-          title: "Team Squad",
+          title: "Team Requests",
         },
       },
       {

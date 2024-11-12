@@ -19,34 +19,6 @@ onMounted(() => {
           sub-title="Super Admin"
           title="Dashboard"
         >
-          <v-row align="center">
-            <v-menu>
-              <template v-slot:activator="{ props }">
-                <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">
-                </v-btn>
-              </template>
-              <v-list density="compact">
-                <v-list-item
-                  density="compact"
-                  prepend-icon="mdi-lock"
-                  title="Credentials"
-                  @click="
-                    router.push({
-                      name: 'credential',
-                    })
-                  "
-                ></v-list-item>
-                <v-list-item
-                  :to="{
-                    name: 'team-add',
-                  }"
-                  density="compact"
-                  prepend-icon="mdi-plus"
-                  title="Add Team"
-                ></v-list-item>
-              </v-list>
-            </v-menu>
-          </v-row>
         </page-title>
       </v-col>
     </v-row>

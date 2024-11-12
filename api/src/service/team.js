@@ -149,10 +149,16 @@ exports.getTeamsWEmailOptionalById = async ({ teamIds }) => {
 };
 
 exports.getTeamWSquad = async ({ teamId }) => {
-  const teamMembers = await sql`SELECT *
-                                  FROM team_members
-                                  WHERE team_id = ${teamId}`;
-  return teamMembers;
+  const [team] = await sql`
+        SELECT *
+        FROM teams
+        WHERE id = ${teamId}`;
+  const members = await sql`
+        SELECT *
+        FROM team_members
+        WHERE team_id = ${teamId}`;
+  console.log(5, team, members)
+  return { team, members };
 };
 
 exports.getEventByEventIdnClubId = async ({ clubId, eventId }) => {

@@ -3,13 +3,14 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import RemoveEntity from "@/components/ConfirmationDialog.vue";
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
-import { getClientPublicImgUrl } from "@/others/util";
+import {getApiPublicImgUrl, getClientPublicImgUrl} from "@/others/util";
 
 const route = useRoute();
 const store = useStore();
 
+const team = computed(() => store.state.team.team);
 const members = computed(() => store.state.team.members);
 
 const dialog = ref(false);
@@ -71,15 +72,15 @@ const removeMember = async (id) => {
 };
 
 const fetchData = () => {
-  store.dispatch("team/setTeamWSquad", { teamId: route.params.teamId });
+  return store.dispatch("team/setTeamWSquad", { teamId: route.params.teamId });
 };
 const currentUser = store.getters["user/getCurrentUser"];
 const isAuthorized = computed(
   () =>
     currentUser.role === "team_manager" &&
-    Number(currentUser.teamId) === Number(route.params.teamId),
+    Number(currentUser.teamId) === Number(team.value.id),
 );
-onMounted(() => {
+onMounted(async () => {
   fetchData();
 });
 </script>
@@ -91,10 +92,11 @@ onMounted(() => {
         <page-title
           justify="space-between"
           show-back
-          sub-title="Team"
+          :prepend-avatar="getApiPublicImgUrl(team.logo, 'team-logo')"
+          :sub-title="team.name"
           title="Squad"
         >
-          <v-row align="center" v-if="isAuthorized">
+          <v-row v-if="isAuthorized" align="center">
             <v-menu>
               <template v-slot:activator="{ props }">
                 <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">
@@ -160,13 +162,16 @@ onMounted(() => {
 
                     <v-divider></v-divider>
 
-                    <remove-entity
-                      custom-class="text-error"
-                      label="Delete"
-                      prepend-icon="mdi-delete"
-                      variant="list"
-                      @remove-entity="removeMember(item.id)"
-                    ></remove-entity>
+                    <confirmation-dialog @confirm="removeMember(item.id)">
+                      <template #activator="{ onClick }">
+                        <v-list-item
+                          class="text-error"
+                          prepend-icon="mdi-delete"
+                          title="Delete"
+                          @click.stop="onClick"
+                        ></v-list-item>
+                      </template>
+                    </confirmation-dialog>
                   </v-list>
                 </v-menu>
               </template>

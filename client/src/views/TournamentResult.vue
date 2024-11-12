@@ -160,9 +160,9 @@ onMounted(async () => {
     <v-row>
       <v-col>
         <page-title
+          :back-route="{ name: 'tournament-list' }"
           :sub-title="tournament.name"
           justify="space-between"
-          show-back
           title="Result"
         >
           <v-row align="center">

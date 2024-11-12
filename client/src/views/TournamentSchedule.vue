@@ -333,9 +333,9 @@ watch(
     <v-row>
       <v-col>
         <page-title
+          :back-route="{ name: 'tournament-list' }"
           :sub-title="tournament.name"
           justify="space-between"
-          show-back
           title="Schedule"
         >
           <v-row align="center">
@@ -346,10 +346,10 @@ watch(
               </template>
               <v-list density="compact">
                 <v-list-item
-                  @click="openBroadcastUpdateDialog"
                   density="compact"
                   prepend-icon="mdi-share"
                   title="Broadcast Update"
+                  @click="openBroadcastUpdateDialog"
                 ></v-list-item>
               </v-list>
             </v-menu>
@@ -675,24 +675,24 @@ watch(
         >
           <v-checkbox
             v-model="isAllParticipantsSelected"
-            label="Select All Participants"
             hide-details="auto"
+            label="Select All Participants"
           ></v-checkbox>
           <v-select
             v-model="selectedParticipants"
             :items="participants"
+            hide-details="auto"
+            item-title="name"
+            item-value="id"
             label="Select Teams"
             multiple
-            item-value="id"
-            item-title="name"
-            hide-details="auto"
           >
             <template v-slot:selection="data">
               <v-chip
                 :key="JSON.stringify(data.item)"
-                v-bind="data.attrs"
                 :disabled="data.disabled"
                 :model-value="data.selected"
+                v-bind="data.attrs"
                 @click:close="data.parent.selectItem(data.item)"
               >
                 <template v-slot:prepend>
@@ -707,11 +707,11 @@ watch(
           <v-select
             v-model="selectedBroadcastType"
             :items="broadcastTypes"
-            label="Select Broadcast Type"
-            hide-details="auto"
-            item-value="id"
-            item-title="name"
             class="mt-2 mt-md-4"
+            hide-details="auto"
+            item-title="name"
+            item-value="id"
+            label="Select Broadcast Type"
           ></v-select>
           <v-card-actions>
             <v-spacer></v-spacer>

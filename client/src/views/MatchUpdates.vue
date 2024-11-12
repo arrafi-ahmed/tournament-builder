@@ -3,9 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import RemoveEntity from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
-import { formatDate, toLocalISOString } from "@/others/util";
 import MatchCard from "@/components/MatchCard.vue";
 // import { getTournamentLogoUrl } from "@/others/util";
 
@@ -29,7 +27,7 @@ onMounted(async () => {
       <v-col>
         <page-title
           justify="space-between"
-          show-back
+          :back-route="{ name: 'dashboard' }"
           sub-title="Tournament"
           title="Matches"
         />
@@ -49,9 +47,9 @@ onMounted(async () => {
               <match-card
                 v-for="(match, index) in matches.futureMatches"
                 :match="match"
+                :showDate="true"
                 :showField="true"
                 :showTime="true"
-                :showDate="true"
                 :showTournament="true"
                 container-class="ma-4 max-600"
               ></match-card>
@@ -64,9 +62,9 @@ onMounted(async () => {
               <match-card
                 v-for="(match, index) in matches.pastMatches"
                 :match="match"
+                :showDate="true"
                 :showField="true"
                 :showTime="true"
-                :showDate="true"
                 :showTournament="true"
                 container-class="ma-4 max-600"
               ></match-card>

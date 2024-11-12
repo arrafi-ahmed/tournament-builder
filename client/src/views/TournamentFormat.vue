@@ -7,7 +7,7 @@ import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 import { useDisplay } from "vuetify";
 import { calcMatchType, getRoundTitle } from "@/others/util";
 import { VueDraggableNext } from "vue-draggable-next";
-import RemoveEntity from "@/components/ConfirmationDialog.vue";
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 
 const route = useRoute();
 const store = useStore();
@@ -532,30 +532,11 @@ onMounted(async () => {
     <v-row>
       <v-col>
         <page-title
+          :back-route="{ name: 'tournament-list' }"
           :sub-title="tournament.name"
           justify="space-between"
-          show-back
           title="Format"
         >
-          <v-row align="center">
-            <v-menu>
-              <template v-slot:activator="{ props }">
-                <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">
-                </v-btn>
-              </template>
-              <v-list density="compact">
-                <v-list-item
-                  :to="{
-                    name: 'tournament-invite',
-                    params: { tournamentId: tournament.id },
-                  }"
-                  density="compact"
-                  prepend-icon="mdi-plus"
-                  title="Invite Team"
-                ></v-list-item>
-              </v-list>
-            </v-menu>
-          </v-row>
         </page-title>
       </v-col>
     </v-row>
@@ -584,7 +565,7 @@ onMounted(async () => {
                   variant="plain"
                   @blur="updatePhase({ phase })"
                 ></v-text-field>
-                <ConfirmationDialog @confirm="removePhase(phase)">
+                <confirmation-dialog @confirm="removePhase(phase)">
                   <template #activator="{ onClick }">
                     <v-btn
                       class="rounded"
@@ -596,7 +577,7 @@ onMounted(async () => {
                       @click="onClick"
                     ></v-btn>
                   </template>
-                </ConfirmationDialog>
+                </confirmation-dialog>
               </div>
 
               <template v-if="phase.items.length > 0">
@@ -634,7 +615,7 @@ onMounted(async () => {
                                     tile
                                     variant="tonal"
                                   ></v-btn>
-                                  <ConfirmationDialog
+                                  <confirmation-dialog
                                     @confirm="removeGroup(phaseItem)"
                                   >
                                     <template #activator="{ onClick }">
@@ -648,7 +629,7 @@ onMounted(async () => {
                                         @click="onClick"
                                       ></v-btn>
                                     </template>
-                                  </ConfirmationDialog>
+                                  </confirmation-dialog>
                                 </div>
                               </v-card-title>
                               <v-card-text>
@@ -718,7 +699,7 @@ onMounted(async () => {
                                 tile
                                 variant="tonal"
                               ></v-btn>
-                              <ConfirmationDialog
+                              <confirmation-dialog
                                 @confirm="removeBracket(phaseItem)"
                               >
                                 <template #activator="{ onClick }">
@@ -732,7 +713,7 @@ onMounted(async () => {
                                     @click="onClick"
                                   ></v-btn>
                                 </template>
-                              </ConfirmationDialog>
+                              </confirmation-dialog>
                             </div>
                           </v-card-title>
                           <v-row class="pb-3" no-gutters>
@@ -867,7 +848,7 @@ onMounted(async () => {
                                     tile
                                     variant="tonal"
                                   ></v-btn>
-                                  <ConfirmationDialog
+                                  <confirmation-dialog
                                     @confirm="removeMatch(phaseItem)"
                                   >
                                     <template #activator="{ onClick }">
@@ -881,7 +862,7 @@ onMounted(async () => {
                                         @click="onClick"
                                       ></v-btn>
                                     </template>
-                                  </ConfirmationDialog>
+                                  </confirmation-dialog>
                                 </div>
                               </v-card-title>
                               <v-card-text>

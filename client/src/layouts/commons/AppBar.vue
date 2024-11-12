@@ -2,7 +2,7 @@
 import Logo from "@/components/Logo.vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
-import { computed, ref } from "vue";
+import { computed, onMounted, ref, watch } from "vue";
 import { getToLink } from "@/others/util";
 import { useDisplay } from "vuetify";
 import UserAvatar from "@/components/UserAvatar.vue";
@@ -10,13 +10,60 @@ import UserAvatar from "@/components/UserAvatar.vue";
 const store = useStore();
 const { mobile } = useDisplay();
 const router = useRouter();
+
 const signedin = computed(() => store.getters["user/signedin"]);
 const currentUser = computed(() => store.getters["user/getCurrentUser"]);
+const calcHome = computed(() => store.getters["user/calcHome"]);
+
+const isSudo = computed(() => store.getters["user/isSudo"]);
+const isOrganizer = computed(() => store.getters["user/isOrganizer"]);
+const isTeamManager = computed(() => store.getters["user/isTeamManager"]);
+
+const menuItemsSudo = [
+  {
+    title: "Credentials",
+    to: { name: "credential" },
+  },
+  {
+    title: "Create Team",
+    to: { name: "team-add" },
+  },
+];
+const menuItemsOrganizer = [
+  { title: "Tournaments", to: { name: "tournament-list" } },
+  {
+    title: "Create Tournament",
+    to: { name: "tournament-add" },
+  },
+  {
+    title: "Team Requests",
+    to: { name: "team-requests" },
+  },
+];
+const menuItemsTeamManager = [
+  { title: "Matches", to: { name: "match-updates" } },
+  {
+    title: "Team Squad",
+    to: { name: "team-squad" },
+  },
+  { title: "Join Tournament", to: { name: "tournament-join" } },
+  { title: "Edit Team", to: { name: "team-edit" } },
+];
+const menuItems = computed(() => {
+  let items = [{ title: "Home", to: calcHome.value }];
+  if (isSudo.value) {
+    items = items.concat(menuItemsSudo);
+  } else if (isOrganizer.value) {
+    items = items.concat(menuItemsOrganizer);
+  } else if (isTeamManager.value) {
+    items = items.concat(menuItemsTeamManager);
+  }
+  console.log(1, isOrganizer.value, items);
+  return items;
+});
 
 const drawer = ref(false);
 
-const calcHome = computed(() => store.getters["user/calcHome"]);
-const menuItems = computed(() => [{ title: "Home", to: calcHome.value }]);
 const getFirstName = computed(() => currentUser.value.name?.split(" ")[0]);
 const getGreetings = computed(() => {
   const hour = new Date().getHours();

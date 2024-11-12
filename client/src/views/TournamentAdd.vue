@@ -58,8 +58,8 @@ const handleAddTournament = async () => {
     <v-row>
       <v-col>
         <page-title
-          justify="space-between"
           show-back
+          justify="space-between"
           sub-title="Tournament"
           title="Add"
         >

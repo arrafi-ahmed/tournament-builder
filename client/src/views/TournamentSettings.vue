@@ -73,30 +73,11 @@ onMounted(async () => {
     <v-row>
       <v-col>
         <page-title
+          :back-route="{ name: 'tournament-list' }"
           :sub-title="tournament.name"
           justify="space-between"
-          show-back
           title="Settings"
         >
-          <v-row align="center">
-            <v-menu>
-              <template v-slot:activator="{ props }">
-                <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">
-                </v-btn>
-              </template>
-              <v-list density="compact">
-                <v-list-item
-                  :to="{
-                    name: 'tournament-invite',
-                    params: { tournamentId: tournament.id },
-                  }"
-                  density="compact"
-                  prepend-icon="mdi-plus"
-                  title="Invite Team"
-                ></v-list-item>
-              </v-list>
-            </v-menu>
-          </v-row>
         </page-title>
       </v-col>
     </v-row>

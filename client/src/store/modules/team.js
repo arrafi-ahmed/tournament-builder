@@ -7,7 +7,7 @@ export const state = {
   team: {},
   members: [],
   teamRequests: [],
-  matches:[], // used in team manager dashboard
+  matches: [], // used in team manager dashboard
 };
 
 export const mutations = {
@@ -70,9 +70,9 @@ export const mutations = {
   resetTeams(state) {
     state.teams = [];
   },
-  setMatches(state, payload){
+  setMatches(state, payload) {
     state.matches = payload;
-  }
+  },
 };
 
 export const actions = {
@@ -122,7 +122,8 @@ export const actions = {
       $axios
         .get("/api/team/getTeamWSquad", { params: { teamId: request?.teamId } })
         .then((response) => {
-          commit("setMembers", response.data?.payload);
+          commit("setTeam", response.data?.payload?.team);
+          commit("setMembers", response.data?.payload?.members);
           resolve(response);
         })
         .catch((err) => {

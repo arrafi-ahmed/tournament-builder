@@ -62,7 +62,7 @@ const handleEditTournament = async () => {
   });
 };
 const fetchData = async () => {
-  await store.dispatch("tournament/setTournamentWEmailOptionalById", {
+  return store.dispatch("tournament/setTournamentWEmailOptionalById", {
     tournamentId: route.params.tournamentId,
   });
 };
@@ -73,6 +73,8 @@ onMounted(async () => {
     ...tournament.value,
     organizerEmail: tournament.value?.email,
   });
+  console.log(22, newTournament)
+  console.log(23, tournament.value)
 });
 </script>
 
@@ -81,10 +83,9 @@ onMounted(async () => {
     <v-row>
       <v-col>
         <page-title
+          :back-route="{ name: 'tournament-list' }"
           :sub-title="tournament.name"
           justify="space-between"
-          show-back
-          sub-title="Tournament"
           title="Edit"
         >
         </page-title>
@@ -167,7 +168,7 @@ onMounted(async () => {
           ></v-textarea>
 
           <v-text-field
-            v-if="isSudo"
+            :disabled="!isSudo"
             v-model="newTournament.organizerEmail"
             :rules="[
               (v) => !!v || 'Email is required!',

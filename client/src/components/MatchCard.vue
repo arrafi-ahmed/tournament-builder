@@ -23,11 +23,11 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
       <span>
         <v-chip
           v-if="showDate"
+          class="me-1"
           color="primary"
           label
           size="small"
           variant="tonal"
-          class="me-1"
           >{{ getDateOnly(match.startTime) }}
         </v-chip>
         <v-chip
@@ -46,15 +46,21 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
       <v-chip
         v-if="match.hostName"
         :color="calcMatchType(match.type).color"
+        class="me-1"
         size="small"
         variant="tonal"
-        class="me-1"
         >{{ match.hostName }}
       </v-chip>
     </div>
     <v-card-subtitle>
-      <div class="mb-1" v-if="showTournament"><v-icon icon="mdi-trophy" class="mr-1"></v-icon>{{ match.tournamentName }}</div>
-      <div v-if="showField"><v-icon icon="mdi-soccer-field" class="mr-1"></v-icon>{{ match.fieldName }}</div>
+      <div v-if="showTournament" class="mb-1">
+        <v-icon class="mr-1" icon="mdi-trophy"></v-icon>
+        {{ match.tournamentName }}
+      </div>
+      <div v-if="showField">
+        <v-icon class="mr-1" icon="mdi-soccer-field"></v-icon>
+        {{ match.fieldName }}
+      </div>
     </v-card-subtitle>
     <v-card-text>
       <v-table density="compact">

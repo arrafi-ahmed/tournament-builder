@@ -3,7 +3,7 @@ import { computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import RemoveEntity from "@/components/ConfirmationDialog.vue";
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
 import { getTeamLogoUrl } from "@/others/util";
 
@@ -62,9 +62,9 @@ onMounted(async () => {
     <v-row>
       <v-col>
         <page-title
+          :back-route="{ name: 'tournament-list' }"
           :sub-title="tournament.name"
           justify="space-between"
-          show-back
           title="Participants"
         >
           <v-row align="center">
@@ -97,15 +97,18 @@ onMounted(async () => {
           rounded
         >
           <template v-for="(item, index) in participants">
-            <v-list-item v-if="item" :key="index" :title="item?.name" link>
-              <!--                    @click="-->
-              <!--                      router.push({-->
-              <!--                        name: 'team-single',-->
-              <!--                        params: {-->
-              <!--                          teamId: item.id,-->
-              <!--                        },-->
-              <!--                      })-->
-              <!--                    "-->
+            <v-list-item
+              v-if="item"
+              :key="index"
+              :title="item?.name"
+              link
+              @click="
+                router.push({
+                  name: 'team-squad',
+                  params: { teamId: item.id },
+                })
+              "
+            >
               <template v-slot:prepend>
                 <v-avatar
                   :image="getTeamLogoUrl(item.logo)"
@@ -152,15 +155,20 @@ onMounted(async () => {
 
                     <v-divider></v-divider>
 
-                    <remove-entity
-                      custom-class="text-error"
-                      label="Delete"
-                      prepend-icon="mdi-delete"
-                      variant="list"
-                      @remove-entity="
+                    <confirmation-dialog
+                      @confirm="
                         deleteParticipant(item.ttId, item.tmId, item.tuId)
                       "
-                    ></remove-entity>
+                    >
+                      <template #activator="{ onClick }">
+                        <v-list-item
+                          class="text-error"
+                          prepend-icon="mdi-delete"
+                          title="Delete"
+                          @click.stop="onClick"
+                        ></v-list-item>
+                      </template>
+                    </confirmation-dialog>
                   </v-list>
                 </v-menu>
               </template>

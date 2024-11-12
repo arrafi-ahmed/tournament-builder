@@ -79,11 +79,11 @@ onMounted(async () => {
           <v-tabs-window-item value="participants">
             <v-list
               v-if="participants.length > 0"
+              class="my-2"
               density="compact"
               elevation="1"
               lines="two"
               rounded
-              class="my-2"
             >
               <template v-for="(item, index) in participants">
                 <v-list-item

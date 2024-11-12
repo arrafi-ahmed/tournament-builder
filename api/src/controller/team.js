@@ -95,11 +95,9 @@ router.get("/getTeamRequestsByTournamentId", auth, (req, res, next) => {
 });
 
 router.get("/getTeamWSquad", auth, (req, res, next) => {
-  const teamId = ifSudo(req.currentUser.role)
-    ? req.query.teamId
-    : ifManager(req.currentUser.role)
-      ? req.currentUser.teamId
-      : null;
+  const teamId = ifManager(req.currentUser.role)
+    ? req.currentUser.teamId
+    : req.query.teamId;
 
   teamService
     .getTeamWSquad({ teamId })

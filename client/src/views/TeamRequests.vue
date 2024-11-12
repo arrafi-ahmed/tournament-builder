@@ -3,7 +3,7 @@ import { computed, onMounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
-import RemoveEntity from "@/components/ConfirmationDialog.vue";
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
 import { formatDate, getRequestBg, getTeamLogoUrl } from "@/others/util";
 
@@ -63,28 +63,10 @@ watch(
       <v-col>
         <page-title
           justify="space-between"
-          show-back
+          :back-route="{ name: 'dashboard' }"
           sub-title="Tournament Join"
           title="Team Requests"
         >
-          <v-row align="center">
-            <v-menu :close-on-content-click="false">
-              <template v-slot:activator="{ props }">
-                <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">
-                </v-btn>
-              </template>
-              <v-list density="compact">
-                <v-list-item
-                  :to="{
-                    name: 'team-add',
-                  }"
-                  density="compact"
-                  prepend-icon="mdi-plus"
-                  title="Add Team"
-                ></v-list-item>
-              </v-list>
-            </v-menu>
-          </v-row>
         </page-title>
       </v-col>
     </v-row>
@@ -153,13 +135,17 @@ watch(
 
                     <v-divider></v-divider>
 
-                    <remove-entity
-                      custom-class="text-error"
-                      label="Reject"
-                      prepend-icon="mdi-delete"
-                      variant="list"
-                      @remove-entity="rejectTeamRequest(item)"
-                    ></remove-entity>
+                    <confirmation-dialog @confirm="rejectTeamRequest(item)">
+                      <template #activator="{ onClick }">
+                        <v-list-item
+                          class="text-error"
+                          popup-title="Reject"
+                          prepend-icon="mdi-delete"
+                          title="Reject"
+                          @click.stop="onClick"
+                        ></v-list-item>
+                      </template>
+                    </confirmation-dialog>
                   </v-list>
                 </v-menu>
               </template>

@@ -4,7 +4,7 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import { toast } from "vue-sonner";
-import RemoveEntity from "@/components/ConfirmationDialog.vue";
+import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 
 const store = useStore();
 const route = useRoute();
@@ -82,7 +82,7 @@ onMounted(async () => {
       <v-col>
         <page-title
           justify="space-between"
-          show-back
+          :back-route="{ name: 'dashboard' }"
           sub-title="Super Admin"
           title="Credentials"
         >
@@ -143,14 +143,16 @@ onMounted(async () => {
                           @click="openEditDialog(item, 'organizer')"
                         ></v-list-item>
                         <v-divider></v-divider>
-                        <remove-entity
-                          custom-class="text-error"
-                          label="Delete"
-                          prepend-icon="mdi-delete"
-                          text="Delete"
-                          variant="list"
-                          @remove-entity="removeUser(item.id)"
-                        ></remove-entity>
+                        <confirmation-dialog @confirm="removeUser(item.id)">
+                          <template #activator="{ onClick }">
+                            <v-list-item
+                              class="text-error"
+                              prepend-icon="mdi-delete"
+                              title="Delete"
+                              @click.stop="onClick"
+                            ></v-list-item>
+                          </template>
+                        </confirmation-dialog>
                       </v-list>
                     </v-menu>
                   </td>
@@ -215,14 +217,16 @@ onMounted(async () => {
                           @click="openEditDialog(item, 'team_manager')"
                         ></v-list-item>
                         <v-divider></v-divider>
-                        <remove-entity
-                          custom-class="text-error"
-                          label="Delete"
-                          prepend-icon="mdi-delete"
-                          text="Delete"
-                          variant="list"
-                          @remove-entity="removeUser(item.id)"
-                        ></remove-entity>
+                        <confirmation-dialog @confirm="removeUser(item.id)">
+                          <template #activator="{ onClick }">
+                            <v-list-item
+                              class="text-error"
+                              prepend-icon="mdi-delete"
+                              title="Delete"
+                              @click.stop="onClick"
+                            ></v-list-item>
+                          </template>
+                        </confirmation-dialog>
                       </v-list>
                     </v-menu>
                   </td>
