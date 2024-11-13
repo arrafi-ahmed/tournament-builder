@@ -1250,8 +1250,6 @@ const populateSelectedNTeamOptions = ({
         : presentTeamPosition === 2
           ? futureTeamReference?.away
           : {};
-    // console.log(40, presentTeamPosition, match);
-    console.log(41, match);
 
     if (!reference?.id) {
       return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
@@ -1261,7 +1259,6 @@ const populateSelectedNTeamOptions = ({
     const { type, id: refId, position } = reference;
 
     if (type === "group") {
-      console.log(42, refId, groups);
       const foundGroup = groups[refId];
       const foundTeam = foundGroup?.teams.find(
         (t) => t.teamRanking === position,
@@ -1275,7 +1272,6 @@ const populateSelectedNTeamOptions = ({
         (teamOptions[`g-${foundGroup.id}-${position}`] ??= {}).used = true;
         val = teamOptions[`g-${foundGroup.id}-${position}`];
       } else {
-        console.log(43, foundGroup);
         // if ref group deleted & not found, return teamOptions["empty"]
         return (selectedTeamOptions[`m-${match.id}-${presentTeamPosition}`] =
           teamOptions["empty"]);

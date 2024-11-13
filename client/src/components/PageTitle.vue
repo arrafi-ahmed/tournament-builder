@@ -52,9 +52,9 @@ const handleBackClick = () => {
         <v-avatar
           v-if="prependAvatar"
           :image="prependAvatar"
+          class="mr-2"
           rounded
           size="60"
-          class="mr-2"
         ></v-avatar>
         <div>
           <div v-if="subTitle" class="text-overline">{{ subTitle }}</div>

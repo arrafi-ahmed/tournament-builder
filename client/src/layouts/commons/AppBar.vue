@@ -2,7 +2,7 @@
 import Logo from "@/components/Logo.vue";
 import { useRouter } from "vue-router";
 import { useStore } from "vuex";
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import { getToLink } from "@/others/util";
 import { useDisplay } from "vuetify";
 import UserAvatar from "@/components/UserAvatar.vue";
@@ -58,7 +58,6 @@ const menuItems = computed(() => {
   } else if (isTeamManager.value) {
     items = items.concat(menuItemsTeamManager);
   }
-  console.log(1, isOrganizer.value, items);
   return items;
 });
 

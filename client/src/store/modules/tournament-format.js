@@ -149,12 +149,10 @@ export const mutations = {
     const foundPhaseIndex = state.tournamentFormat.findIndex(
       (phase) => phase.id === payload.id,
     );
-    // console.log(2, state.selectedTeamOptions);
 
     const keys = [];
     //populate keys
     state.tournamentFormat[foundPhaseIndex].items.forEach((item) => {
-      console.log(2, item.type);
       if (item.type === "bracket") {
         item.rounds.forEach((round) => {
           round.matches.forEach((match) => {

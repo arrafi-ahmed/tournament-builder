@@ -62,8 +62,8 @@ watch(
     <v-row>
       <v-col>
         <page-title
-          justify="space-between"
           :back-route="{ name: 'dashboard' }"
+          justify="space-between"
           sub-title="Tournament Join"
           title="Team Requests"
         >
@@ -157,7 +157,10 @@ watch(
                 <div>Requested at: {{ formatDate(item.updatedAt) }}</div>
               </template>
             </v-list-item>
-            <v-divider v-if="index !== teams.length - 1"></v-divider>
+            <v-divider
+              v-if="index !== teams.length - 1"
+              class="my-2"
+            ></v-divider>
           </template>
         </v-list>
         <no-items v-else :cols="12"></no-items>

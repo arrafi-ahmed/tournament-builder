@@ -43,8 +43,8 @@ onMounted(() => {
     <v-row>
       <v-col>
         <page-title
-          justify="space-between"
           :back-route="{ name: 'dashboard' }"
+          justify="space-between"
           sub-title="Tournament"
           title="List"
         >

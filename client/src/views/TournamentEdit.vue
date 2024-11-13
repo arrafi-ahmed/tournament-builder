@@ -73,8 +73,6 @@ onMounted(async () => {
     ...tournament.value,
     organizerEmail: tournament.value?.email,
   });
-  console.log(22, newTournament)
-  console.log(23, tournament.value)
 });
 </script>
 
@@ -168,8 +166,8 @@ onMounted(async () => {
           ></v-textarea>
 
           <v-text-field
-            :disabled="!isSudo"
             v-model="newTournament.organizerEmail"
+            :disabled="!isSudo"
             :rules="[
               (v) => !!v || 'Email is required!',
               (v) => isValidEmail(v) || 'Invalid Email',

@@ -157,7 +157,6 @@ exports.getTeamWSquad = async ({ teamId }) => {
         SELECT *
         FROM team_members
         WHERE team_id = ${teamId}`;
-  console.log(5, team, members)
   return { team, members };
 };
 

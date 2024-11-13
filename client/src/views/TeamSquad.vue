@@ -5,7 +5,7 @@ import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
-import {getApiPublicImgUrl, getClientPublicImgUrl} from "@/others/util";
+import { getApiPublicImgUrl, getClientPublicImgUrl } from "@/others/util";
 
 const route = useRoute();
 const store = useStore();
@@ -90,10 +90,10 @@ onMounted(async () => {
     <v-row>
       <v-col>
         <page-title
-          justify="space-between"
-          show-back
           :prepend-avatar="getApiPublicImgUrl(team.logo, 'team-logo')"
           :sub-title="team.name"
+          justify="space-between"
+          show-back
           title="Squad"
         >
           <v-row v-if="isAuthorized" align="center">

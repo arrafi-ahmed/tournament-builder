@@ -55,7 +55,11 @@ router.post("/deleteMatch", (req, res, next) => {
 router.post("/broadcastUpdate", (req, res, next) => {
   tournamentScheduleService
     .broadcastUpdate({ payload: req.body })
-    .then((results) => res.status(200).json(new ApiResponse("Update has been broadcast!", results)))
+    .then((results) =>
+      res
+        .status(200)
+        .json(new ApiResponse("Update has been broadcast!", results)),
+    )
     .catch((err) => next(err));
 });
 

@@ -2,10 +2,11 @@
 
 echo "----- Deployment script started ---"
 # Define variables for directories and repositories
-REPO_NAME="sample-repo"
-PROJECT_ROOT="/usr/local/lsws/sample-project"
+REPO_NAME="tournament-builder"
+VHOST_NAME="Example"
 
 # Auto generated
+PROJECT_ROOT="/usr/local/lsws/$VHOST_NAME"
 REPO_URL="https://github.com/arrafi-ahmed/$REPO_NAME.git"
 REPO_DIR="$PROJECT_ROOT/$REPO_NAME"
 HTML_DIR="$PROJECT_ROOT/html"

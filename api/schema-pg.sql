@@ -56,7 +56,7 @@ CREATE TABLE tournament_phases
 (
     id            SERIAL PRIMARY KEY,
     name          VARCHAR(255),
-    order         INT,
+    "order"       INT,
     updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
 );
@@ -65,7 +65,7 @@ CREATE TABLE tournament_brackets
 (
     id                  SERIAL PRIMARY KEY,
     name                VARCHAR(255),
-    order               INT,
+    "order"             INT,
     teams_count         INT,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tournament_phase_id INT REFERENCES tournament_phases (id) ON DELETE CASCADE
@@ -76,7 +76,7 @@ CREATE TABLE tournament_groups
     id                  SERIAL PRIMARY KEY,
     name                VARCHAR(255),
     ranking_published   BOOLEAN, --added
-    order               INT,
+    "order"             INT,
     teams_per_group     INT,
     double_round_robin  BOOLEAN,
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -96,7 +96,7 @@ CREATE TABLE groups_teams
     team_ranking        INT,
     tournament_group_id INT REFERENCES tournament_groups (id) ON DELETE CASCADE,
     team_id             INT REFERENCES teams (id),
-    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 --added
@@ -113,6 +113,24 @@ CREATE TABLE groups_teams_stats
     goal_difference INT,
     groups_teams_id INT REFERENCES groups_teams (id) ON DELETE CASCADE,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE match_days
+(
+    id            SERIAL PRIMARY KEY,
+    match_date    DATE not null,
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
+);
+
+CREATE TABLE fields
+(
+    id            SERIAL PRIMARY KEY,
+    name          varchar(255) not null,
+    start_time    time         not null,
+    field_order   int, -- added
+    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
 );
 
 -- #host_id:
@@ -135,8 +153,8 @@ CREATE TABLE matches
 (
     id                    SERIAL PRIMARY KEY,
     name                  VARCHAR(255),
-    order                 INT,
-    type                  VARCHAR(50) CHECK (match_type IN ('group', 'bracket', 'single_match')) NOT NULL,
+    "order"               INT,
+    type                  VARCHAR(50) CHECK (type IN ('group', 'bracket', 'single_match')) NOT NULL,
     round_type            INT,
     start_time            TIMESTAMP,
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -147,9 +165,9 @@ CREATE TABLE matches
     bracket_id            INT REFERENCES tournament_brackets (id) ON DELETE CASCADE, -- used in brackets
     future_team_reference JSONB,
     group_team_reference  JSONB,
-    match_day_id          INT                                                                    REFERENCES match_days (id) ON DELETE SET NULL,
-    field_id              INT                                                                    REFERENCES fields (id) ON DELETE SET NULL,
-    tournament_id         INT REFERENCES tournaments (id),
+    match_day_id          INT                                                              REFERENCES match_days (id) ON DELETE SET NULL,
+    field_id              INT                                                              REFERENCES fields (id) ON DELETE SET NULL,
+    tournament_id         INT REFERENCES tournaments (id)
 );
 
 CREATE TABLE match_results
@@ -194,24 +212,6 @@ CREATE TABLE subscription_plan
     title   varchar(255) NOT NULL,
     tagline varchar(255),
     price   decimal(10, 2)
-);
-
-CREATE TABLE match_days
-(
-    id            SERIAL PRIMARY KEY,
-    match_date    DATE not null,
-    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
-);
-
-CREATE TABLE fields
-(
-    id            SERIAL PRIMARY KEY,
-    name          varchar(255) not null,
-    start_time    time         not null,
-    field_order   int, -- added
-    updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
 );
 
 ALTER TABLE teams_tournaments

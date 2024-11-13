@@ -69,9 +69,9 @@ onMounted(() => {
     <v-row>
       <v-col>
         <page-title
+          :back-route="{ name: 'dashboard' }"
           :title="generateTitle"
           justify="space-between"
-          :back-route="{ name: 'dashboard' }"
           sub-title="Tournament Join"
         >
           <v-row align="center">
@@ -120,7 +120,6 @@ onMounted(() => {
               :key="index"
               :class="getRequestBg(item)"
               :title="item?.name"
-              link
             >
               <template v-slot:append>
                 <v-menu>
@@ -185,7 +184,10 @@ onMounted(() => {
                 </div>
               </template>
             </v-list-item>
-            <v-divider v-if="index !== tournaments.length - 1"></v-divider>
+            <v-divider
+              v-if="index !== tournaments.length - 1"
+              class="my-2"
+            ></v-divider>
           </template>
         </v-list>
         <no-items v-else :cols="12" class="mt-2 mt-md-4"></no-items>
