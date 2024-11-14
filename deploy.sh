@@ -63,8 +63,13 @@ find . -mindepth 1 -maxdepth 1 ! -name 'public' -exec rm -rf {} + && \
 echo "----- Project Node dir cleaned..."
 
 # Sync API files to the node directory (excluding 'public' folder)
-rsync -av --progress --exclude public "$REPO_DIR/api/" "$HTML_DIR/node" && \
-echo "----- Project Node synced..."
+if [ -d "$HTML_DIR/node/public" ]; then
+  rsync -av --progress --exclude public "$REPO_DIR/api/" "$HTML_DIR/node" && \
+  echo "----- Project Node synced (with exclusion)..."
+else
+  rsync -av --progress "$REPO_DIR/api/" "$HTML_DIR/node" && \
+  echo "----- Project Node synced (no exclusion)..."
+fi
 
 # Navigate to the node directory and setup the node environment
 cd "$HTML_DIR/node" && \

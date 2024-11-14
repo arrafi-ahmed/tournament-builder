@@ -13,17 +13,20 @@ watch(route, (to) => {
 });
 </script>
 <template>
-  <progress-loader />
-  <Toaster
-    :expand="true"
-    class="custom-toast"
-    closeButton
-    position="bottom-left"
-    richColors
-    theme="dark"
-  />
-
-  <router-view />
+  <v-app>
+    <v-main>
+      <progress-loader />
+      <Toaster
+        :expand="true"
+        class="custom-toast"
+        closeButton
+        position="bottom-left"
+        richColors
+        theme="dark"
+      />
+      <router-view />
+    </v-main>
+  </v-app>
 </template>
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap");
