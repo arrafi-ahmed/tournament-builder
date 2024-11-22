@@ -85,7 +85,7 @@ export const getClientPublicImgUrl = (imageName) =>
 
 export const getApiPublicImgUrl = (imageName, type) =>
   isProd
-    ? `${apiBaseUrl}/api/public/${type}/${imageName}`
+    ? `${apiBaseUrl}/api/${type}/${imageName}`
     : `${apiBaseUrl}/${type}/${imageName}`;
 
 export const getUserImageUrl = (imageName) => {
@@ -96,7 +96,7 @@ export const getUserImageUrl = (imageName) => {
 
 export const getTeamLogoUrl = (imageName) => {
   return imageName === "null" || !imageName
-    ? getClientPublicImgUrl("default-event.jpg")
+    ? getClientPublicImgUrl("default-user.jpg")
     : getApiPublicImgUrl(imageName, "team-logo");
 };
 
