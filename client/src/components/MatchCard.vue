@@ -71,7 +71,7 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
             </td>
             <td class="w-25">
               <v-chip
-                v-if="match.homeTeamScore"
+                v-if="match.homeTeamScore !== null"
                 :color="
                   match.winnerId === match.homeTeamId ? 'success' : 'error'
                 "
@@ -89,7 +89,7 @@ const { match, showTime, showLgTitle, showField, variant, containerClass } =
             </td>
             <td class="ms-auto">
               <v-chip
-                v-if="match.awayTeamScore"
+                v-if="match.awayTeamScore !== null"
                 :color="
                   match.winnerId === match.awayTeamId ? 'success' : 'error'
                 "

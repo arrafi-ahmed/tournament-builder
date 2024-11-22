@@ -19,7 +19,7 @@ definePage({
 const router = useRouter();
 const route = useRoute();
 const store = useStore();
-const { mobile } = useDisplay();
+const { xs } = useDisplay();
 
 const subscription = computed(() => store.state.subscription.subscription);
 const subscriptionPlans = computed(
@@ -191,7 +191,7 @@ onMounted(async () => {
       <v-col cols="auto">
         <v-btn
           v-if="showContinue"
-          :density="mobile ? 'comfortable' : 'default'"
+          :density="xs ? 'comfortable' : 'default'"
           :to="{
             name: 'tournament-participants',
             params: { tournamentId: $route.params.tournamentId },

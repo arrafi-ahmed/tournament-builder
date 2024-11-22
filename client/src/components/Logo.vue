@@ -2,7 +2,7 @@
 import { useDisplay } from "vuetify";
 import { appInfo } from "@/others/util";
 
-const { mobile } = useDisplay();
+const { xs } = useDisplay();
 const { imgSrc, title, imgClass, containerClass, maxWidth, width } =
   defineProps([
     "imgSrc",
@@ -25,7 +25,7 @@ const { imgSrc, title, imgClass, containerClass, maxWidth, width } =
     ></v-img>
 
     <div v-if="title" class="pl-2">
-      <component :is="mobile ? 'h3' : 'h2'">
+      <component :is="xs ? 'h3' : 'h2'">
         <span class="text-primary">{{ appInfo.name }}</span>
       </component>
     </div>

@@ -235,6 +235,7 @@ exports.saveGroupTeam = async ({ payload: { updateGroupTeam } }) => {
 exports.saveMatch = async ({
   payload: { newMatch, tournamentId, onlyEntitySave = false },
 }) => {
+  console.log(99, newMatch)
   const [savedMatch] = await sql`
         insert into matches ${sql(newMatch)} on conflict (id)
         do

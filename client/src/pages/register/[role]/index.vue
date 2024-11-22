@@ -13,7 +13,7 @@ definePage({
   },
 });
 
-const { mobile } = useDisplay();
+const { xs } = useDisplay();
 const route = useRoute();
 const router = useRouter();
 const userInit = {
@@ -137,7 +137,7 @@ onMounted(() => {
 
               <!-- Register Button -->
               <v-btn
-                :density="mobile ? 'comfortable' : 'default'"
+                :density="xs ? 'comfortable' : 'default'"
                 block
                 color="primary"
                 @click="registerUser"

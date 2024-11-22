@@ -16,7 +16,7 @@ definePage({
   },
 });
 
-const { mobile } = useDisplay();
+const { xs } = useDisplay();
 const route = useRoute();
 const router = useRouter();
 const store = useStore();
@@ -219,7 +219,7 @@ onMounted(async () => {
           <div class="d-flex align-center mt-3 mt-md-4">
             <v-spacer></v-spacer>
             <v-btn
-              :density="mobile ? 'comfortable' : 'default'"
+              :density="xs ? 'comfortable' : 'default'"
               color="primary"
               type="submit"
               >Save

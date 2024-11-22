@@ -8,7 +8,7 @@ import { useDisplay } from "vuetify";
 import UserAvatar from "@/components/UserAvatar.vue";
 
 const store = useStore();
-const { mobile } = useDisplay();
+const { xs } = useDisplay();
 const router = useRouter();
 
 const signedin = computed(() => store.getters["user/signedin"]);
@@ -91,7 +91,7 @@ const getGreetings = computed(() => {
     <template v-slot:append>
       <v-btn
         v-if="signedin"
-        :size="mobile ? 'small' : 'default'"
+        :size="xs ? 'small' : 'default'"
         icon
         rounded
         tile

@@ -85,9 +85,17 @@ onMounted(async () => {
               <v-list density="compact">
                 <v-list-item
                   density="compact"
-                  prepend-icon="mdi-plus"
+                  prepend-icon="mdi-account-plus"
                   title="Invite Team"
                   @click="goInvitePage"
+                ></v-list-item>
+                <v-list-item
+                  :to="{
+                    name: 'team-add',
+                  }"
+                  density="compact"
+                  prepend-icon="mdi-plus"
+                  title="Create Team"
                 ></v-list-item>
               </v-list>
             </v-menu>

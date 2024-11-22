@@ -14,7 +14,7 @@ definePage({
   title: "Signin",
 });
 
-const { mobile } = useDisplay();
+const { xs } = useDisplay();
 const store = useStore();
 const router = useRouter();
 
@@ -107,10 +107,10 @@ const handleSubmitResetPassword = async () => {
                 variant="solo"
               ></v-text-field>
 
-              <div class="d-flex align-center mt-2 mt-md-5">
+              <div class="d-flex mt-2 mt-md-6">
                 <div>
                   <div
-                    class="clickable text-blue"
+                    class="clickable text-blue mt-2"
                     @click="
                       router.push({
                         name: 'register',
@@ -121,7 +121,7 @@ const handleSubmitResetPassword = async () => {
                     Join as Organizer
                   </div>
                   <div
-                    class="clickable text-blue"
+                    class="clickable text-blue mt-2"
                     @click="
                       router.push({
                         name: 'register',
@@ -131,17 +131,23 @@ const handleSubmitResetPassword = async () => {
                   >
                     Join as Manager
                   </div>
-                  <div class="clickable text-blue" @click="dialog = !dialog">
+                </div>
+                <v-spacer></v-spacer>
+                <div class="d-flex align-center justify-center flex-column">
+                  <v-btn
+                    :density="xs ? 'comfortable' : 'default'"
+                    color="primary"
+                    type="submit"
+                    block
+                    >Sign In
+                  </v-btn>
+                  <div
+                    class="clickable text-blue mt-2"
+                    @click="dialog = !dialog"
+                  >
                     Forgot Password?
                   </div>
                 </div>
-                <v-spacer></v-spacer>
-                <v-btn
-                  :density="mobile ? 'comfortable' : 'default'"
-                  color="primary"
-                  type="submit"
-                  >Sign In
-                </v-btn>
               </div>
             </v-form>
           </v-card-text>
@@ -178,7 +184,7 @@ const handleSubmitResetPassword = async () => {
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn
-              :density="mobile ? 'compact' : 'default'"
+              :density="xs ? 'compact' : 'default'"
               color="primary"
               type="submit"
               >Submit

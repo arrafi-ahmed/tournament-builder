@@ -14,7 +14,7 @@ api/public/user/*
 # env files
 .env
 .env.development
-.env.production
+**/.env.production
 
 # skip ignoring production env as its used in build on prod server
 !client/.env.production

@@ -9,7 +9,7 @@ const { inputItem, customClass, rounded, variant, density } = defineProps([
   "variant",
   "density",
 ]);
-const { mobile } = useDisplay();
+const { xs } = useDisplay();
 const emit = defineEmits(["updatePhone"]);
 
 // phone input
@@ -63,7 +63,7 @@ onMounted(() => {
         :item-title="formatInputItemTitle"
         :items="inputItem.options"
         :menu-props="
-          mobile
+          xs
             ? { maxHeight: '300px', width: '100%' }
             : { maxHeight: '300px', width: '300px' }
         "

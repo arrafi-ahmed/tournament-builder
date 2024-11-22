@@ -154,7 +154,7 @@ CREATE TABLE matches
     id                    SERIAL PRIMARY KEY,
     name                  VARCHAR(255),
     "order"               INT,
-    type                  VARCHAR(50) CHECK (type IN ('group', 'bracket', 'single_match')) NOT NULL,
+    type                  VARCHAR(50) CHECK (type IN ('group', 'bracket', 'single_match')),
     round_type            INT,
     start_time            TIMESTAMP,
     updated_at            TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -191,7 +191,7 @@ CREATE TABLE team_requests
     team_id        INT REFERENCES teams (id) ON DELETE CASCADE
 );
 
-CREATE TABLE subscriptions
+CREATE TABLE subscription
 (
     id                     SERIAL PRIMARY KEY,
     plan_id                int            NOT NULL,

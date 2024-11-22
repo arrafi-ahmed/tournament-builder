@@ -82,7 +82,7 @@ onMounted(async () => {
                   }"
                   density="compact"
                   prepend-icon="mdi-plus"
-                  title="Add Team"
+                  title="Create Team"
                 ></v-list-item>
               </v-list>
             </v-menu>
