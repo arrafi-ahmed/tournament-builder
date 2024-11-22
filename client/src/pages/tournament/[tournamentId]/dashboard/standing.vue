@@ -40,6 +40,9 @@ const fetchData = async () => {
 onMounted(async () => {
   fetchData();
 });
+const formattedName = computed(() =>
+  tournament.value.name.toLowerCase().replaceAll(" ", "-"),
+);
 </script>
 
 <template>
@@ -62,7 +65,10 @@ onMounted(async () => {
                 <v-list-item
                   :to="{
                     name: 'public-view',
-                    params: { tournamentId: tournament.id },
+                    params: {
+                      tournamentId: tournament.id,
+                      tournamentName: formattedName,
+                    },
                   }"
                   density="compact"
                   prepend-icon="mdi-eye"

@@ -51,9 +51,9 @@ onMounted(async () => {
   if (tournament.value?.name) {
     document.title = tournament.value?.name;
   }
-  const currentUrl = window.location.href;
-  const newUrl = `${currentUrl}/${tournament.value.name.toLowerCase().replaceAll(" ", "-")}`;
-  window.history.replaceState(null, "", newUrl);
+  // const currentUrl = window.location.href;
+  // const newUrl = `${currentUrl}/${tournament.value.name.toLowerCase().replaceAll(" ", "-")}`;
+  // window.history.replaceState(null, "", newUrl);
 
   const referred = getQueryParam("ref");
   const validTabs = ["schedule", "standing", "participants", "rules"];
