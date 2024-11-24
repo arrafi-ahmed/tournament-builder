@@ -12,7 +12,7 @@ const { xs } = useDisplay();
     rail
     permanent
     :expand-on-hover="!xs"
-    touchless
+    :touchless="true"
   >
     <v-list-item nav>
       <template v-slot:append>

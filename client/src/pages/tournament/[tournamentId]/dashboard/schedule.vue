@@ -514,7 +514,7 @@ watch(
             v-model="matchDrawer"
             location="right"
             permanent
-            touchless
+            :touchless="true"
           >
             <div class="d-flex space-between">
               <v-btn
