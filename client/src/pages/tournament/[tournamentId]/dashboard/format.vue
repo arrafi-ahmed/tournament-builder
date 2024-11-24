@@ -632,7 +632,6 @@ onMounted(async () => {
                             :cols="calcPhaseCol[phaseIndex].inner"
                             class="font-weight-thin font-size-smaller"
                           >
-                            i-{{ calcPhaseCol[phaseIndex].inner }}
                             <v-card density="compact">
                               <v-card-title
                                 :class="`${calcMatchType(phaseItem.type).bgColor} d-flex justify-space-around align-center`"
