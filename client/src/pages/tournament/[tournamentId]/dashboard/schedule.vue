@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import NoItems from "@/components/NoItems.vue";
-import { calcMatchType, getTimeOnly } from "@/others/util";
+import {addSwipeBlocking, calcMatchType, getTimeOnly, removeSwipeBlocking} from "@/others/util";
 import { useDisplay } from "vuetify";
 import TimePicker from "@/components/TimePicker.vue";
 import { toast } from "vue-sonner";
@@ -42,8 +42,7 @@ const matchesForSelectedDate = computed(() => {
     return foundMatchDay?.matches ?? [];
   });
 });
-console.log(1, xs.value);
-const matchDrawer = ref(xs.value ? false : true);
+const matchDrawer = ref(!xs.value);
 const selectedMatchDate = ref(null);
 const selectedField = ref(null);
 
@@ -332,28 +331,6 @@ watch(
   },
 );
 
-//disable horizontal scrolling
-const preventSwipeToOpen = (event) => {
-  if (event.type === "touchmove") {
-    const touch = event.touches[0];
-    const deltaX = Math.abs(touch.clientX - touch.screenX);
-    const deltaY = Math.abs(touch.clientY - touch.screenY);
-
-    if (deltaX > deltaY && deltaX > 30) {
-      event.preventDefault(); // Block horizontal swipes
-    }
-  }
-};
-
-const addSwipeBlocking = () => {
-  window.addEventListener("touchstart", preventSwipeToOpen, { passive: false });
-  window.addEventListener("touchmove", preventSwipeToOpen, { passive: false });
-};
-
-const removeSwipeBlocking = () => {
-  window.removeEventListener("touchstart", preventSwipeToOpen);
-  window.removeEventListener("touchmove", preventSwipeToOpen);
-};
 onMounted(async () => {
   await fetchData();
   selectedMatchDate.value = matchDays.value[0];
@@ -422,7 +399,7 @@ onUnmounted(() => {
       </v-col>
     </v-row>
 
-    <v-row class="scrollable-container" justify="center">
+    <v-row class="scrollable-container no-block-swipe" justify="center">
       <v-col :cols="12">
         <v-row>
           <v-col
@@ -538,11 +515,7 @@ onUnmounted(() => {
             </v-btn>
           </v-col>
 
-          <v-navigation-drawer
-            v-model="matchDrawer"
-            location="right"
-            permanent
-          >
+          <v-navigation-drawer v-model="matchDrawer" location="right" permanent>
             <div class="d-flex space-between">
               <v-btn
                 icon="mdi-chevron-right"

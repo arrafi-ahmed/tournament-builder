@@ -207,3 +207,48 @@ export const getCurrencySymbol = (currencyCode, type) => {
 
   return currencyMap[currencyCodeLower][type];
 };
+
+// disable-horizontal-scrolling start
+let touchStartX = 0;
+let touchStartY = 0;
+export const preventDrawerSwipe = (event) => {
+  if (typeof window === "undefined") return; // Prevent execution on the server
+
+  const touch = event.touches[0];
+  if (event.type === "touchstart") {
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+  } else if (event.type === "touchmove") {
+    const touchEndX = touch.clientX;
+    const touchEndY = touch.clientY;
+    const deltaX = touchStartX - touchEndX;
+    const deltaY = Math.abs(touchStartY - touchEndY);
+
+    const isHorizontalSwipe = deltaY < deltaX;
+    const drawerOpenGesture = isHorizontalSwipe && deltaX > 8;
+
+    if (drawerOpenGesture) {
+      const target = event.target.closest(".no-block-swipe");
+      if (!target) {
+        event.preventDefault();
+      }
+    }
+  }
+};
+export const addSwipeBlocking = () => {
+  if (typeof window !== "undefined") {
+    window.addEventListener("touchstart", preventDrawerSwipe, {
+      passive: false,
+    });
+    window.addEventListener("touchmove", preventDrawerSwipe, {
+      passive: false,
+    });
+  }
+};
+export const removeSwipeBlocking = () => {
+  if (typeof window !== "undefined") {
+    window.removeEventListener("touchstart", preventDrawerSwipe);
+    window.removeEventListener("touchmove", preventDrawerSwipe);
+  }
+};
+// disable-horizontal-scrolling  end
