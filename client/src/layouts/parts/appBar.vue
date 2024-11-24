@@ -109,6 +109,7 @@ const getGreetings = computed(() => {
     :width="200"
     location="end"
     temporary
+    touchless
   >
     <v-list>
       <v-list-item>

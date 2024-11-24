@@ -1,26 +1,22 @@
 <script setup>
 import { ref } from "vue";
+import { useDisplay } from "vuetify";
 
 const drawer = ref(true);
-const rail = ref(true);
+const { xs } = useDisplay();
 </script>
 
 <template>
   <v-navigation-drawer
     v-model="drawer"
-    :rail="rail"
+    rail
     permanent
-    @click="rail = false"
+    :expand-on-hover="!xs"
+    touchless
   >
     <v-list-item nav>
       <template v-slot:append>
-        <v-btn
-          :icon="`mdi-chevron-${rail ? 'right' : 'left'}`"
-          class="mt-1"
-          density="comfortable"
-          variant="text"
-          @click.stop="rail = !rail"
-        ></v-btn>
+        <v-btn class="mt-1" variant="text" disabled></v-btn>
       </template>
     </v-list-item>
 

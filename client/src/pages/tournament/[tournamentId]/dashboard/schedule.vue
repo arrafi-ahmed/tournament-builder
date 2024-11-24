@@ -42,8 +42,8 @@ const matchesForSelectedDate = computed(() => {
     return foundMatchDay?.matches ?? [];
   });
 });
-
-const matchDrawer = ref(true);
+console.log(1, xs.value);
+const matchDrawer = ref(xs.value ? false : true);
 const selectedMatchDate = ref(null);
 const selectedField = ref(null);
 
@@ -510,7 +510,12 @@ watch(
             </v-btn>
           </v-col>
 
-          <v-navigation-drawer v-model="matchDrawer" location="right" permanent>
+          <v-navigation-drawer
+            v-model="matchDrawer"
+            location="right"
+            permanent
+            touchless
+          >
             <div class="d-flex space-between">
               <v-btn
                 icon="mdi-chevron-right"

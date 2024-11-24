@@ -37,23 +37,39 @@ const entityLastCount = computed(
 const visibleTeamOptions = ref([]);
 
 const phaseSingleColUnit = ref(3);
-const calcPhaseColWrapper = computed(() => {
+const baseFlexBasis = ref(250);
+
+const calcPhaseCol = computed(() => {
   if (tournamentFormat.value?.length > 0) {
     return tournamentFormat.value.map((phase) => {
       const maxRoundLength = phase.items
         .filter((item) => item.type === "bracket")
         .reduce((max, item) => Math.max(max, item.rounds.length), 0);
-      return maxRoundLength
-        ? maxRoundLength * phaseSingleColUnit.value
+
+      const wrapper = maxRoundLength
+        ? maxRoundLength * phaseSingleColUnit.value // add 1 with bracket width for giving inner content space
         : phaseSingleColUnit.value;
+
+      const inner = maxRoundLength > 0 ? 12 / maxRoundLength : 0;
+      const flexBasis =
+        baseFlexBasis.value * (wrapper / phaseSingleColUnit.value);
+
+      const result = { wrapper, inner, flexBasis };
+
+      console.log(33, maxRoundLength, result);
+      return result;
     });
-  } else return 0;
+  } else {
+    return [{ wrapper: 0, inner: 0, flexBasis: 0 }];
+  }
 });
 
 // in case bracket with more round, calc each phase item width
-const calcPhaseCol = (index) => {
-  return 12 / (calcPhaseColWrapper.value[index] / phaseSingleColUnit.value);
-};
+// const calcPhaseCol = (index) => {
+//   return Math.ceil(
+//     12 / (calcPhaseColWrapper.value[index] / phaseSingleColUnit.value),
+//   );
+// };
 
 const bracketTeamOptions = [64, 32, 16, 8, 4, 2];
 
@@ -559,10 +575,20 @@ onMounted(async () => {
     </v-row>
 
     <v-row v-else justify="center">
-      <v-col class="scrollable-container" col="12">
+      <v-col class="scrollable-container">
         <v-row>
+          <!--          <pre>-->
+          <!--          {{ calcPhaseCol }}-->
+          <!--          </pre>-->
           <template v-for="(phase, phaseIndex) in tournamentFormat">
-            <v-col :cols="calcPhaseColWrapper[phaseIndex]" class="max-content">
+            <v-col
+              :cols="calcPhaseCol[phaseIndex].wrapper"
+              class="max-content"
+              :style="{
+                flexBasis: `${calcPhaseCol[phaseIndex].flexBasis}px`,
+                maxWidth: 'inherit!important',
+              }"
+            >
               <div
                 class="d-flex justify-start align-center bg-amber-accent-1 rounded px-4 py-2 mb-4"
               >
@@ -602,7 +628,11 @@ onMounted(async () => {
                       <!--                if group-->
                       <template v-if="phaseItem.type === 'group'">
                         <v-row>
-                          <v-col :cols="calcPhaseCol(phaseIndex)">
+                          <v-col
+                            :cols="calcPhaseCol[phaseIndex].inner"
+                            class="font-weight-thin font-size-smaller"
+                          >
+                            i-{{ calcPhaseCol[phaseIndex].inner }}
                             <v-card density="compact">
                               <v-card-title
                                 :class="`${calcMatchType(phaseItem.type).bgColor} d-flex justify-space-around align-center`"
@@ -728,7 +758,8 @@ onMounted(async () => {
                           <v-row class="pb-3" no-gutters>
                             <v-col
                               v-for="(round, roundIndex) in phaseItem.rounds"
-                              :cols="calcPhaseCol(phaseIndex)"
+                              :cols="calcPhaseCol[phaseIndex].inner"
+                              class="font-weight-thin font-size-smaller"
                             >
                               <h4 class="py-2 pl-4 font-weight-medium">
                                 {{ getRoundTitle(round.type) }}
@@ -749,7 +780,7 @@ onMounted(async () => {
                                         @blur="updateMatch({ match })"
                                       ></v-text-field>
                                     </v-card-title>
-                                    <v-card-text>
+                                    <v-card-text class="font-size-smaller">
                                       <v-select
                                         :disabled="
                                           roundIndex > 0 ||
@@ -835,7 +866,10 @@ onMounted(async () => {
                       <!--                if single_match-->
                       <template v-if="phaseItem.type === 'single_match'">
                         <v-row>
-                          <v-col :cols="calcPhaseCol(phaseIndex)">
+                          <v-col
+                            :cols="calcPhaseCol[phaseIndex].inner"
+                            class="font-weight-thin font-size-smaller"
+                          >
                             <v-card density="compact">
                               <v-card-title
                                 :class="`${calcMatchType(phaseItem.type).bgColor}  d-flex justify-space-around align-center`"
@@ -1096,7 +1130,30 @@ onMounted(async () => {
 </template>
 
 <style>
+/*
 .format .v-col {
   max-width: 100% !important;
 }
+
+.format-match-card {
+  flex: 0 0 auto;
+  flex-basis: 250px;
+  max-width: 300px;
+  box-sizing: border-box;
+}
+
+.font-size-smaller .v-select__selection {
+  font-size: smaller !important;
+}
+
+.v-field__append-inner {
+  display: none;
+}
+
+.v-select__selection-text {
+  overflow: visible !important;
+  margin-left: -12px;
+  font-size: smaller !important;
+}
+*/
 </style>
