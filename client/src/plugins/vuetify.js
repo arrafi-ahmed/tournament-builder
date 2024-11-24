@@ -5,6 +5,7 @@
  */
 // lab
 import { VTimePicker } from "vuetify/labs/VTimePicker";
+import { VNumberInput } from 'vuetify/labs/VNumberInput'
 
 // Styles
 import "@mdi/font/css/materialdesignicons.css";
@@ -17,6 +18,7 @@ import { createVuetify } from "vuetify";
 export default createVuetify({
   components: {
     VTimePicker,
+    VNumberInput,
   },
   theme: {
     themes: {

@@ -270,84 +270,84 @@ onMounted(async () => {
                 {{ item.fieldName }}
               </v-list-item-subtitle>
 
-              <v-row class="mt-2">
+              <v-row align="center" no-gutters class="my-2">
                 <v-col>
-                  <div class="d-flex align-center">
-                    <!--                    TODO:fix name-->
-                    <h4>
-                      {{ item.homeTeamName || getTeamName(item, "home") }}
-                    </h4>
-                    <v-chip
-                      v-if="
-                        item.winnerId !== null &&
-                        item.winnerId === item.homeTeamId
-                      "
-                      class="ml-1"
-                      color="green-darken-1"
-                      density="compact"
-                      variant="flat"
-                      >Winner
-                    </v-chip>
-                  </div>
-                  <v-text-field
+                  <span class="font-weight-bold me-2">
+                    {{ item.homeTeamName || getTeamName(item, "home") }}
+                  </span>
+                  <v-chip
+                    v-if="
+                      item.winnerId !== null &&
+                      item.winnerId === item.homeTeamId
+                    "
+                    color="green-darken-1"
+                    density="comfortable"
+                    variant="flat"
+                    size="small"
+                    label
+                    >Winner
+                  </v-chip>
+                </v-col>
+                <v-col>
+                  <v-number-input
                     v-model="item.homeTeamScore"
+                    :min="0"
+                    :max-width="150"
                     :disabled="!item.homeTeamId"
-                    :max-width="60"
-                    color="primary"
-                    hide-details="auto"
                     label="Score"
-                    type="number"
-                    variant="underlined"
-                    @change="
+                    density="comfortable"
+                    hide-details="auto"
+                    @update:modelValue="
                       checkMatchScore({
                         match: item,
                         matchIndex: index,
                       })
                     "
-                  ></v-text-field>
+                  ></v-number-input>
                 </v-col>
-                <v-col cols="auto">
-                  <v-chip color="error">V</v-chip>
+              </v-row>
+
+              <v-chip color="error" size="large">V</v-chip>
+
+              <v-row align="center" no-gutters class="my-2">
+                <v-col>
+                  <span class="font-weight-bold me-2">
+                    {{ item.awayTeamName || getTeamName(item, "away") }}
+                  </span>
+                  <v-chip
+                    v-if="
+                      item.winnerId !== null &&
+                      item.winnerId === item.awayTeamId
+                    "
+                    color="green-darken-1"
+                    density="comfortable"
+                    variant="flat"
+                    size="small"
+                    label
+                    >Winner
+                  </v-chip>
                 </v-col>
                 <v-col>
-                  <div class="d-flex align-center">
-                    <h4>
-                      {{ item.awayTeamName || getTeamName(item, "away") }}
-                    </h4>
-                    <v-chip
-                      v-if="
-                        item.winnerId !== null &&
-                        item.winnerId === item.awayTeamId
-                      "
-                      class="ml-1"
-                      color="green-darken-1"
-                      density="compact"
-                      variant="flat"
-                      >Winner
-                    </v-chip>
-                  </div>
-                  <v-text-field
+                  <v-number-input
                     v-model="item.awayTeamScore"
+                    :min="0"
+                    :max-width="150"
                     :disabled="!item.awayTeamId"
-                    :max-width="60"
-                    color="primary"
-                    hide-details="auto"
                     label="Score"
-                    type="number"
-                    variant="underlined"
-                    @change="
+                    density="comfortable"
+                    hide-details="auto"
+                    @update:modelValue="
                       checkMatchScore({
                         match: item,
                         matchIndex: index,
                       })
                     "
-                  ></v-text-field>
+                  ></v-number-input>
                 </v-col>
               </v-row>
 
               <v-row
                 v-if="showSelectWinner && currSelectedMatchIndex === index"
-                class="mt-2"
               >
                 <v-col cols="auto">
                   <v-select
