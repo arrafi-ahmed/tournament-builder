@@ -49,7 +49,7 @@ onMounted(() => {
 <template>
   <v-container class="fill-height">
     <v-row align="center" justify="center">
-      <v-col cols="12" lg="6" md="6" sm="6">
+      <v-col :cols="12" lg="6" md="6" sm="6">
         <v-card
           class="mx-auto pa-2 my-2"
           color="grey-lighten-3"

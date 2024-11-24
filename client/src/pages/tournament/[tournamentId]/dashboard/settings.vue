@@ -92,7 +92,7 @@ onMounted(async () => {
     </v-row>
 
     <v-row justify="center">
-      <v-col col="12" md="6">
+      <v-col :cols="12" md="6">
         <v-expansion-panels v-model="panels" multiple>
           <v-expansion-panel value="duration">
             <v-expansion-panel-title>Match Duration</v-expansion-panel-title>

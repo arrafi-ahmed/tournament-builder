@@ -218,7 +218,7 @@ onMounted(async () => {
     </v-row>
 
     <v-row justify="center">
-      <v-col col="12" lg="7" md="10">
+      <v-col :cols="12" lg="7" md="10">
         <v-list
           v-if="matchesForSelectedDate.length > 0"
           density="compact"

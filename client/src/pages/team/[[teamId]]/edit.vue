@@ -166,7 +166,7 @@ onMounted(async () => {
           ></v-text-field>
 
           <v-row align="center" justify="start" no-gutters>
-            <v-col class="mt-5" cols="12" sm="2">
+            <v-col class="mt-5" :cols="12" sm="2">
               <v-img
                 :src="getTeamLogoUrl(newTeam.logo)"
                 aspect-ratio="1"

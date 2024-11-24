@@ -149,7 +149,7 @@ onMounted(async () => {
                     <v-row class="ma-1">
                       <v-col
                         v-for="match in matchDay.matches"
-                        cols="12"
+                        :cols="12"
                         md="4"
                         sm="6"
                       >

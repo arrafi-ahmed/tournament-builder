@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
@@ -242,11 +242,7 @@ const fetchData = async () => {
     }),
   ]);
 };
-onMounted(async () => {
-  await fetchData();
-  selectedMatchDate.value = matchDays.value[0];
-  selectedField.value = fields.value[0];
-});
+
 const handleFieldMatchChanged = (fieldIndex, eventData) => {
   const {
     moved: { element, oldIndex, newIndex },
@@ -335,6 +331,38 @@ watch(
     }
   },
 );
+
+//disable horizontal scrolling
+const preventSwipeToOpen = (event) => {
+  if (event.type === "touchmove") {
+    const touch = event.touches[0];
+    const deltaX = Math.abs(touch.clientX - touch.screenX);
+    const deltaY = Math.abs(touch.clientY - touch.screenY);
+
+    if (deltaX > deltaY && deltaX > 30) {
+      event.preventDefault(); // Block horizontal swipes
+    }
+  }
+};
+
+const addSwipeBlocking = () => {
+  window.addEventListener("touchstart", preventSwipeToOpen, { passive: false });
+  window.addEventListener("touchmove", preventSwipeToOpen, { passive: false });
+};
+
+const removeSwipeBlocking = () => {
+  window.removeEventListener("touchstart", preventSwipeToOpen);
+  window.removeEventListener("touchmove", preventSwipeToOpen);
+};
+onMounted(async () => {
+  await fetchData();
+  selectedMatchDate.value = matchDays.value[0];
+  selectedField.value = fields.value[0];
+  addSwipeBlocking();
+});
+onUnmounted(() => {
+  removeSwipeBlocking();
+});
 </script>
 
 <template>
@@ -395,12 +423,12 @@ watch(
     </v-row>
 
     <v-row class="scrollable-container" justify="center">
-      <v-col col="12">
+      <v-col :cols="12">
         <v-row>
           <v-col
             v-for="(field, fieldIndex) in schedule"
             class="max-content"
-            col="12"
+            :cols="12"
             sm="4"
           >
             <v-card color="green" density="compact">
@@ -496,7 +524,7 @@ watch(
                   </v-list-item>
                 </vue-draggable-next>
               </v-list>
-              <no-items v-else cols="12" text="No items!"></no-items>
+              <no-items v-else :cols="12" text="No items!"></no-items>
             </v-card>
           </v-col>
 
@@ -514,7 +542,6 @@ watch(
             v-model="matchDrawer"
             location="right"
             permanent
-            :touchless="true"
           >
             <div class="d-flex space-between">
               <v-btn
@@ -581,7 +608,7 @@ watch(
               </template>
               <no-items
                 v-else
-                cols="12"
+                :cols="12"
                 text="No unplanned matches found!"
               ></no-items>
             </v-list>

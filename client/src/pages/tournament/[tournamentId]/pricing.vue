@@ -103,7 +103,7 @@ onMounted(async () => {
 
     <!-- Pricing Content -->
     <v-row class="mt-5" justify="center">
-      <v-col cols="12" md="7">
+      <v-col :cols="12" md="7">
         <v-table v-if="subscriptionPlans.length > 0">
           <thead>
             <tr>

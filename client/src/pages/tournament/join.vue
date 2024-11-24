@@ -104,7 +104,7 @@ onMounted(() => {
     </v-row>
 
     <v-row justify="center">
-      <v-col col="12" md="6">
+      <v-col :cols="12" md="6">
         <v-text-field
           v-model="searchKeyword"
           append-inner-icon="mdi-magnify"
