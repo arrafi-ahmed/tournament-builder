@@ -1,10 +1,10 @@
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import { useDisplay } from "vuetify";
-import { getRoundTitle } from "@/others/util";
+import {addSwipeBlocking, getRoundTitle, removeSwipeBlocking} from "@/others/util";
 import MatchCard from "@/components/MatchCard.vue";
 import NoItems from "@/components/NoItems.vue";
 
@@ -37,12 +37,16 @@ const fetchData = async () => {
     }),
   ]);
 };
-onMounted(async () => {
-  fetchData();
-});
 const formattedName = computed(() =>
   tournament.value.name.toLowerCase().replaceAll(" ", "-"),
 );
+onMounted(async () => {
+  fetchData();
+  addSwipeBlocking();
+});
+onUnmounted(() => {
+  removeSwipeBlocking();
+});
 </script>
 
 <template>
@@ -97,7 +101,7 @@ const formattedName = computed(() =>
 
         <no-items v-else />
 
-        <v-tabs-window v-model="tab">
+        <v-tabs-window v-model="tab" class="no-block-swipe">
           <template v-for="(phase, phaseIndex) in standing">
             <v-tabs-window-item :value="phase.phaseId" class="ma-1">
               <template v-for="(phaseItem, phaseItemIndex) in phase.items">

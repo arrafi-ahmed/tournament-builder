@@ -228,40 +228,42 @@ onMounted(async () => {
         >
           <template v-for="(item, index) in matchesForSelectedDate">
             <v-list-item v-if="item" :key="index">
-              <v-list-item-title
-                class="d-flex align-center justify-space-between"
-              >
-                <span>
-                  <v-chip color="primary" label size="large" variant="flat"
-                    >{{ getTimeOnly(item.startTime) }}
-                  </v-chip>
-                  <span class="ml-3">{{ item?.name }}</span>
-                  <v-chip
-                    :color="calcMatchType(item.type).color"
-                    class="ml-3"
-                    density="comfortable"
-                    >{{ calcMatchType(item.type).title }}
-                  </v-chip>
-                </span>
-                <span>
-                  <v-btn
-                    class="ml-1"
-                    color="error"
-                    density="comfortable"
-                    icon="mdi-close"
-                    variant="outlined"
-                    @click="clearResult({ matchIndex: index })"
-                  ></v-btn>
-                  <v-btn
-                    :disabled="!item.homeTeamId || !item.awayTeamId"
-                    class="ml-2"
-                    color="success"
-                    density="comfortable"
-                    icon="mdi-check"
-                    variant="outlined"
-                    @click="saveResult({ matchIndex: index })"
-                  ></v-btn>
-                </span>
+              <v-list-item-title>
+                <div class="d-flex align-center justify-space-between">
+                  <span>
+                    <v-chip color="primary" label size="large" variant="flat"
+                      >{{ getTimeOnly(item.startTime) }}
+                    </v-chip>
+                    <v-chip
+                      :color="calcMatchType(item.type).color"
+                      class="ml-3"
+                      density="comfortable"
+                      >{{ calcMatchType(item.type).title }}
+                    </v-chip>
+                  </span>
+                  <span>
+                    <v-btn
+                      class="ml-1"
+                      color="error"
+                      density="comfortable"
+                      icon="mdi-close"
+                      variant="outlined"
+                      @click="clearResult({ matchIndex: index })"
+                    ></v-btn>
+                    <v-btn
+                      :disabled="!item.homeTeamId || !item.awayTeamId"
+                      class="ml-2"
+                      color="success"
+                      density="comfortable"
+                      icon="mdi-check"
+                      variant="outlined"
+                      @click="saveResult({ matchIndex: index })"
+                    ></v-btn>
+                  </span>
+                </div>
+                <div class="d-flex align-center mt-2">
+                  {{ item?.name }}
+                </div>
               </v-list-item-title>
 
               <v-list-item-subtitle class="mt-2 ml-1">

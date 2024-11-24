@@ -1,11 +1,16 @@
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import TournamentBaseFormat from "@/components/TournamentBaseFormat.vue";
 import { useDisplay } from "vuetify";
-import { calcMatchType, getRoundTitle } from "@/others/util";
+import {
+  addSwipeBlocking,
+  calcMatchType,
+  getRoundTitle,
+  removeSwipeBlocking,
+} from "@/others/util";
 import { VueDraggableNext } from "vue-draggable-next";
 import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 
@@ -49,27 +54,15 @@ const calcPhaseCol = computed(() => {
       const wrapper = maxRoundLength
         ? maxRoundLength * phaseSingleColUnit.value // add 1 with bracket width for giving inner content space
         : phaseSingleColUnit.value;
-
       const inner = maxRoundLength > 0 ? 12 / maxRoundLength : 0;
       const flexBasis =
         baseFlexBasis.value * (wrapper / phaseSingleColUnit.value);
-
-      const result = { wrapper, inner, flexBasis };
-
-      console.log(33, maxRoundLength, result);
-      return result;
+      return { wrapper, inner, flexBasis };
     });
   } else {
     return [{ wrapper: 0, inner: 0, flexBasis: 0 }];
   }
 });
-
-// in case bracket with more round, calc each phase item width
-// const calcPhaseCol = (index) => {
-//   return Math.ceil(
-//     12 / (calcPhaseColWrapper.value[index] / phaseSingleColUnit.value),
-//   );
-// };
 
 const bracketTeamOptions = [64, 32, 16, 8, 4, 2];
 
@@ -549,6 +542,10 @@ const fetchData = async () => {
 };
 onMounted(async () => {
   fetchData();
+  addSwipeBlocking();
+});
+onUnmounted(() => {
+  removeSwipeBlocking();
 });
 </script>
 
@@ -575,11 +572,8 @@ onMounted(async () => {
     </v-row>
 
     <v-row v-else justify="center">
-      <v-col class="scrollable-container">
+      <v-col class="scrollable-container no-block-swipe">
         <v-row>
-          <!--          <pre>-->
-          <!--          {{ calcPhaseCol }}-->
-          <!--          </pre>-->
           <template v-for="(phase, phaseIndex) in tournamentFormat">
             <v-col
               :cols="calcPhaseCol[phaseIndex].wrapper"
@@ -1128,31 +1122,4 @@ onMounted(async () => {
   </v-dialog>
 </template>
 
-<style>
-/*
-.format .v-col {
-  max-width: 100% !important;
-}
-
-.format-match-card {
-  flex: 0 0 auto;
-  flex-basis: 250px;
-  max-width: 300px;
-  box-sizing: border-box;
-}
-
-.font-size-smaller .v-select__selection {
-  font-size: smaller !important;
-}
-
-.v-field__append-inner {
-  display: none;
-}
-
-.v-select__selection-text {
-  overflow: visible !important;
-  margin-left: -12px;
-  font-size: smaller !important;
-}
-*/
-</style>
+<style></style>
