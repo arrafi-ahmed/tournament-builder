@@ -1,6 +1,6 @@
 <script setup>
 import PageTitle from "@/components/PageTitle.vue";
-import { reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { isValidEmail, isValidImage } from "@/others/util";
@@ -18,6 +18,8 @@ definePage({
 const { xs } = useDisplay();
 const router = useRouter();
 const store = useStore();
+const isTeamManager = computed(() => store.getters["user/isTeamManager"]);
+const currentUser = computed(() => store.getters["user/getCurrentUser"]);
 
 const teamInit = {
   name: null,
@@ -54,15 +56,33 @@ const handleAddTeam = async () => {
   if (team.logo) formData.append("files", team.logo);
 
   await store.dispatch("team/save", formData).then((result) => {
-    // team = {...team, ...teamInit}
+    // if teamManager saves team data, setCurrentUser in store
+    if (isTeamManager.value) {
+      console.log(10, result)
+      store.commit("user/setCurrentUser", {
+        ...currentUser.value,
+        teamId: result.id,
+        teamName: result.name,
+      });
+    }
     Object.assign(team, {
       ...teamInit,
     });
-    router.push({
+    //fix:if clicking back in team-list page, skip going team-add/edit page
+    router.replace({
       name: "team-list",
     });
+    if (window.history.length > 2) {
+      router.go(-1);
+    }
   });
 };
+onMounted(() => {
+  if (isTeamManager.value) {
+    team.email = currentUser.value.email;
+  }
+  console.log(66, currentUser.value, team.email);
+});
 </script>
 
 <template>
@@ -103,6 +123,7 @@ const handleAddTeam = async () => {
               (v) => !!v || 'Email is required!',
               (v) => isValidEmail(v) || 'Invalid Email',
             ]"
+            :disabled="isTeamManager"
             class="mt-2 mt-md-4"
             clearable
             hide-details="auto"

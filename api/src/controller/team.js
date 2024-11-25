@@ -94,13 +94,9 @@ router.get("/getTeamRequestsByTournamentId", auth, (req, res, next) => {
     .catch((err) => next(err));
 });
 
-router.get("/getTeamWSquad", auth, (req, res, next) => {
-  const teamId = ifManager(req.currentUser.role)
-    ? req.currentUser.teamId
-    : req.query.teamId;
-
+router.get("/getTeamWSquad", (req, res, next) => {
   teamService
-    .getTeamWSquad({ teamId })
+    .getTeamWSquad({ teamId: req.query.teamId })
     .then((results) => res.status(200).json(new ApiResponse(null, results)))
     .catch((err) => next(err));
 });

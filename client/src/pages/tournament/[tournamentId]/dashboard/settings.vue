@@ -24,7 +24,7 @@ const { xs } = useDisplay();
 
 const matchDays = computed(() => store.state.tournamentSettings.matchDays);
 const tournament = computed(() => store.state.tournament.tournament);
-const panels = ref("duration");
+const panels = ref(["duration", "match_days"]);
 
 const matchDayInit = {
   matchDate: null,
@@ -87,6 +87,22 @@ onMounted(async () => {
           justify="space-between"
           title="Settings"
         >
+          <v-row align="center">
+            <v-menu>
+              <template v-slot:activator="{ props }">
+                <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text">
+                </v-btn>
+              </template>
+              <v-list density="compact">
+                <v-list-item
+                  density="compact"
+                  prepend-icon="mdi-currency-usd"
+                  title="Manage Subscription"
+                  @click="$router.push({ name: 'pricing' })"
+                ></v-list-item>
+              </v-list>
+            </v-menu>
+          </v-row>
         </page-title>
       </v-col>
     </v-row>

@@ -32,10 +32,10 @@ exports.save = async ({ payload: user }) => {
   let upsertedUser = null;
   try {
     [upsertedUser] = await sql`
-            insert into users ${sql(user)}
-            on conflict (id)
-            do update set ${sql(user)}
-            returning *`;
+            insert into users ${sql(user)} on conflict (id)
+            do
+            update set ${sql(user)}
+                returning *`;
   } catch (err) {
     if (err.code === "23505")
       throw new CustomError("Email already taken!", 409);
@@ -66,9 +66,7 @@ const generateAuthData = async (result) => {
         currentUser.teamName = teams[0].name;
       }
     }
-
-    ifOrganizer(currentUser.role);
-    {
+    if (ifOrganizer(currentUser.role)) {
     }
     token = jwt.sign({ currentUser }, process.env.TOKEN_SECRET);
   }
@@ -108,7 +106,6 @@ exports.removeUser = async ({ userId }) => {
                                       and role in ${sql([
                                         "organizer",
                                         "team_manager",
-                                      ])}
-                                    returning *`;
+                                      ])} returning *`;
   return deletedUser;
 };

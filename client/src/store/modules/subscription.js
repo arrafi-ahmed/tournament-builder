@@ -4,6 +4,7 @@ export const state = {
   subscription: {},
   stripeSubscription: {},
   subscriptionPlans: [],
+  isPremiumUser: false,
 };
 
 export const mutations = {
@@ -24,6 +25,9 @@ export const mutations = {
   },
   setSubscriptionPlans(state, payload) {
     Object.assign(state.subscriptionPlans, payload);
+  },
+  setPremiumUser(state, payload) {
+    state.isPremiumUser = payload;
   },
 };
 
@@ -226,7 +230,7 @@ export const actions = {
     });
   },
   async canAddParticipant(
-    { dispatch, rootGetters, rootState },
+    { dispatch, rootGetters, rootState, commit },
     { tournamentId, userId },
   ) {
     const isSudo = rootGetters["user/isSudo"];
@@ -248,12 +252,14 @@ export const actions = {
       );
     }
     if (isSudo) {
+      commit("setPremiumUser", true);
       return true;
     } else {
-      return (
+      const result =
         rootState.tournament.participants?.length < 6 ||
-        rootGetters["subscription/isPremiumSubscriptionActive"](tournamentId)
-      );
+        rootGetters["subscription/isPremiumSubscriptionActive"](tournamentId);
+      commit("setPremiumUser", result);
+      return result;
     }
   },
 };

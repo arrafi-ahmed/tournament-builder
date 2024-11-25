@@ -16,9 +16,10 @@ export const mutations = {
     state.token = payload;
   },
   setCurrentUser(state, payload) {
-    state.currentUser = { ...state.currentUser, ...payload };
     let currentUser = JSON.parse(localStorage.getItem("currentUser"));
     currentUser = { ...currentUser, ...payload };
+    state.currentUser = { ...currentUser };
+    console.log(11, state.currentUser)
     localStorage.setItem("currentUser", JSON.stringify(currentUser));
   },
   removeToken(state) {

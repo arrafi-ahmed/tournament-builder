@@ -13,16 +13,19 @@ const { label, customClass, density, rules, variant, showIcon } = defineProps([
 ]);
 const menu = ref(false);
 
-const handleTimeChange = (newTime) => {
-  model.value = newTime;
-};
+const handleTimeUnitChange = (newVal, unitType) => {
+  // Parse the model value into a Date object
+  const modelValueParts = model.value.split(":");
+  const oldTime = new Date();
+  oldTime.setHours(modelValueParts[0], modelValueParts[1]);
 
-watch(
-  () => model.value,
-  (newVal) => {
-    menu.value = false;
-  },
-);
+  // Update the val
+  if (unitType === "min") oldTime.setMinutes(newVal);
+  if (unitType === "hr") oldTime.setHours(newVal);
+
+  model.value = oldTime.toTimeString().slice(0, 5);
+  if (unitType === "min") menu.value = false;
+};
 </script>
 
 <template>
@@ -46,12 +49,16 @@ watch(
           :close-on-content-click="false"
           activator="parent"
           transition="scale-transition"
+          @keyup.enter=""
         >
           <v-time-picker
             v-if="menu"
             v-model="model"
             full-width
-            @update:model-value="handleTimeChange"
+            format="24hr"
+            scrollable
+            @update:minute="handleTimeUnitChange($event, 'min')"
+            @update:hour="handleTimeUnitChange($event, 'hr')"
           ></v-time-picker>
         </v-menu>
       </v-text-field>

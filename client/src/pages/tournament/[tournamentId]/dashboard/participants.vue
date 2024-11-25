@@ -1,11 +1,11 @@
 <script setup>
-import { computed, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
-import { getTeamLogoUrl } from "@/others/util";
+import { getTeamLogoUrl, isValidEmail } from "@/others/util";
 
 definePage({
   name: "tournament-participants",
@@ -22,6 +22,7 @@ const store = useStore();
 
 const participants = computed(() => store.state.tournament.participants);
 const tournament = computed(() => store.state.tournament.tournament);
+const isPremiumUser = computed(() => store.state.subscription.isPremiumUser);
 const currentUser = store.getters["user/getCurrentUser"];
 
 const deleteParticipant = (id, teamId, tournamentId) => {
@@ -31,15 +32,24 @@ const deleteParticipant = (id, teamId, tournamentId) => {
     tournamentId,
   }); //TODO
 };
+const showWarningDialog = ref(false);
+
 const goInvitePage = async () => {
-  const canAddParticipant = await store.dispatch(
-    "subscription/canAddParticipant",
-    {
-      userId: currentUser.id,
-      tournamentId: route.params.tournamentId,
-    },
-  );
-  if (canAddParticipant) {
+  await store.dispatch("subscription/canAddParticipant", {
+    userId: currentUser.id,
+    tournamentId: route.params.tournamentId,
+  });
+  if (isPremiumUser.value) {
+    router.push({
+      name: "tournament-invite",
+      params: { tournamentId: tournament.value.id },
+    });
+  } else {
+    showWarningDialog.value = true;
+  }
+};
+const goInvitePageAfterConfirmation = (async) => {
+  if (isPremiumUser.value) {
     router.push({
       name: "tournament-invite",
       params: { tournamentId: tournament.value.id },
@@ -67,6 +77,25 @@ onMounted(async () => {
 </script>
 
 <template>
+  <v-dialog v-model="showWarningDialog" width="350">
+    <v-card>
+      <v-card-title>
+        <span>Activate Subscription</span>
+      </v-card-title>
+      <v-card-text>
+        <p>To add more than 6 participants, you need to buy subscription!</p>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn
+          density="comfortable"
+          color="primary"
+          @click="goInvitePageAfterConfirmation"
+          >Activate
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <v-container>
     <v-row>
       <v-col>

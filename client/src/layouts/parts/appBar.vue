@@ -47,7 +47,7 @@ const menuItemsTeamManager = [
     to: { name: "team-squad" },
   },
   { title: "Join Tournament", to: { name: "tournament-join" } },
-  { title: "Edit Team", to: { name: "team-edit" } },
+  { title: "Team", to: { name: "team-edit" } },
 ];
 const menuItems = computed(() => {
   let items = [{ title: "Home", to: calcHome.value }];
@@ -63,7 +63,11 @@ const menuItems = computed(() => {
 
 const drawer = ref(false);
 
-const getFirstName = computed(() => currentUser.value.name?.split(" ")[0]);
+const getFirstName = computed(() =>
+  isTeamManager.value
+    ? currentUser.value.teamName
+    : currentUser.value.name?.split(" ")[0],
+);
 const getGreetings = computed(() => {
   const hour = new Date().getHours();
   return `Good ${hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening"}!`;
@@ -89,13 +93,7 @@ const getGreetings = computed(() => {
     ></logo>
 
     <template v-slot:append>
-      <v-btn
-        v-if="signedin"
-        :size="xs ? 'small' : 'default'"
-        icon
-        rounded
-        tile
-      >
+      <v-btn v-if="signedin" :size="xs ? 'small' : 'default'" icon rounded tile>
         <user-avatar
           :imgSrc="currentUser.image"
           @click-avatar="drawer = !drawer"

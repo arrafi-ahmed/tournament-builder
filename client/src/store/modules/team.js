@@ -138,7 +138,7 @@ export const actions = {
         .then((response) => {
           const actionName = request.id ? "edit" : "add";
           commit(`${actionName}Team`, response.data?.payload);
-          resolve(response);
+          resolve(response.data?.payload);
         })
         .catch((err) => {
           reject(err);

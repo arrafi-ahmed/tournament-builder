@@ -5,7 +5,11 @@ import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
-import { getApiPublicImgUrl, getClientPublicImgUrl } from "@/others/util";
+import {
+  getApiPublicImgUrl,
+  getClientPublicImgUrl,
+  getTeamLogoUrl,
+} from "@/others/util";
 
 definePage({
   name: "team-squad",
@@ -20,6 +24,8 @@ const store = useStore();
 
 const team = computed(() => store.state.team.team);
 const members = computed(() => store.state.team.members);
+const currentUser = computed(() => store.getters["user/getCurrentUser"]);
+const isTeamManager = computed(() => store.getters["user/isTeamManager"]);
 
 const dialog = ref(false);
 const form = ref(null);
@@ -79,17 +85,24 @@ const removeMember = async (id) => {
   });
 };
 
-const fetchData = () => {
-  return store.dispatch("team/setTeamWSquad", { teamId: route.params.teamId });
+const fetchData = async () => {
+  // if manager doesn't provide teamId as param, provide stored teamId
+  const teamId =
+    isTeamManager.value && !route.params.teamId
+      ? currentUser.value.teamId
+      : route.params.teamId;
+  console.log(21, teamId);
+  return store.dispatch("team/setTeamWSquad", { teamId });
 };
-const currentUser = store.getters["user/getCurrentUser"];
+
 const isAuthorized = computed(
   () =>
-    currentUser.role === "team_manager" &&
-    Number(currentUser.teamId) === Number(team.value.id),
+    isTeamManager.value &&
+    Number(currentUser.value?.teamId) === Number(team.value?.id),
 );
 onMounted(async () => {
   fetchData();
+  console.log(22, currentUser.value, team.value);
 });
 </script>
 
@@ -98,8 +111,8 @@ onMounted(async () => {
     <v-row>
       <v-col>
         <page-title
-          :prepend-avatar="getApiPublicImgUrl(team.logo, 'team-logo')"
-          :sub-title="team.name"
+          :prepend-avatar="getTeamLogoUrl(team?.logo)"
+          :sub-title="team?.name"
           justify="space-between"
           show-back
           title="Squad"
@@ -186,7 +199,7 @@ onMounted(async () => {
             <v-divider v-if="index !== members.length - 1"></v-divider>
           </template>
         </v-list>
-        <no-items v-else :cols="12"></no-items>
+        <no-items v-else></no-items>
       </v-col>
     </v-row>
   </v-container>

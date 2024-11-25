@@ -1,9 +1,9 @@
 <script setup>
 import PageTitle from "@/components/PageTitle.vue";
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref, watchEffect } from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
-import { getTeamLogoUrl, isValidImage } from "@/others/util";
+import {getTeamLogoUrl, isValidEmail, isValidImage} from "@/others/util";
 import { useDisplay } from "vuetify";
 import NoItems from "@/components/NoItems.vue";
 
@@ -20,15 +20,21 @@ const { xs } = useDisplay();
 const route = useRoute();
 const router = useRouter();
 const store = useStore();
+const isSudo = computed(() => store.getters["user/isSudo"]);
+const isOrganizer = computed(() => store.getters["user/isOrganizer"]);
+const isTeamManager = computed(() => store.getters["user/isTeamManager"]);
 
 const currentUser = computed(() => store.state.user.currentUser);
-const targetTeamId = computed(() =>
-  currentUser.value.role === "sudo" || currentUser.value.role === "organizer"
-    ? route.params.teamId
-    : currentUser.value.role === "team_manager"
-      ? currentUser.value.teamId
-      : null,
-);
+const targetTeamId = computed(() => {
+  if (isSudo.value || isOrganizer.value) {
+    return route.params.teamId ?? null;
+  } else if (isTeamManager.value) {
+    return currentUser.value.teamId ?? null;
+  } else {
+    return null;
+  }
+});
+
 const team = computed(() => store.state.team.team);
 
 const teamInit = {
@@ -57,9 +63,9 @@ const handleNewLogoClear = () => {
 };
 
 const redirectDestination = computed(() =>
-  currentUser.value.role === "sudo" || currentUser.value.role === "organizer"
+  isSudo.value || isOrganizer.value
     ? "team-list"
-    : currentUser.value.role === "team_manager"
+    : isTeamManager.value
       ? "dashboard-manager"
       : null,
 );
@@ -91,11 +97,22 @@ const handleEditTeam = async () => {
     Object.assign(newTeam, {
       ...teamInit,
     });
-    router.push({
+    //fix:if clicking back in team-list page, skip going team-add/edit page
+    router.replace({
       name: redirectDestination.value,
     });
+    if (window.history.length > 2) {
+      router.go(-1);
+    }
   });
 };
+//if role manager and teamId not available, redirect to team-add
+watchEffect(() => {
+  console.log(46, targetTeamId.value);
+  if (!targetTeamId.value) {
+    router.replace({ name: "team-add" });
+  }
+});
 
 const fetchData = async () => {
   return store.dispatch("team/setTeamWEmail", { teamId: targetTeamId.value });
@@ -103,6 +120,7 @@ const fetchData = async () => {
 
 onMounted(async () => {
   await fetchData();
+  console.log(45, targetTeamId.value);
   Object.assign(newTeam, {
     ...team.value,
   });
@@ -125,7 +143,6 @@ onMounted(async () => {
 
     <v-row v-if="team?.id">
       <v-col>
-        <!--        {{newTeam}}-->
         <v-form
           ref="form"
           v-model="isFormValid"
@@ -156,7 +173,11 @@ onMounted(async () => {
 
           <v-text-field
             v-model="newTeam.email"
-            :rules="[(v) => !!v || 'Email is required!']"
+            :rules="[
+              (v) => !!v || 'Email is required!',
+              (v) => isValidEmail(v) || 'Invalid Email',
+            ]"
+            :disabled="isTeamManager"
             class="mt-2 mt-md-4"
             clearable
             hide-details="auto"
@@ -197,7 +218,7 @@ onMounted(async () => {
                 accept="image/*"
                 class="mx-1"
                 hide-details="auto"
-                label="Update Logo"
+                label="Logo"
                 prepend-icon=""
                 prepend-inner-icon="mdi-camera"
                 show-size
@@ -228,7 +249,7 @@ onMounted(async () => {
         </v-form>
       </v-col>
     </v-row>
-    <no-items v-else></no-items>
+    <no-items v-else :md="6"></no-items>
   </v-container>
 </template>
 

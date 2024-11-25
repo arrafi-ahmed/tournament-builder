@@ -142,7 +142,6 @@ onMounted(() => {
                     </v-btn>
                   </template>
                   <v-list density="compact">
-                    <!--                    {{item}}-->
                     <v-list-item
                       v-if="!item.sentRequest"
                       class="text-primary"
@@ -200,7 +199,7 @@ onMounted(() => {
             ></v-divider>
           </template>
         </v-list>
-        <no-items v-else :cols="12" class="mt-2 mt-md-4"></no-items>
+        <no-items v-else class="mt-2 mt-md-4"></no-items>
       </v-col>
     </v-row>
   </v-container>

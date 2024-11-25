@@ -84,7 +84,7 @@ onMounted(() => {
             })
           "
         >
-          <v-card-text class="text-center"><h2>Edit Team</h2></v-card-text>
+          <v-card-text class="text-center"><h2>Team</h2></v-card-text>
         </v-card>
       </v-col>
     </v-row>

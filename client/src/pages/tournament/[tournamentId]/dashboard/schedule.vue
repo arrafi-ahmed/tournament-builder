@@ -4,7 +4,12 @@ import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import NoItems from "@/components/NoItems.vue";
-import {addSwipeBlocking, calcMatchType, getTimeOnly, removeSwipeBlocking} from "@/others/util";
+import {
+  addSwipeBlocking,
+  calcMatchType,
+  getTimeOnly,
+  removeSwipeBlocking,
+} from "@/others/util";
 import { useDisplay } from "vuetify";
 import TimePicker from "@/components/TimePicker.vue";
 import { toast } from "vue-sonner";
@@ -22,7 +27,7 @@ definePage({
 const router = useRouter();
 const route = useRoute();
 const store = useStore();
-const { xs } = useDisplay();
+const { xs, md } = useDisplay();
 
 const tournament = computed(() => store.state.tournament.tournament);
 const schedule = computed(() => store.state.tournamentSchedule.schedule);
@@ -42,7 +47,7 @@ const matchesForSelectedDate = computed(() => {
     return foundMatchDay?.matches ?? [];
   });
 });
-const matchDrawer = ref(!xs.value);
+const matchDrawer = ref(md.value);
 const selectedMatchDate = ref(null);
 const selectedField = ref(null);
 
@@ -581,7 +586,7 @@ onUnmounted(() => {
               </template>
               <no-items
                 v-else
-                :cols="12"
+                :closable="false"
                 text="No unplanned matches found!"
               ></no-items>
             </v-list>
