@@ -12,7 +12,7 @@ definePage({
   name: "tournament-standing",
   meta: {
     requiresAuth: true,
-    title: "Tournament Standing",
+    title: "Standing",
     layout: "tournament-dashboard",
   },
 });

@@ -29,7 +29,7 @@ watch(route, (to) => {
   </v-app>
 </template>
 <style>
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@100;300;400;500;700;900&display=swap");
 
 .v-application {
   font-family: "Poppins", sans-serif;

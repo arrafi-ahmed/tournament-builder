@@ -7,6 +7,7 @@ import NoItems from "@/components/NoItems.vue";
 import {
   addSwipeBlocking,
   calcMatchType,
+  getTeamName,
   getTimeOnly,
   removeSwipeBlocking,
 } from "@/others/util";
@@ -19,7 +20,7 @@ definePage({
   name: "tournament-schedule",
   meta: {
     requiresAuth: true,
-    title: "Tournament Schedule",
+    title: "Schedule",
     layout: "tournament-dashboard",
   },
 });
@@ -36,6 +37,7 @@ const unplannedMatches = computed(
 );
 const fields = computed(() => store.state.tournamentSchedule.fields);
 const matchDays = computed(() => store.state.tournamentSchedule.matchDays);
+const titles = computed(() => store.state.tournamentSchedule.titles);
 
 const matchesForSelectedDate = computed(() => {
   if (!selectedMatchDate.value) return [];
@@ -413,7 +415,7 @@ onUnmounted(() => {
             :cols="12"
             sm="4"
           >
-            <v-card color="green" density="compact">
+            <v-card color="green" density="compact" flat>
               <v-card-title class="d-flex justify-space-between">
                 <span>{{ field.name }}</span>
                 <div>
@@ -453,22 +455,22 @@ onUnmounted(() => {
                   >field
                 </v-chip>
               </v-card-subtitle>
-              <v-list v-if="matchesForSelectedDate[fieldIndex]?.length">
+              <v-card-text v-if="matchesForSelectedDate[fieldIndex]?.length">
                 <vue-draggable-next
                   :list="matchesForSelectedDate[fieldIndex]"
                   @change="handleFieldMatchChanged(fieldIndex, $event)"
                 >
-                  <v-list-item
+                  <v-card
                     v-for="(match, matchIndex) in matchesForSelectedDate[
                       fieldIndex
                     ]"
                     :key="match?.id"
-                    class="cursor-move"
+                    class="cursor-move subtitle-full-opacity mb-2"
                   >
-                    <v-list-item-title>
+                    <template #title>
                       {{ match.name }}
-                    </v-list-item-title>
-                    <v-list-item-subtitle class="opacity-100">
+                    </template>
+                    <template #subtitle>
                       <span class="text-disabled">{{
                         getTimeOnly(match.startTime)
                       }}</span>
@@ -480,7 +482,25 @@ onUnmounted(() => {
                         size="small"
                         >{{ match.hostName }}
                       </v-chip>
-                    </v-list-item-subtitle>
+                    </template>
+
+                    <template #text>
+                      <div class="font-weight-medium me-2">
+                        {{
+                          match.homeTeamName ||
+                          getTeamName(match, "home", titles)
+                        }}
+                      </div>
+                      <v-chip color="error" size="small" class="my-2"
+                        >V
+                      </v-chip>
+                      <div class="font-weight-medium me-2">
+                        {{
+                          match.awayTeamName ||
+                          getTeamName(match, "away", titles)
+                        }}
+                      </div>
+                    </template>
 
                     <template #append>
                       <v-btn
@@ -496,16 +516,9 @@ onUnmounted(() => {
                         "
                       ></v-btn>
                     </template>
-                    <v-divider
-                      v-if="
-                        matchIndex !==
-                        matchesForSelectedDate[fieldIndex].length - 1
-                      "
-                      class="mb-1 mt-2"
-                    ></v-divider>
-                  </v-list-item>
+                  </v-card>
                 </vue-draggable-next>
-              </v-list>
+              </v-card-text>
               <no-items v-else :cols="12" text="No items!"></no-items>
             </v-card>
           </v-col>
@@ -553,11 +566,11 @@ onUnmounted(() => {
 
               <template v-if="unplannedMatches.length">
                 <template v-for="(match, matchIndex) in unplannedMatches">
-                  <v-list-item>
-                    <v-list-item-title>
+                  <v-card class="subtitle-full-opacity" density="compact">
+                    <template #title>
                       {{ match.name }}
-                    </v-list-item-title>
-                    <div class="d-flex align-center">
+                    </template>
+                    <template #subtitle>
                       <v-chip
                         :class="`mt-1`"
                         :color="`${calcMatchType(match.type).color}`"
@@ -566,7 +579,24 @@ onUnmounted(() => {
                         size="small"
                         >{{ match.hostName }}
                       </v-chip>
-                    </div>
+                    </template>
+                    <template #text>
+                      <div class="font-weight-medium me-2">
+                        {{
+                          match.homeTeamName ||
+                          getTeamName(match, "home", titles)
+                        }}
+                      </div>
+                      <v-chip color="error" size="small" class="my-2"
+                      >V
+                      </v-chip>
+                      <div class="font-weight-medium me-2">
+                        {{
+                          match.awayTeamName ||
+                          getTeamName(match, "away", titles)
+                        }}
+                      </div>
+                    </template>
 
                     <template #append>
                       <v-btn
@@ -577,7 +607,7 @@ onUnmounted(() => {
                         @click="addMatchToField({ match })"
                       ></v-btn>
                     </template>
-                  </v-list-item>
+                  </v-card>
 
                   <v-divider
                     v-if="matchIndex !== unplannedMatches.length - 1"
@@ -750,5 +780,9 @@ onUnmounted(() => {
 <style>
 .schedule .v-col {
   max-width: 100% !important;
+}
+
+.subtitle-full-opacity .v-card-subtitle {
+  opacity: 1 !important;
 }
 </style>

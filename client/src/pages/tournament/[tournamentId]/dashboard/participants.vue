@@ -11,7 +11,7 @@ definePage({
   name: "tournament-participants",
   meta: {
     requiresAuth: true,
-    title: "Tournament Participants",
+    title: "Participants",
     layout: "tournament-dashboard",
   },
 });

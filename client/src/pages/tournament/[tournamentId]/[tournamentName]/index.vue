@@ -138,8 +138,8 @@ onMounted(async () => {
             </v-tabs-window-item>
 
             <v-tabs-window-item value="schedule">
-              <v-row v-if="schedule.length > 0" class="my-2">
-                <template v-for="matchDay in schedule">
+              <template v-if="schedule.length > 0">
+                <v-row v-for="matchDay in schedule" class="my-2">
                   <v-col>
                     <div class="text-body-1">
                       {{ formatDate(matchDay.matchDate) }}
@@ -157,8 +157,8 @@ onMounted(async () => {
                       </v-col>
                     </v-row>
                   </v-col>
-                </template>
-              </v-row>
+                </v-row>
+              </template>
               <no-items v-else :cols="12"></no-items>
             </v-tabs-window-item>
 

@@ -18,7 +18,7 @@ definePage({
   name: "tournament-format",
   meta: {
     requiresAuth: true,
-    title: "Tournament Format",
+    title: "Format",
     layout: "tournament-dashboard",
   },
 });

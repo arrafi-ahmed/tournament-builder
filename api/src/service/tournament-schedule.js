@@ -106,28 +106,33 @@ exports.broadcastUpdate = async ({
 
 exports.getSchedule = async ({ tournamentId }) => {
   const rows = await sql`
-        SELECT m.id                                                         AS match_id,
-               m.name                                                       AS match_name,
-               m.type                                                       AS match_type,
-               m.start_time                                                 AS match_start_time,
+        SELECT f.id                                                            AS field_id,
+               f.name                                                          AS field_name,
+               f.field_order                                                   AS field_order,
+               f.start_time                                                    AS field_start_time,
+               md.id                                                           AS match_day_id,
+               md.match_date,
+               home_team.name                                                  AS home_team_name,
+               away_team.name                                                  AS away_team_name,
+               m.id                                                            AS match_id,
+               m.name                                                          AS match_name,
+               m.type                                                          AS match_type,
+               m.start_time                                                    AS match_start_time,
                m.home_team_id,
                m.away_team_id,
-               home_team.name                                               AS home_team_name,
-               away_team.name                                               AS away_team_name,
-               CASE WHEN m.type = 'group' THEN m.group_id ELSE NULL END     AS group_id,
-               CASE WHEN m.type = 'group' THEN tg.name ELSE NULL END        AS group_name,
-               CASE WHEN m.type = 'bracket' THEN m.bracket_id ELSE NULL END AS bracket_id,
-               CASE WHEN m.type = 'bracket' THEN tb.name ELSE NULL END      AS bracket_name,
-               f.id                                                         AS field_id,
-               f.name                                                       AS field_name,
-               f.field_order                                                AS field_order,
-               f.start_time                                                 AS field_start_time,
-               md.id                                                        AS match_day_id,
-               md.match_date,
+               m.future_team_reference,
+               CASE
+                   WHEN m.type = 'group' THEN m.group_team_reference
+                   END                                                         AS group_team_reference,
+               CASE WHEN m.type = 'group' THEN m.group_id ELSE NULL END        AS group_id,
+               CASE WHEN m.type = 'group' THEN tg.name ELSE NULL END           AS group_name,
+               CASE WHEN m.type = 'bracket' THEN m.bracket_id ELSE NULL END    AS bracket_id,
+               CASE WHEN m.type = 'bracket' THEN tb.name ELSE NULL END         AS bracket_name,
+               CASE WHEN m.type = 'single_match' THEN m.phase_id ELSE NULL END AS phase_id,
                CASE
                    WHEN m.field_id IS NULL OR m.match_day_id IS NULL THEN 'unplanned'
                    ELSE 'planned'
-                   END                                                      AS match_status
+                   END                                                         AS match_status
         FROM matches m
                  LEFT JOIN fields f ON m.field_id = f.id
                  LEFT JOIN match_days md ON m.match_day_id = md.id
@@ -169,34 +174,40 @@ exports.getSchedule = async ({ tournamentId }) => {
     fields,
     matchDays,
     unplannedMatches: processedData.unplannedMatches,
+    titles: processedData.titles,
   };
 };
 
-const processScheduleData = async (matchRows) => {
+const processScheduleData = async (rows) => {
   const fields = {}; // To store fields and their match days
   const unplannedMatches = []; // To store unplanned matches
+  const titles = { match: {}, group: {} };
 
-  matchRows.forEach((row) => {
+  rows.forEach((row) => {
     const matchStatus = row.matchStatus;
     const fieldId = row.fieldId;
     const matchDayId = row.matchDayId;
+
+    const match = {
+      id: row.matchId,
+      name: row.matchName,
+      type: row.matchType,
+      hostName:
+        row.matchType === "group"
+          ? row.groupName
+          : row.matchType === "bracket"
+            ? row.bracketName
+            : row.matchName,
+      homeTeamId: row.homeTeamId,
+      awayTeamId: row.awayTeamId,
+      homeTeamName: row.homeTeamName,
+      awayTeamName: row.awayTeamName,
+      startTime: row.matchStartTime,
+      futureTeamReference: row.futureTeamReference,
+      groupTeamReference: row.groupTeamReference,
+    };
     if (matchStatus === "unplanned") {
-      unplannedMatches.push({
-        id: row.matchId,
-        name: row.matchName,
-        type: row.matchType,
-        hostName:
-          row.matchType === "group"
-            ? row.groupName
-            : row.matchType === "bracket"
-              ? row.bracketName
-              : row.matchName,
-        homeTeamId: row.homeTeamId,
-        awayTeamId: row.awayTeamId,
-        homeTeamName: row.homeTeamName,
-        awayTeamName: row.awayTeamName,
-        startTime: row.matchStartTime,
-      });
+      unplannedMatches.push(match);
     } else {
       if (!fields[fieldId]) {
         fields[fieldId] = {
@@ -210,24 +221,29 @@ const processScheduleData = async (matchRows) => {
       if (!fields[fieldId].matchDays[matchDayId]) {
         fields[fieldId].matchDays[matchDayId] = [];
       }
-      fields[fieldId].matchDays[matchDayId].push({
-        id: row.matchId,
-        name: row.matchName,
-        type: row.matchType,
-        hostName:
-          row.matchType === "group"
-            ? row.groupName
-            : row.matchType === "bracket"
-              ? row.bracketName
-              : row.matchName,
-        homeTeamId: row.homeTeamId,
-        awayTeamId: row.awayTeamId,
-        homeTeamName: row.homeTeamName,
-        awayTeamName: row.awayTeamName,
-        startTime: row.matchStartTime,
-      });
+      fields[fieldId].matchDays[matchDayId].push(match);
     }
+    // store match title
+    const { home, away } = match.futureTeamReference || {};
+
+    if (home?.type === "match" && !titles.match[home.id])
+      titles.match[home.id] = rows.find(
+        (item) => item.matchId === home.id,
+      )?.matchName;
+    if (away?.type === "match" && !titles.match[away.id])
+      titles.match[away.id] = rows.find(
+        (item) => item.matchId === away.id,
+      )?.matchName;
+    if (home?.type === "group" && !titles.group[home.id])
+      titles.group[home.id] = rows.find(
+        (item) => item.groupId === home.id,
+      )?.groupName;
+    if (away?.type === "group" && !titles.group[away.id])
+      titles.group[away.id] = rows.find(
+        (item) => item.groupId === away.id,
+      )?.groupName;
   });
   unplannedMatches.sort((a, b) => a.id - b.id);
-  return { fields, unplannedMatches };
+
+  return { fields, unplannedMatches, titles };
 };

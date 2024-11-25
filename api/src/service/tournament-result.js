@@ -422,17 +422,15 @@ exports.getResults = async ({ tournamentId }) => {
                mr.home_team_score,
                mr.away_team_score,
                mr.winner_id,
+               m.future_team_reference,
+               CASE
+                 WHEN m.type = 'group' THEN m.group_team_reference
+                 END AS group_team_reference,
                CASE
                    WHEN m.type = 'group' THEN m.group_id
                    WHEN m.type = 'bracket' THEN m.bracket_id
                    WHEN m.type = 'single_match' THEN m.phase_id
-               END AS type_id,
-               CASE
-                   WHEN m.type = 'group' THEN m.group_team_reference
-               END AS group_team_reference,
-               CASE
-                   WHEN m.type = 'bracket' THEN m.future_team_reference                
-               END AS future_team_reference
+               END AS type_id
         FROM matches m
                  LEFT JOIN fields f ON m.field_id = f.id
                  LEFT JOIN match_days md ON m.match_day_id = md.id
@@ -486,11 +484,17 @@ exports.getResults = async ({ tournamentId }) => {
 
     // store match title
     const { home, away } = newMatch.futureTeamReference || {};
-    if (home?.type === "match" && !titles.match[home.id])
-      titles.match[home.id] = home.id;
-    if (away?.type === "match" && !titles.match[away.id])
-      titles.match[away.id] = away.id;
 
+    if (home?.type === "match" && !titles.match[home.id])
+      titles.match[home.id] = rows.find(
+        (item) => item.matchId === home.id,
+      )?.matchName;
+    if (away?.type === "match" && !titles.match[away.id])
+      titles.match[away.id] = rows.find(
+        (item) => item.matchId === away.id,
+      )?.matchName;
+
+    // prepare ref->groupId for db fetch
     if (home?.type === "group" && !titles.group[home.id])
       titles.group[home.id] = home.id;
     if (away?.type === "group" && !titles.group[away.id])
@@ -499,16 +503,8 @@ exports.getResults = async ({ tournamentId }) => {
     return acc;
   }, {});
 
-  const matchIds = Object.values(titles.match).filter((item) => item);
+  // as result don't fetch group data, need db query to fetch group data
   const groupIds = Object.values(titles.group).filter((item) => item);
-  const fetchedMatches = await sql`
-        select id, name
-        from matches
-        where matches.id in ${sql(matchIds)}
-    `;
-  fetchedMatches.forEach((match) => {
-    titles.match[match.id] = match.name;
-  });
   const fetchedGroups = await sql`
         select id, name
         from tournament_groups
@@ -517,6 +513,16 @@ exports.getResults = async ({ tournamentId }) => {
   fetchedGroups.forEach((group) => {
     titles.group[group.id] = group.name;
   });
+  // const matchIds = Object.values(titles.match).filter((item) => item);
+  // const fetchedMatches = await sql`
+  //       select id, name
+  //       from matches
+  //       where matches.id in ${sql(matchIds)}
+  //   `;
+  // fetchedMatches.forEach((match) => {
+  //   titles.match[match.id] = match.name;
+  // });
+
   // Retrieve matchDays data from scheduleService
   const matchDaysFromService = await scheduleService.getMatchDays({
     tournamentId,

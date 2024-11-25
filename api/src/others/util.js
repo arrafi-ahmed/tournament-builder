@@ -3,7 +3,7 @@ const fsSync = require("fs");
 const path = require("path");
 const { API_BASE_URL, VUE_BASE_URL, ANDROID_BASE_URL } = process.env;
 
-const appInfo = { name: "TotaLiga", version: 1.0 };
+const appInfo = { name: "TotaLiga", version: 1.1 };
 
 const formatDate = (inputDate) => {
   const date = new Date(inputDate);

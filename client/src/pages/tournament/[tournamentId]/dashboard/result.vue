@@ -4,13 +4,13 @@ import { useRoute, useRouter } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import NoItems from "@/components/NoItems.vue";
-import { calcMatchType, getTimeOnly } from "@/others/util";
+import { calcMatchType, getTeamName, getTimeOnly } from "@/others/util";
 
 definePage({
   name: "tournament-result",
   meta: {
     requiresAuth: true,
-    title: "Tournament Result",
+    title: "Result",
     layout: "tournament-dashboard",
   },
 });
@@ -126,25 +126,6 @@ const checkMatchScore = ({ match, matchIndex }) => {
     (item) => item.teamId === match.winnerId,
   );
 };
-const getTeamName = (item, selectedType) => {
-  const { home, away } = item.futureTeamReference || {};
-  if (selectedType === "home") {
-    if (home?.type === "match") {
-      return `${home.position == 1 ? "Winner" : "Looser"}, ${titles.value.match[home.id]}`;
-    } else if (home?.type === "group") {
-      return `${titles.value.group[home.id]}, Ranking ${home.position}`;
-    }
-    // return `Team ${item.homeTeamId}`;
-  } else if (selectedType === "away") {
-    if (away?.type === "match") {
-      return `${away.position == 1 ? "Winner" : "Looser"}, ${titles.value.match[away.id]}`;
-    } else if (away?.type === "group") {
-      return `${titles.value.group[away.id]}, Ranking ${away.position}`;
-    }
-    // return `Team ${item.awayTeamId}`;
-  }
-  return "Empty Slot";
-};
 
 const fetchData = () => {
   return Promise.all([
@@ -247,14 +228,14 @@ onMounted(async () => {
                 </div>
               </v-list-item-title>
 
-              <v-list-item-subtitle class="mt-2 ml-1">
+              <v-list-item-subtitle class="mt-1 ml-1">
                 {{ item.fieldName }}
               </v-list-item-subtitle>
 
-              <v-row align="center" no-gutters class="my-2">
+              <v-row align="center" no-gutters class="my-1">
                 <v-col>
-                  <span class="font-weight-bold me-2">
-                    {{ item.homeTeamName || getTeamName(item, "home") }}
+                  <span class="font-weight-medium me-2">
+                    {{ item.homeTeamName || getTeamName(item, "home", titles) }}
                   </span>
                   <v-chip
                     v-if="
@@ -290,10 +271,10 @@ onMounted(async () => {
 
               <v-chip color="error" size="large">V</v-chip>
 
-              <v-row align="center" no-gutters class="my-2">
+              <v-row align="center" no-gutters class="my-1">
                 <v-col>
-                  <span class="font-weight-bold me-2">
-                    {{ item.awayTeamName || getTeamName(item, "away") }}
+                  <span class="font-weight-medium me-2">
+                    {{ item.awayTeamName || getTeamName(item, "away", titles) }}
                   </span>
                   <v-chip
                     v-if="

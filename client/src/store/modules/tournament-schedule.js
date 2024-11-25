@@ -7,6 +7,7 @@ export const state = {
   fields: [],
   matchDays: [],
   unplannedMatches: [],
+  titles: {},
 };
 
 export const mutations = {
@@ -21,6 +22,9 @@ export const mutations = {
   },
   setUnplannedMatches(state, payload) {
     state.unplannedMatches = payload;
+  },
+  setTitles(state, payload) {
+    state.titles = payload;
   },
   addField(state, payload) {
     state.schedule.push({
@@ -101,6 +105,7 @@ export const actions = {
             "setUnplannedMatches",
             response.data?.payload?.unplannedMatches,
           );
+          commit("setTitles", response.data?.payload?.titles);
           resolve(response.data.payload);
         })
         .catch((err) => {

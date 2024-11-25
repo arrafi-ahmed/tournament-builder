@@ -1,10 +1,30 @@
 import { toast } from "vue-sonner";
 import { countries } from "@/others/country-list";
 
-export const appInfo = { name: "TotaLiga", version: 1.0 };
+export const appInfo = { name: "TotaLiga", version: 1.1 };
 export const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 export const clientBaseUrl = import.meta.env.VITE_BASE_URL;
 export const isProd = import.meta.env.PROD;
+
+export const getTeamName = (item, selectedType, titles) => {
+  const { home, away } = item.futureTeamReference || {};
+  if (selectedType === "home") {
+    if (home?.type === "match") {
+      return `${Number(home.position) === 1 ? "Winner" : "Looser"}, ${titles.match[home.id]}`;
+    } else if (home?.type === "group") {
+      return `${titles.group[home.id]}, Ranking ${home.position}`;
+    }
+    // return `Team ${item.homeTeamId}`;
+  } else if (selectedType === "away") {
+    if (away?.type === "match") {
+      return `${Number(away.position) === 1 ? "Winner" : "Looser"}, ${titles.match[away.id]}`;
+    } else if (away?.type === "group") {
+      return `${titles.group[away.id]}, Ranking ${away.position}`;
+    }
+    // return `Team ${item.awayTeamId}`;
+  }
+  return "Empty Slot";
+};
 
 export const formatDate = (inputDate) => {
   if (!inputDate) return "";
