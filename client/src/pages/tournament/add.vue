@@ -3,9 +3,13 @@ import PageTitle from "@/components/PageTitle.vue";
 import { computed, reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import {clientBaseUrl, getSlug, isValidEmail} from "@/others/util";
+import {
+  clientBaseUrl,
+  getDateOnly,
+  getSlug,
+  isValidEmail,
+} from "@/others/util";
 import { useDisplay } from "vuetify";
-import DatePicker from "@/components/DatePicker.vue";
 
 definePage({
   name: "tournament-add",
@@ -57,7 +61,12 @@ const handleAddTournament = async () => {
   if (!isFormValid.value) return;
 
   await store
-    .dispatch("tournament/save", { ...tournament, slug: formatSlug.value })
+    .dispatch("tournament/save", {
+      ...tournament,
+      slug: formatSlug.value,
+      startDate: getDateOnly(tournament.startDate),
+      endDate: getDateOnly(tournament.endDate),
+    })
     .then((result) => {
       // tournament = {...tournament, ...tournamentInit}
       Object.assign(tournament, {
@@ -104,6 +113,7 @@ const handleAddTournament = async () => {
 
           <v-text-field
             v-model="tournament.slug"
+            :hint="dynamicHint"
             :rules="[
               (v) => !!v || 'Slug is required!',
               (v) =>
@@ -111,11 +121,10 @@ const handleAddTournament = async () => {
                 'Only letters, numbers, and hyphens are allowed!',
             ]"
             class="mt-2 mt-md-4"
-            :hint="dynamicHint"
-            persistent-hint
             clearable
             hide-details="auto"
             label="Slug"
+            persistent-hint
             prepend-inner-icon="mdi-link"
           ></v-text-field>
 
@@ -140,15 +149,18 @@ const handleAddTournament = async () => {
             prepend-inner-icon="mdi-map-marker"
           ></v-text-field>
 
-          <date-picker
+          <v-date-input
             v-model="tournament.startDate"
             :rules="[(v) => !!v || 'Start Date is required!']"
+            class="mt-2 mt-md-4"
             color="primary"
-            custom-class="mt-2 mt-md-4"
             label="Start Date"
-          ></date-picker>
+            prepend-inner-icon="mdi-calendar"
+            prepend-icon=""
+            hide-details="auto"
+          ></v-date-input>
 
-          <date-picker
+          <v-date-input
             v-model="tournament.endDate"
             :rules="[
               (v) => !!v || 'End Date is required!',
@@ -156,10 +168,13 @@ const handleAddTournament = async () => {
                 tournament.startDate <= tournament.endDate ||
                 'Start Date must be less than End Date',
             ]"
+            class="mt-2 mt-md-4"
             color="primary"
-            custom-class="mt-2 mt-md-4"
             label="End Date"
-          ></date-picker>
+            prepend-inner-icon="mdi-calendar"
+            prepend-icon=""
+            hide-details="auto"
+          ></v-date-input>
 
           <v-textarea
             v-model="tournament.rules"

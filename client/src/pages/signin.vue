@@ -136,9 +136,9 @@ const handleSubmitResetPassword = async () => {
                 <div class="d-flex align-center justify-center flex-column">
                   <v-btn
                     :density="xs ? 'comfortable' : 'default'"
+                    block
                     color="primary"
                     type="submit"
-                    block
                     >Sign In
                   </v-btn>
                   <div

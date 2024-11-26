@@ -11,7 +11,7 @@ definePage({
 const store = useStore();
 const router = useRouter();
 
-router.push({ name: "not-found", params: { catchAll: 'p' } });
+router.push({ name: "not-found", params: { catchAll: "p" } });
 </script>
 
 <template></template>

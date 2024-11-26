@@ -230,7 +230,7 @@ export const actions = {
   },
   save({ commit }, request) {
     return new Promise((resolve, reject) => {
-      console.log(21, request)
+      console.log(21, request);
       $axios
         .post("/api/tournament/save", request)
         .then((response) => {

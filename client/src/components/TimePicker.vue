@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref } from "vue";
 
 const model = defineModel();
 
@@ -54,8 +54,8 @@ const handleTimeUnitChange = (newVal, unitType) => {
           <v-time-picker
             v-if="menu"
             v-model="model"
-            full-width
             format="24hr"
+            full-width
             scrollable
             @update:minute="handleTimeUnitChange($event, 'min')"
             @update:hour="handleTimeUnitChange($event, 'hr')"

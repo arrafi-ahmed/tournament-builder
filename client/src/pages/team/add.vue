@@ -58,7 +58,7 @@ const handleAddTeam = async () => {
   await store.dispatch("team/save", formData).then((result) => {
     // if teamManager saves team data, setCurrentUser in store
     if (isTeamManager.value) {
-      console.log(10, result)
+      console.log(10, result);
       store.commit("user/setCurrentUser", {
         ...currentUser.value,
         teamId: result.id,
@@ -119,11 +119,11 @@ onMounted(() => {
 
           <v-text-field
             v-model="team.email"
+            :disabled="isTeamManager"
             :rules="[
               (v) => !!v || 'Email is required!',
               (v) => isValidEmail(v) || 'Invalid Email',
             ]"
-            :disabled="isTeamManager"
             class="mt-2 mt-md-4"
             clearable
             hide-details="auto"

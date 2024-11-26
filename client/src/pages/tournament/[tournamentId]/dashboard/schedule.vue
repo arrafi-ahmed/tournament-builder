@@ -411,8 +411,8 @@ onUnmounted(() => {
         <v-row>
           <v-col
             v-for="(field, fieldIndex) in schedule"
-            class="max-content"
             :cols="12"
+            class="max-content"
             sm="4"
           >
             <v-card color="green" density="compact" flat>
@@ -491,7 +491,7 @@ onUnmounted(() => {
                           getTeamName(match, "home", titles)
                         }}
                       </div>
-                      <v-chip color="error" size="small" class="my-2"
+                      <v-chip class="my-2" color="error" size="small"
                         >V
                       </v-chip>
                       <div class="font-weight-medium me-2">
@@ -587,8 +587,8 @@ onUnmounted(() => {
                           getTeamName(match, "home", titles)
                         }}
                       </div>
-                      <v-chip color="error" size="small" class="my-2"
-                      >V
+                      <v-chip class="my-2" color="error" size="small"
+                        >V
                       </v-chip>
                       <div class="font-weight-medium me-2">
                         {{

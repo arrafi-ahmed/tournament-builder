@@ -19,7 +19,7 @@ export const mutations = {
     let currentUser = JSON.parse(localStorage.getItem("currentUser"));
     currentUser = { ...currentUser, ...payload };
     state.currentUser = { ...currentUser };
-    console.log(11, state.currentUser)
+    console.log(11, state.currentUser);
     localStorage.setItem("currentUser", JSON.stringify(currentUser));
   },
   removeToken(state) {

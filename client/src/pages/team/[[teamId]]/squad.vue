@@ -5,11 +5,7 @@ import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
-import {
-  getApiPublicImgUrl,
-  getClientPublicImgUrl,
-  getTeamLogoUrl,
-} from "@/others/util";
+import { getClientPublicImgUrl, getTeamLogoUrl } from "@/others/util";
 
 definePage({
   name: "team-squad",

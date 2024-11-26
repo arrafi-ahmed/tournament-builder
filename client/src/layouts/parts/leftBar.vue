@@ -7,15 +7,10 @@ const { xs } = useDisplay();
 </script>
 
 <template>
-  <v-navigation-drawer
-    v-model="drawer"
-    rail
-    permanent
-    :expand-on-hover="!xs"
-  >
+  <v-navigation-drawer v-model="drawer" :expand-on-hover="!xs" permanent rail>
     <v-list-item nav>
       <template v-slot:append>
-        <v-btn class="mt-1" variant="text" disabled></v-btn>
+        <v-btn class="mt-1" disabled variant="text"></v-btn>
       </template>
     </v-list-item>
 

@@ -5,7 +5,7 @@ import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import ConfirmationDialog from "@/components/ConfirmationDialog.vue";
 import NoItems from "@/components/NoItems.vue";
-import { getTeamLogoUrl, isValidEmail } from "@/others/util";
+import { getTeamLogoUrl } from "@/others/util";
 
 definePage({
   name: "tournament-participants",
@@ -87,8 +87,8 @@ onMounted(async () => {
       </v-card-text>
       <v-card-actions>
         <v-btn
-          density="comfortable"
           color="primary"
+          density="comfortable"
           @click="goInvitePageAfterConfirmation"
           >Activate
         </v-btn>

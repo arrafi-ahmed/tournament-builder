@@ -232,7 +232,7 @@ onMounted(async () => {
                 {{ item.fieldName }}
               </v-list-item-subtitle>
 
-              <v-row align="center" no-gutters class="my-1">
+              <v-row align="center" class="my-1" no-gutters>
                 <v-col>
                   <span class="font-weight-medium me-2">
                     {{ item.homeTeamName || getTeamName(item, "home", titles) }}
@@ -244,21 +244,21 @@ onMounted(async () => {
                     "
                     color="green-darken-1"
                     density="comfortable"
-                    variant="flat"
-                    size="small"
                     label
+                    size="small"
+                    variant="flat"
                     >Winner
                   </v-chip>
                 </v-col>
                 <v-col>
                   <v-number-input
                     v-model="item.homeTeamScore"
-                    :min="0"
-                    :max-width="150"
                     :disabled="!item.homeTeamId"
-                    label="Score"
+                    :max-width="150"
+                    :min="0"
                     density="comfortable"
                     hide-details="auto"
+                    label="Score"
                     @update:modelValue="
                       checkMatchScore({
                         match: item,
@@ -271,7 +271,7 @@ onMounted(async () => {
 
               <v-chip color="error" size="large">V</v-chip>
 
-              <v-row align="center" no-gutters class="my-1">
+              <v-row align="center" class="my-1" no-gutters>
                 <v-col>
                   <span class="font-weight-medium me-2">
                     {{ item.awayTeamName || getTeamName(item, "away", titles) }}
@@ -283,21 +283,21 @@ onMounted(async () => {
                     "
                     color="green-darken-1"
                     density="comfortable"
-                    variant="flat"
-                    size="small"
                     label
+                    size="small"
+                    variant="flat"
                     >Winner
                   </v-chip>
                 </v-col>
                 <v-col>
                   <v-number-input
                     v-model="item.awayTeamScore"
-                    :min="0"
-                    :max-width="150"
                     :disabled="!item.awayTeamId"
-                    label="Score"
+                    :max-width="150"
+                    :min="0"
                     density="comfortable"
                     hide-details="auto"
+                    label="Score"
                     @update:modelValue="
                       checkMatchScore({
                         match: item,

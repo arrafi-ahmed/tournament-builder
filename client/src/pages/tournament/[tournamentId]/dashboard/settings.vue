@@ -5,7 +5,6 @@ import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import NoItems from "@/components/NoItems.vue";
 import { formatDate, getDateOnly } from "@/others/util";
-import DatePicker from "@/components/DatePicker.vue";
 import { useDisplay } from "vuetify";
 
 definePage({
@@ -222,7 +221,7 @@ onMounted(async () => {
           fast-fail
           @submit.prevent="addMatchDay"
         >
-          <date-picker
+          <v-date-input
             v-model="matchDay.matchDate"
             :rules="[(v) => !!v || 'Date is required!']"
             class="mt-2"
@@ -230,7 +229,9 @@ onMounted(async () => {
             color="primary"
             hide-details="auto"
             label="Match Date"
-          ></date-picker>
+            prepend-inner-icon="mdi-calendar"
+            prepend-icon=""
+          ></v-date-input>
 
           <v-card-actions>
             <v-spacer></v-spacer>

@@ -9,7 +9,7 @@ import vuetify from "./vuetify";
 import router from "../router";
 import store from "../store";
 import $axios from "@/plugins/axios";
-import { getQueryParam, removeQueryParams } from "@/others/util";
+import {getQueryParam, removeQueryParams} from "@/others/util";
 
 function handleApiQueryMsg() {
   //check if message came from server through query params

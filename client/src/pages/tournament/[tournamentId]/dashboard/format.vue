@@ -577,11 +577,11 @@ onUnmounted(() => {
           <template v-for="(phase, phaseIndex) in tournamentFormat">
             <v-col
               :cols="calcPhaseCol[phaseIndex].wrapper"
-              class="max-content"
               :style="{
                 flexBasis: `${calcPhaseCol[phaseIndex].flexBasis}px`,
                 maxWidth: 'inherit!important',
               }"
+              class="max-content"
             >
               <div
                 class="d-flex justify-start align-center bg-amber-accent-1 rounded px-4 py-2 mb-4"

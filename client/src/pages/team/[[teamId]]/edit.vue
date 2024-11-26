@@ -3,7 +3,7 @@ import PageTitle from "@/components/PageTitle.vue";
 import { computed, onMounted, reactive, ref, watchEffect } from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
-import {getTeamLogoUrl, isValidEmail, isValidImage} from "@/others/util";
+import { getTeamLogoUrl, isValidEmail, isValidImage } from "@/others/util";
 import { useDisplay } from "vuetify";
 import NoItems from "@/components/NoItems.vue";
 
@@ -173,11 +173,11 @@ onMounted(async () => {
 
           <v-text-field
             v-model="newTeam.email"
+            :disabled="isTeamManager"
             :rules="[
               (v) => !!v || 'Email is required!',
               (v) => isValidEmail(v) || 'Invalid Email',
             ]"
-            :disabled="isTeamManager"
             class="mt-2 mt-md-4"
             clearable
             hide-details="auto"
@@ -187,7 +187,7 @@ onMounted(async () => {
           ></v-text-field>
 
           <v-row align="center" justify="start" no-gutters>
-            <v-col class="mt-5" :cols="12" sm="2">
+            <v-col :cols="12" class="mt-5" sm="2">
               <v-img
                 :src="getTeamLogoUrl(newTeam.logo)"
                 aspect-ratio="1"

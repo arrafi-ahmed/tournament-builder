@@ -17,11 +17,11 @@ const { justify, text, variant, cols, sm, md, lg, xl, closable, customClass } =
 <template>
   <v-container>
     <v-row :class="`${customClass} text-wrap`" :justify="justify">
-      <v-col :cols="cols" :sm="sm" :md="md" :lg="lg" :xl="xl">
+      <v-col :cols="cols" :lg="lg" :md="md" :sm="sm" :xl="xl">
         <v-alert
+          :closable="closable"
           :text="text"
           :variant="variant"
-          :closable="closable"
           density="compact"
           icon="mdi-information-outline"
         ></v-alert>
