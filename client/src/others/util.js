@@ -26,6 +26,13 @@ export const getTeamName = (item, selectedType, titles) => {
   return "Empty Slot";
 };
 
+export const getSlug = (slug) =>
+  slug
+    .trim()
+    .toLowerCase() // Convert to lowercase
+    .replace(/\s+/g, "-") // Replace spaces with hyphens
+    .replace(/[^a-z0-9-]/g, "");
+
 export const formatDate = (inputDate) => {
   if (!inputDate) return "";
   const parsedDate = new Date(inputDate);

@@ -4,7 +4,7 @@ import { computed, onMounted, reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { useRoute, useRouter } from "vue-router";
 import { useDisplay } from "vuetify";
-import { isValidEmail } from "@/others/util";
+import { clientBaseUrl, getSlug, isValidEmail } from "@/others/util";
 import DatePicker from "@/components/DatePicker.vue";
 
 definePage({
@@ -27,6 +27,7 @@ const isSudo = computed(() => store.getters["user/isSudo"]);
 
 const tournamentInit = {
   name: null,
+  slug: null,
   type: null,
   location: null,
   startDate: null,
@@ -37,7 +38,12 @@ const tournamentInit = {
   organizerId: null,
 };
 const newTournament = reactive({ ...tournamentInit });
-
+const formatSlug = computed(() => getSlug(newTournament.slug || ""));
+const dynamicHint = computed(() =>
+  formatSlug.value
+    ? `Public URL: ${clientBaseUrl}/p/${formatSlug.value}`
+    : "Example input: world-cup-24",
+);
 const form = ref(null);
 const isFormValid = ref(true);
 
@@ -61,14 +67,16 @@ const handleEditTournament = async () => {
   await form.value.validate();
   if (!isFormValid.value) return;
 
-  await store.dispatch("tournament/save", newTournament).then((result) => {
-    Object.assign(newTournament, {
-      ...tournamentInit,
+  await store
+    .dispatch("tournament/save", { ...newTournament, slug: formatSlug.value })
+    .then((result) => {
+      Object.assign(newTournament, {
+        ...tournamentInit,
+      });
+      router.push({
+        name: redirectDestination.value,
+      });
     });
-    router.push({
-      name: redirectDestination.value,
-    });
-  });
 };
 const fetchData = async () => {
   return store.dispatch("tournament/setTournamentWEmailOptionalById", {
@@ -116,6 +124,23 @@ onMounted(async () => {
             label="Name"
             prepend-inner-icon="mdi-account"
             required
+          ></v-text-field>
+
+          <v-text-field
+            v-model="newTournament.slug"
+            :rules="[
+              (v) => !!v || 'Slug is required!',
+              (v) =>
+                /^[a-zA-Z0-9-]+$/.test(v) ||
+                'Only letters, numbers, and hyphens are allowed!',
+            ]"
+            class="mt-2 mt-md-4"
+            :hint="dynamicHint"
+            persistent-hint
+            clearable
+            hide-details="auto"
+            label="Slug"
+            prepend-inner-icon="mdi-link"
           ></v-text-field>
 
           <v-select

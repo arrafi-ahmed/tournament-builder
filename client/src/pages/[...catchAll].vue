@@ -6,8 +6,7 @@ import { useStore } from "vuex";
 definePage({
   name: "not-found",
   meta: {
-    requiresSudo: true,
-    title: "Credentials",
+    title: "Not Found",
     layout: "headerless",
   },
 });

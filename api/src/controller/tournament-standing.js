@@ -15,4 +15,15 @@ router.get("/getTournamentStanding", (req, res, next) => {
     .catch((err) => next(err));
 });
 
+router.get("/getPublicView", (req, res, next) => {
+  tournamentStandingService
+    .getPublicView({
+      tournamentSlug: req.query.tournamentSlug,
+    })
+    .then((results) => {
+      res.status(200).json(new ApiResponse(null, results));
+    })
+    .catch((err) => next(err));
+});
+
 module.exports = router;

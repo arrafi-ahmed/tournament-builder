@@ -1,4 +1,20 @@
 const { sql } = require("../db");
+const tournamentService = require("../service/tournament");
+
+exports.getPublicView = async ({ tournamentSlug }) => {
+  const tournament = await tournamentService.getTournamentBySlug({
+    tournamentSlug,
+  });
+  const [participants, standing] = await Promise.all([
+    tournamentService.getParticipants({
+      tournamentId: tournament.id,
+    }),
+    exports.getTournamentStanding({
+      tournamentId: tournament.id,
+    }),
+  ]);
+  return { tournament, participants, standing };
+};
 
 exports.getTournamentStanding = async ({ tournamentId }) => {
   const rawData = await sql`

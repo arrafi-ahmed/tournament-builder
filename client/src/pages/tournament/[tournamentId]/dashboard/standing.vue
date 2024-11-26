@@ -4,7 +4,11 @@ import { useRoute } from "vue-router";
 import { useStore } from "vuex";
 import PageTitle from "@/components/PageTitle.vue";
 import { useDisplay } from "vuetify";
-import {addSwipeBlocking, getRoundTitle, removeSwipeBlocking} from "@/others/util";
+import {
+  addSwipeBlocking,
+  getRoundTitle,
+  removeSwipeBlocking,
+} from "@/others/util";
 import MatchCard from "@/components/MatchCard.vue";
 import NoItems from "@/components/NoItems.vue";
 
@@ -69,10 +73,7 @@ onUnmounted(() => {
                 <v-list-item
                   :to="{
                     name: 'public-view',
-                    params: {
-                      tournamentId: tournament.id,
-                      tournamentName: formattedName,
-                    },
+                    params: { tournamentSlug: tournament.slug },
                   }"
                   density="compact"
                   prepend-icon="mdi-eye"

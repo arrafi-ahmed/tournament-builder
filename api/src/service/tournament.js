@@ -35,11 +35,20 @@ exports.save = async ({ payload, currentUser }) => {
   delete payload.tId;
   delete payload.uId;
 
-  const [insertedTournament] = await sql`
-        insert into tournaments ${sql(payload)} on conflict (id)
+  let insertedTournament = null;
+  try {
+    [insertedTournament] = await sql`
+            insert into tournaments ${sql(payload)} on conflict (id)
         do
-        update set ${sql(payload)} returning *`;
-
+            update set ${sql(payload)} returning *`;
+  } catch (err) {
+    if (
+      err.code === "23505" &&
+      err.constraint_name === "tournaments_slug_key"
+    ) {
+      throw new CustomError("Slug already taken!", 409);
+    }
+  }
   return insertedTournament;
 };
 
@@ -128,6 +137,15 @@ exports.getTournamentWEmailOptionalById = async ({ tournamentId }) => {
                  left join users u
                            on t.organizer_id = u.id and u.role = 'organizer'
         WHERE t.id = ${tournamentId}`;
+
+  return tournament;
+};
+
+exports.getTournamentBySlug = async ({ tournamentSlug }) => {
+  const [tournament] = await sql`
+        SELECT *
+        FROM tournaments
+        WHERE slug = ${tournamentSlug}`;
 
   return tournament;
 };

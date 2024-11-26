@@ -114,7 +114,7 @@ onMounted(() => {
                       @click="
                         router.push({
                           name: 'public-view',
-                          params: { tournamentId: item.id },
+                          params: { tournamentSlug: item.slug },
                         })
                       "
                     ></v-list-item>

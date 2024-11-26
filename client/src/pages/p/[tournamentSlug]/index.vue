@@ -34,17 +34,9 @@ const parentTab = ref(null);
 const tab = ref(null);
 
 const fetchData = async () => {
-  return Promise.all([
-    store.dispatch("tournament/setTournamentWEmailOptionalById", {
-      tournamentId: route.params.tournamentId,
-    }),
-    store.dispatch("tournamentStanding/setTournamentStanding", {
-      tournamentId: route.params.tournamentId,
-    }),
-    store.dispatch("tournament/setParticipants", {
-      tournamentId: route.params.tournamentId,
-    }),
-  ]);
+  return store.dispatch("tournamentStanding/setPublicView", {
+    tournamentSlug: route.params.tournamentSlug,
+  });
 };
 onMounted(async () => {
   await fetchData();
@@ -134,7 +126,7 @@ onMounted(async () => {
                   ></v-divider>
                 </template>
               </v-list>
-              <no-items v-else :cols="12"></no-items>
+              <no-items v-else :md="6"></no-items>
             </v-tabs-window-item>
 
             <v-tabs-window-item value="schedule">
@@ -159,7 +151,7 @@ onMounted(async () => {
                   </v-col>
                 </v-row>
               </template>
-              <no-items v-else :cols="12"></no-items>
+              <no-items v-else :md="6"></no-items>
             </v-tabs-window-item>
 
             <v-tabs-window-item value="standing">
@@ -291,7 +283,7 @@ onMounted(async () => {
                   </v-tabs-window>
                 </v-col>
               </v-row>
-              <no-items v-else :cols="12"></no-items>
+              <no-items v-else :md="6"></no-items>
             </v-tabs-window-item>
 
             <v-tabs-window-item value="rules">
@@ -307,7 +299,7 @@ onMounted(async () => {
         </v-col>
       </v-row>
     </template>
-    <no-items v-else />
+    <no-items v-else :md="6" />
   </v-container>
 </template>
 

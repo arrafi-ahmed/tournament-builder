@@ -31,6 +31,7 @@ CREATE TABLE team_members
 CREATE TABLE tournaments
 (
     id                  SERIAL PRIMARY KEY,
+    slug                VARCHAR(255) UNIQUE NOT NULL,  -- added
     name                VARCHAR(255) NOT NULL,
     type                int CHECK (type IN (5, 6, 7, 8, 11)),
     location            VARCHAR(255),
@@ -43,6 +44,8 @@ CREATE TABLE tournaments
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     organizer_id        INT REFERENCES users (id) ON DELETE CASCADE
 );
+alter table tournaments
+    add column slug VARCHAR(255) UNIQUE;
 
 CREATE TABLE teams_tournaments
 (
@@ -75,7 +78,7 @@ CREATE TABLE tournament_groups
 (
     id                  SERIAL PRIMARY KEY,
     name                VARCHAR(255),
-    ranking_published   BOOLEAN, --added
+    ranking_published   BOOLEAN,
     "order"             INT,
     teams_per_group     INT,
     double_round_robin  BOOLEAN,
@@ -99,7 +102,6 @@ CREATE TABLE groups_teams
     updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
---added
 CREATE TABLE groups_teams_stats
 (
     id              SERIAL PRIMARY KEY,
@@ -128,7 +130,7 @@ CREATE TABLE fields
     id            SERIAL PRIMARY KEY,
     name          varchar(255) not null,
     start_time    time         not null,
-    field_order   int, -- added
+    field_order   int,
     updated_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     tournament_id INT REFERENCES tournaments (id) ON DELETE CASCADE
 );
